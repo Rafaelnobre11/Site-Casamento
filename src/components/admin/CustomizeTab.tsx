@@ -95,7 +95,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 const fullAddressForMap = `${updatedState.locationAddress}, ${updatedState.addressNumber}`;
                 const encodedAddress = encodeURIComponent(fullAddressForMap);
                 
-                updatedState.mapUrl = `https://www.google.com/maps/embed?q=${encodedAddress}`;
+                updatedState.mapUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.141655099321!2d-46.68652408447477!3d-23.563069268536075!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce59c8da039523%3A0x36b0439649b38c23!2sR.%20dos%20Pinheiros%2C%201000%20-%20Pinheiros%2C%20S%C3%A3o%20Paulo%20-%20SP%2C%2005422-001!5e0!3m2!1sen!2sbr!4v1622573836063!5m2!1sen!2sbr&q=${encodedAddress}`;
                 updatedState.wazeLink = `https://www.waze.com/ul?q=${encodedAddress}`;
             }
 
