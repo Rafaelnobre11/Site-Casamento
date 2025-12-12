@@ -67,19 +67,6 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         handleFieldChange('carouselImages', newImages);
     };
 
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'heroImage') => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const base64 = event.target?.result as string;
-                handleFieldChange(field, base64);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
     const handleSave = () => {
         startTransition(async () => {
             if (!firestore) {
@@ -98,7 +85,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
             }
 
             try {
-                await setDocument(firestore, 'config/site', updatedState);
+                await setDocument(firestore, 'config/site', updatedState, { merge: true });
                 toast({ title: "Salvo!", description: `Suas personalizações foram salvas com sucesso.` });
             } catch (error) {
                 console.error("Error saving config:", error);
@@ -141,18 +128,18 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                          <div className="grid md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <Label htmlFor="couple-names">Nome do Casal (ex: Cláudia & Rafael)</Label>
-                                <Input id="couple-names" value={formState.names || ''} onChange={(e) => handleFieldChange('names', e.target.value)} />
+                                <Input id="couple-names" value={formState.names || 'Cláudia & Rafael'} onChange={(e) => handleFieldChange('names', e.target.value)} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="logo-image">Logo / Brasão (Opcional)</Label>
-                                <Input id="logo-image" type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'logoUrl')}/>
+                                <Label htmlFor="logo-url">URL do Logo / Brasão (Opcional)</Label>
+                                <Input id="logo-url" type="text" placeholder="Cole a URL da imagem aqui" value={formState.logoUrl || ''} onChange={(e) => handleFieldChange('logoUrl', e.target.value)} />
                                 {formState.logoUrl && <img src={formState.logoUrl} alt="Preview" className="mt-2 rounded-md max-h-20 object-contain bg-muted p-2" />}
                             </div>
                         </div>
                         <div className="grid md:grid-cols-2 gap-6">
                            <div className="space-y-2">
                                 <Label htmlFor="wedding-date" className="flex items-center gap-2"><Calendar /> Data do Casamento</Label>
-                                <Input id="wedding-date" type="date" value={formState.date?.substring(0, 10) || ''} onChange={(e) => handleFieldChange('date', `${e.target.value}T${formState.time || '16:00'}:00`)} />
+                                <Input id="wedding-date" type="date" value={(formState.date || '').substring(0, 10)} onChange={(e) => handleFieldChange('date', `${e.target.value}T${formState.time || '16:00'}:00`)} />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="wedding-time" className="flex items-center gap-2"><Clock /> Hora da Cerimônia</Label>
@@ -206,13 +193,13 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><ImageIcon /> Imagens Principais</CardTitle>
-                        <CardDescription>Troque a foto de capa e gerencie a galeria de fotos do site.</CardDescription>
+                        <CardDescription>Cole a URL da imagem da capa e gerencie a galeria de fotos do site.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-2">
-                            <Label htmlFor="hero-image">Foto da Capa (Hero)</Label>
-                            <Input id="hero-image" type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'heroImage')} />
-                            {formState.heroImage && <img src={formState.heroImage} alt="Preview" className="mt-2 rounded-md max-h-48 object-cover w-full" />}
+                            <Label htmlFor="hero-image-url">URL da Foto da Capa (Hero)</Label>
+                            <Input id="hero-image-url" type="text" placeholder="https://exemplo.com/sua-foto.jpg" value={formState.heroImage || ''} onChange={(e) => handleFieldChange('heroImage', e.target.value)} />
+                             {formState.heroImage && <img src={formState.heroImage} alt="Preview" className="mt-2 rounded-md max-h-48 object-cover w-full" />}
                         </div>
                         <div className="space-y-4">
                             <Label className="font-medium d-block">Galeria de Fotos (Carrossel)</Label>

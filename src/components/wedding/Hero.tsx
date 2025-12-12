@@ -21,7 +21,7 @@ const Hero: React.FC<HeroProps> = ({
   heroImage
 }) => {
   const defaultHeroImage = PlaceHolderImages.find((p) => p.id === 'hero-bg');
-  const imageSrc = heroImage || defaultHeroImage?.imageUrl || 'https://picsum.photos/seed/wedding-hero/1920/1080';
+  const imageSrc = heroImage || defaultHeroImage?.imageUrl;
 
   const formattedDate = weddingDate ? new Date(weddingDate).toLocaleDateString('pt-BR', {
     day: '2-digit',
@@ -36,14 +36,14 @@ const Hero: React.FC<HeroProps> = ({
 
   return (
     <section id="home" className="relative h-[100vh] w-full text-white flex flex-col justify-center items-center">
-      <Image
+      {imageSrc && <Image
         src={imageSrc}
         alt="Imagem do casal"
         fill
         className="object-cover"
         priority
         data-ai-hint="wedding couple elegant"
-      />
+      />}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
 

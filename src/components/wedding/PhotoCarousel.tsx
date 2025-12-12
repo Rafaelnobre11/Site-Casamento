@@ -43,14 +43,14 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [] }) => {
                 <div className="p-1">
                   <Card className="overflow-hidden rounded-lg shadow-md border-transparent">
                     <CardContent className="relative flex aspect-square items-center justify-center p-0">
-                      <Image
+                      {imageUrl && <Image
                         src={imageUrl}
                         alt={`Momento ${index + 1}`}
                         width={600}
                         height={600}
                         className="w-full h-full object-cover transition-transform duration-500 ease-in-out hover:scale-110"
                         data-ai-hint="couple smiling"
-                      />
+                      />}
                        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
                     </CardContent>
                   </Card>
