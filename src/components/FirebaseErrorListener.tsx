@@ -3,17 +3,20 @@
 
 import { useEffect } from 'react';
 import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase';
 
 export function FirebaseErrorListener() {
   useEffect(() => {
-    const unsubscribe = errorEmitter.on('permission-error', (error) => {
+    const handleError = (error: FirestorePermissionError) => {
       // We are throwing this error to make it visible in the Next.js error overlay
       // during development. This helps with debugging security rules.
       throw error;
-    });
+    };
+    
+    errorEmitter.on('permission-error', handleError);
+
     return () => {
-      // @ts-expect-error - we are not using all of the EventEmitter methods.
-      unsubscribe();
+      errorEmitter.off('permission-error', handleError);
     };
   }, []);
 

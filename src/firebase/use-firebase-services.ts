@@ -21,12 +21,15 @@ export function useFirebaseServices(): FirebaseServices {
   });
 
   useEffect(() => {
-    const app =
-      getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    const auth = getAuth(app);
-    const firestore = getFirestore(app);
+    // Ensure config is populated before initializing
+    if (firebaseConfig && firebaseConfig.apiKey) {
+      const app =
+        getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+      const auth = getAuth(app);
+      const firestore = getFirestore(app);
 
-    setServices({ app, auth, firestore });
+      setServices({ app, auth, firestore });
+    }
   }, []);
 
   return services;
