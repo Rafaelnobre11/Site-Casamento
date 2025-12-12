@@ -14,6 +14,7 @@ import Footer from '@/components/wedding/Footer';
 import Header from '@/components/landing-page/Header';
 import { defaultGifts } from '@/lib/default-gifts';
 import { cn } from '@/lib/utils';
+import Countdown from '@/components/wedding/Countdown';
 
 const defaultLayoutOrder = ['hero', 'carousel', 'countdown', 'rsvp', 'event', 'gifts'];
 
@@ -55,9 +56,10 @@ export default function Home() {
     texts: {},
     customColors: {},
     carouselImages: [],
+    isContentLocked: true, // Default to locked
   };
   
-  const isContentLocked = config.isContentLocked ?? true;
+  const isContentLocked = config.isContentLocked;
   const showGatedContent = isRsvpConfirmed || !isContentLocked;
 
   return (
@@ -71,12 +73,19 @@ export default function Home() {
           heroImage={config.heroImage}
         />
         <PhotoCarousel images={config.carouselImages} />
+        
+        {config.date && (
+            <div className="bg-[#C5A086] py-12">
+                <Countdown targetDate={config.date} />
+            </div>
+        )}
+
         <RsvpSection onRsvpConfirmed={handleRsvpConfirmed} />
         
         <div className="relative">
              <div className={cn(
                 "transition-all duration-700", 
-                !showGatedContent && "content-locked"
+                !showGatedContent && "blur-md pointer-events-none select-none"
              )}>
                 <EventInfo
                   locationName={config.locationName}
