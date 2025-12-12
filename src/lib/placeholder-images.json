@@ -1,0 +1,82 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-bg",
+      "description": "A beautiful wedding couple embracing.",
+      "imageUrl": "https://images.unsplash.com/photo-1591604466107-ec97de577aff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx3ZWRkaW5nJTIwY291cGxlfGVufDB8fHx8MTc2NTIwNTQ5NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wedding couple"
+    },
+    {
+      "id": "moment-1",
+      "description": "Couple smiling and looking at each other.",
+      "imageUrl": "https://images.unsplash.com/photo-1624646803808-9c5a9de7aa3f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjb3VwbGUlMjBzbWlsaW5nfGVufDB8fHx8MTc2NTI1NzI2N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "couple smiling"
+    },
+    {
+      "id": "moment-2",
+      "description": "Couple holding hands.",
+      "imageUrl": "https://images.unsplash.com/photo-1695049761557-cb56d348c297?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxob2xkaW5nJTIwaGFuZHN8ZW58MHx8fHwxNzY1MjUzMTcyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "holding hands"
+    },
+    {
+      "id": "moment-3",
+      "description": "Couple laughing together outdoors.",
+      "imageUrl": "https://images.unsplash.com/photo-1656017054238-f08a0e1482fe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb3VwbGUlMjBsYXVnaGluZ3xlbnwwfHx8fDE3NjUyOTA2Mzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "couple laughing"
+    },
+    {
+      "id": "moment-4",
+      "description": "A close-up shot of the wedding rings.",
+      "imageUrl": "https://images.unsplash.com/photo-1554047310-ab6170fc7b10?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx3ZWRkaW5nJTIwcmluZ3N8ZW58MHx8fHwxNzY1MjA2NzEyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wedding rings"
+    },
+    {
+      "id": "rsvp-bg",
+      "description": "Elegant wedding table decoration.",
+      "imageUrl": "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx3ZWRkaW5nJTIwZGVjb3JhdGlvbnxlbnwwfHx8fDE3NjUyOTA2Mzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wedding decoration"
+    },
+    {
+      "id": "map-placeholder",
+      "description": "A map showing a location pin.",
+      "imageUrl": "https://images.unsplash.com/photo-1619468129361-605ebea04b44?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYXAlMjBsb2NhdGlvbnxlbnwwfHx8fDE3NjUxOTg0NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "map location"
+    },
+    {
+      "id": "gift-1",
+      "description": "Honeymoon fund.",
+      "imageUrl": "https://images.unsplash.com/photo-1682685797857-97de838c192e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx0cmF2ZWwlMjBkZXN0aW5hdGlvbnxlbnwwfHx8fDE3NjUyODE1NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "travel destination"
+    },
+    {
+      "id": "gift-2",
+      "description": "Contribution for the new home.",
+      "imageUrl": "https://images.unsplash.com/photo-1717429541792-5c59021d6ceb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxtb2Rlcm4lMjBraXRjaGVufGVufDB8fHx8MTc2NTI1OTU2NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern kitchen"
+    },
+    {
+      "id": "gift-3",
+      "description": "A set of elegant dinnerware.",
+      "imageUrl": "https://images.unsplash.com/photo-1758810741861-d206a70a539a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkaW5uZXJ3YXJlJTIwc2V0fGVufDB8fHx8MTc2NTI5MDYzOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dinnerware set"
+    },
+    {
+      "id": "gift-4",
+      "description": "A high-quality coffee machine.",
+      "imageUrl": "https://images.unsplash.com/photo-1707241358597-bafcc8a8e73d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjb2ZmZWUlMjBtYWNoaW5lfGVufDB8fHx8MTc2NTI3NDg0NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "coffee machine"
+    },
+    {
+      "id": "gift-5",
+      "description": "Donation to a charity of choice.",
+      "imageUrl": "https://images.unsplash.com/photo-1597429903954-9557e50a0d45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxoZWxwaW5nJTIwaGFuZHN8ZW58MHx8fHwxNzY1MjA3MzUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "helping hands"
+    },
+    {
+      "id": "gift-6",
+      "description": "A romantic dinner experience.",
+      "imageUrl": "https://images.unsplash.com/photo-1529521001454-2cf987c34008?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxyb21hbnRpYyUyMGRpbm5lcnxlbnwwfHx8fDE3NjUyOTA2Mzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "romantic dinner"
+    }
+  ]
+}

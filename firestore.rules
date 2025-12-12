@@ -1,0 +1,27 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Regra global: Permite que qualquer pessoa leia qualquer documento.
+    // Isso é necessário para que o site busque configurações e a lista de convidados.
+    match /{document=**} {
+      allow read: if true;
+    }
+
+    // Regra específica para a configuração do site.
+    // Permite que qualquer pessoa (incluindo o admin não autenticado) altere as configurações.
+    match /config/site {
+      allow write: if true;
+    }
+
+    // Regras específicas para a lista de convidados.
+    match /guests/{guestId} {
+      // Qualquer pessoa pode criar um convidado (pelo painel admin)
+      // ou atualizar seu próprio status (pelo RSVP).
+      // A exclusão continua restrita a usuários autenticados.
+      allow create, update: if true;
+      allow delete: if request.auth != null;
+    }
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "guest": {
+      "title": "Guest",
+      "description": "A guest invited to the wedding.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The full name of the guest."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The guest's phone number, used as a unique identifier."
+        },
+        "maxGuests": {
+          "type": "number",
+          "description": "The maximum number of attendees allowed for this guest."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "confirmed", "declined"],
+          "description": "The RSVP status of the guest."
+        },
+        "confirmedGuests": {
+          "type": "number",
+          "description": "The number of attendees the guest is bringing."
+        },
+        "message": {
+          "type": "string",
+          "description": "A message from the guest to the couple."
+        }
+      },
+      "required": ["name", "phone", "maxGuests", "status"]
+    },
+    "siteConfig": {
+      "title": "Site Configuration",
+      "description": "A single document to hold all site-wide configuration and content.",
+      "type": "object",
+      "properties": {
+        "theme": { "type": "string", "description": "Name of the base theme." },
+        "customColor": { "type": "string", "description": "Primary custom color in HEX.", "format": "hex-color" },
+        "customColors": {
+          "type": "object",
+          "properties": {
+            "headerBg": { "type": "string", "format": "hex-color" },
+            "footerBg": { "type": "string", "format": "hex-color" },
+            "buttonBg": { "type": "string", "format": "hex-color" },
+            "buttonText": { "type": "string", "format": "hex-color" },
+            "headingText": { "type": "string", "format": "hex-color" },
+            "bodyText": { "type": "string", "format": "hex-color" }
+          }
+        },
+        "names": { "type": "string", "description": "Names of the couple (e.g., 'J & L')." },
+        "logoUrl": { "type": "string", "description": "URL or base64 data URI of the logo." },
+        "heroImage": { "type": "string", "description": "URL or base64 data URI for the hero image." },
+        "date": { "type": "string", "description": "Wedding date." },
+        "time": { "type": "string", "description": "Wedding time." },
+        "locationName": { "type": "string", "description": "Name of the venue." },
+        "addressCep": { "type": "string", "description": "CEP for automatic address lookup." },
+        "addressNumber": { "type": "string", "description": "Address number." },
+        "locationAddress": { "type": "string", "description": "Full address of the venue." },
+        "mapUrl": { "type": "string", "description": "Google Maps embed URL." },
+        "wazeLink": { "type": "string", "description": "Waze navigation link." },
+        "isContentLocked": { "type": "boolean", "description": "If true, hides content until RSVP confirmation." },
+        "pixKey": { "type": "string", "description": "PIX key for gifts." },
+        "carouselImages": {
+          "type": "array",
+          "items": { "type": "string", "description": "Array of image URLs or base64 data URIs." }
+        },
+        "texts": {
+          "type": "object",
+          "description": "Editable text labels for the entire site."
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "price": { "type": "string" },
+              "imageUrl": { "type": "string" },
+              "funnyNote": { "type": "string" }
+            },
+            "required": ["id", "title", "price"]
+          }
+        },
+        "layoutOrder": {
+          "type": "array",
+          "items": { "type": "string", "description": "Defines the order of page sections." }
+        }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["anonymous"]
+  },
+  "firestore": {
+    "/guests/{guestId}": {
+      "schema": { "$ref": "#/entities/guest" },
+      "description": "Stores information about each invited guest."
+    },
+    "/config/site": {
+       "schema": { "$ref": "#/entities/siteConfig" },
+       "description": "A single document holding all customizable site settings and content."
+    }
+  }
+}
