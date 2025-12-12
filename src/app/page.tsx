@@ -2,32 +2,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Header from '@/components/landing-page/Header';
-import Hero from '@/components/landing-page/Hero';
-import MomentsCarousel from '@/components/landing-page/MomentsCarousel';
-import RsvpSection from '@/components/landing-page/RsvpSection';
-import InfoSection from '@/components/landing-page/InfoSection';
-import GiftSection from '@/components/landing-page/GiftSection';
-import Footer from '@/components/landing-page/Footer';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { SiteConfig } from '@/types/siteConfig';
 import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import Hero from '@/components/wedding/Hero';
+import PhotoCarousel from '@/components/wedding/PhotoCarousel';
+import RsvpSection from '@/components/wedding/RsvpSection';
+import EventInfo from '@/components/wedding/EventInfo';
+import GiftSection from '@/components/wedding/GiftSection';
+import Footer from '@/components/wedding/Footer';
+import { defaultGifts } from '@/lib/default-gifts';
 
-const componentMap: { [key: string]: React.ComponentType<any> } = {
-  hero: Hero,
-  moments: MomentsCarousel,
-  rsvp: RsvpSection,
-  info: InfoSection,
-  gifts: GiftSection,
-};
+const defaultLayoutOrder = ['hero', 'carousel', 'countdown', 'rsvp', 'event', 'gifts'];
 
 export default function Home() {
   const [isRsvpConfirmed, setIsRsvpConfirmed] = useState(false);
-  const { data: config, loading: loadingConfig } = useDoc<SiteConfig>('config/site');
+  const { data: siteConfig, loading } = useDoc<SiteConfig>('config/site');
 
   useEffect(() => {
-    // Check local storage to persist confirmation state across reloads
+    // Persist RSVP confirmation across reloads
     if (localStorage.getItem('rsvpConfirmed') === 'true') {
       setIsRsvpConfirmed(true);
     }
@@ -38,88 +31,62 @@ export default function Home() {
     localStorage.setItem('rsvpConfirmed', 'true');
   };
 
-  if (loadingConfig) {
+  if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-muted-foreground">Carregando os detalhes do grande dia...</p>
       </div>
     );
   }
-  
-  const texts = config?.texts || {};
-  const isSiteLocked = config?.isContentLocked ?? true;
-  const layoutOrder = config?.layoutOrder || ['hero', 'moments', 'rsvp', 'info', 'gifts'];
-  const showContent = !isSiteLocked || isRsvpConfirmed;
-  
-  const getComponentProps = (key: string) => {
-    const props: { [key: string]: any } = { 
-        texts: config?.texts, 
-        names: config?.names, 
-        heroImage: config?.heroImage, 
-        carouselImages: config?.carouselImages 
-    };
 
-    switch (key) {
-      case 'rsvp':
-        return { ...props, onRsvpConfirmed: handleRsvpConfirmed };
-      case 'info':
-         return { ...props, isVisible: true, locationName: config?.locationName, locationAddress: config?.locationAddress, date: config?.date, time: config?.time, wazeLink: config?.wazeLink, mapUrl: config?.mapUrl };
-      case 'gifts':
-         return { ...props, products: config?.products, pixKey: config?.pixKey };
-      default:
-        return props;
-    }
+  // Fallback to a default config if nothing is in the database
+  const config = siteConfig || {
+    names: 'Jéssica & Lucas',
+    date: '2025-09-21T16:00:00',
+    locationName: 'Vila das Amoreiras',
+    locationAddress: 'R. Funchal, 500 - Vila Olímpia, São Paulo - SP',
+    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.749033036691!2d-46.6963980844747!3d-23.57791926830578!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce57a6e1f0c29f%3A0x1d3a0a3a7b6c7a7e!2sRua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo%20-%20SP%2C%2004551-060!5e0!3m2!1sen!2sbr!4v1622573836063!5m2!1sen!2sbr',
+    wazeLink: 'https://www.waze.com/ul?q=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo',
+    products: defaultGifts,
+    layoutOrder: defaultLayoutOrder,
+    texts: {},
+    customColors: {},
+    carouselImages: [],
   };
   
+  const showGatedContent = isRsvpConfirmed || !(config.isContentLocked ?? true);
+
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-background">
-      <Header texts={config?.texts} names={config?.names} logoUrl={config?.logoUrl}/>
+    <div className="flex min-h-[100dvh] flex-col bg-[#FBF9F6] text-[#4a4a4a]">
       <main className="flex-1">
-        {layoutOrder.map(key => {
-          const Component = componentMap[key];
-          if (!Component) return null;
-
-          // These sections are always visible
-          if (key === 'hero' || key === 'moments' || key === 'rsvp') {
-            return <Component key={key} {...getComponentProps(key)} />;
-          }
-          
-          if (key === 'gifts') {
-            if (showContent) {
-              return <Component key={key} {...getComponentProps(key)} />;
-            }
-            return null;
-          }
-
-          return null;
-        })}
-
-        <div className="relative">
-            {isSiteLocked && !showContent && (
-                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-8 p-4">
-                    <div className="text-center p-8 rounded-lg bg-background/80 backdrop-blur-sm shadow-2xl border border-border max-w-lg">
-                        <p className="mb-2 font-headline text-2xl text-foreground">
-                            {texts.rsvp_lock_message_title || "🤫 Segredo, hein?"}
-                        </p>
-                        <p className="max-w-md text-muted-foreground">
-                            {texts.rsvp_lock_message_subtitle || "Calma, curioso! Primeiro diz que vai, depois a gente te mostra onde é a festa e como nos ajudar a ficar menos duros."}
-                        </p>
-                    </div>
-                 </div>
-            )}
-             <div className={cn(isSiteLocked && !showContent && 'blur-lg pointer-events-none select-none overflow-hidden')}>
-                {layoutOrder.map(key => {
-                    const Component = componentMap[key];
-                    // Only render sections that are meant to be hidden here
-                    if (!Component || ['hero', 'moments', 'rsvp', 'gifts'].includes(key)) return null;
-
-                    return <Component key={key} {...getComponentProps(key)} isVisible={true} />;
-                })}
-             </div>
-        </div>
+        <Hero 
+          names={config.names}
+          weddingDate={config.date}
+          romanticQuote="Duas almas, uma só história. O nosso 'para sempre' começa agora."
+          heroImage={config.heroImage}
+        />
+        <PhotoCarousel images={config.carouselImages} />
+        <RsvpSection onRsvpConfirmed={handleRsvpConfirmed} />
+        
+        {showGatedContent && (
+          <div className="animate-fade-in-up duration-1000">
+            <EventInfo
+              locationName={config.locationName}
+              address={config.locationAddress}
+              time={config.time}
+              wazeLink={config.wazeLink}
+              mapUrl={config.mapUrl}
+            />
+            <GiftSection 
+                products={config.products} 
+                pixKey={config.pixKey} 
+            />
+          </div>
+        )}
 
       </main>
-      <Footer texts={config?.texts} names={config?.names}/>
+      <Footer names={config.names} />
     </div>
   );
 }

@@ -1,0 +1,69 @@
+
+'use client';
+
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import Countdown from './Countdown';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+
+interface HeroProps {
+  names?: string;
+  weddingDate?: string;
+  romanticQuote?: string;
+  heroImage?: string;
+}
+
+const Hero: React.FC<HeroProps> = ({ 
+  names = 'Jéssica & Lucas', 
+  weddingDate = '2025-09-21T16:00:00',
+  romanticQuote = "Duas almas, uma só história. O nosso 'para sempre' começa agora.",
+  heroImage
+}) => {
+  const defaultHeroImage = PlaceHolderImages.find((p) => p.id === 'hero-bg');
+  const imageSrc = heroImage || defaultHeroImage?.imageUrl || 'https://picsum.photos/seed/wedding-hero/1920/1080';
+
+  const formattedDate = new Date(weddingDate).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  return (
+    <section id="home" className="relative h-[100vh] w-full text-white flex flex-col justify-center items-center">
+      <Image
+        src={imageSrc}
+        alt="Imagem do casal"
+        fill
+        className="object-cover"
+        priority
+        data-ai-hint="wedding couple elegant"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
+
+      <div className="relative z-10 flex h-full flex-col items-center justify-end text-center pb-20 md:pb-24">
+        <div className="container mx-auto flex flex-col items-center px-4">
+          <p className="animate-fade-in-up uppercase tracking-[0.2em] text-sm md:text-base" style={{ animationDelay: '0.1s' }}>
+            {formattedDate}
+          </p>
+          <h1 className="animate-fade-in-up font-headline text-6xl md:text-8xl lg:text-9xl my-2 md:my-4" style={{ animationDelay: '0.3s' }}>
+            {names}
+          </h1>
+          <p className="animate-fade-in-up text-lg md:text-xl italic max-w-2xl font-light" style={{ animationDelay: '0.5s' }}>
+            {romanticQuote}
+          </p>
+          <Button asChild size="lg" className="animate-fade-in-up mt-8 rounded-full shadow-lg bg-white text-gray-800 hover:bg-gray-200" style={{ animationDelay: '0.7s' }}>
+            <Link href="#rsvp">Confirmar Presença</Link>
+          </Button>
+
+          <div className="mt-12 md:mt-16 animate-fade-in-up" style={{ animationDelay: '0.9s' }}>
+            <Countdown targetDate={weddingDate} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Hero;
