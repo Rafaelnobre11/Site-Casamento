@@ -13,39 +13,21 @@ interface FirebaseServices {
   firestore: Firestore | null;
 }
 
-// Create a single instance of services to be shared across the app
-let firebaseServices: FirebaseServices | null = null;
+export function useFirebaseServices(): FirebaseServices {
+  const [services, setServices] = useState<FirebaseServices>({
+    app: null,
+    auth: null,
+    firestore: null,
+  });
 
-function initializeFirebaseServices(): FirebaseServices {
-  if (firebaseServices) {
-    return firebaseServices;
-  }
-  
-  if (firebaseConfig && firebaseConfig.apiKey) {
-    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  useEffect(() => {
+    const app =
+      getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     const auth = getAuth(app);
     const firestore = getFirestore(app);
 
-    firebaseServices = { app, auth, firestore };
-    return firebaseServices;
-  }
-  
-  return { app: null, auth: null, firestore: null };
-}
-
-
-export function useFirebaseServices(): FirebaseServices {
-  // Use state to make the component re-render once services are available.
-  const [services, setServices] = useState<FirebaseServices>(initializeFirebaseServices());
-
-  // Although we initialize sync, we can use an effect to be safe, 
-  // especially if the config were to load async in the future.
-  useEffect(() => {
-    if (!services.app) {
-        setServices(initializeFirebaseServices());
-    }
-  }, [services.app]);
-
+    setServices({ app, auth, firestore });
+  }, []);
 
   return services;
 }
