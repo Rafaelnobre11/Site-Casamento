@@ -19,9 +19,9 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const navLinks = [
-    { href: '#moments', label: texts.nav_story || 'Nossa Novela' },
-    { href: '#info', label: texts.nav_info || 'Onde Vai Ser o Rolê' },
-    { href: '#gifts', label: texts.nav_gifts || 'Manda PIX' },
+    { href: '#carousel', label: texts.nav_story || 'Nossa História' },
+    { href: '#event-info', label: texts.nav_info || 'O Grande Dia' },
+    { href: '#gifts', label: texts.nav_gifts || 'Presentes' },
   ];
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
         
         <div className="flex items-center gap-2">
           <Button asChild className="hidden rounded-full shadow hover:shadow-lg md:flex">
-            <Link href="#rsvp">{texts.nav_rsvp || 'Bora Confirmar!'}</Link>
+            <Link href="#rsvp">{texts.nav_rsvp || 'Confirmar Presença'}</Link>
           </Button>
 
           <div className="md:hidden">
@@ -104,7 +104,7 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
                     </nav>
                     <div className="mt-auto p-6">
                         <Button asChild className="w-full rounded-full shadow hover:shadow-lg">
-                            <Link href="#rsvp" onClick={() => setMobileMenuOpen(false)}>{texts.nav_rsvp || 'Bora Confirmar!'}</Link>
+                            <Link href="#rsvp" onClick={() => setMobileMenuOpen(false)}>{texts.nav_rsvp || 'Confirmar Presença'}</Link>
                         </Button>
                     </div>
                 </div>

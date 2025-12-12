@@ -4,14 +4,16 @@
 import { useState, useEffect } from 'react';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { SiteConfig } from '@/types/siteConfig';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Lock } from 'lucide-react';
 import Hero from '@/components/wedding/Hero';
 import PhotoCarousel from '@/components/wedding/PhotoCarousel';
 import RsvpSection from '@/components/wedding/RsvpSection';
 import EventInfo from '@/components/wedding/EventInfo';
 import GiftSection from '@/components/wedding/GiftSection';
 import Footer from '@/components/wedding/Footer';
+import Header from '@/components/landing-page/Header';
 import { defaultGifts } from '@/lib/default-gifts';
+import { cn } from '@/lib/utils';
 
 const defaultLayoutOrder = ['hero', 'carousel', 'countdown', 'rsvp', 'event', 'gifts'];
 
@@ -55,35 +57,51 @@ export default function Home() {
     carouselImages: [],
   };
   
-  const showGatedContent = isRsvpConfirmed || !(config.isContentLocked ?? true);
+  const isContentLocked = config.isContentLocked ?? true;
+  const showGatedContent = isRsvpConfirmed || !isContentLocked;
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#FBF9F6] text-[#4a4a4a]">
+      <Header texts={config.texts} names={config.names} logoUrl={config.logoUrl} />
       <main className="flex-1">
         <Hero 
           names={config.names}
           weddingDate={config.date}
-          romanticQuote="Duas almas, uma só história. O nosso 'para sempre' começa agora."
+          romanticQuote={config.texts?.hero_subtitle || "Duas almas, uma só história. O nosso 'para sempre' começa agora."}
           heroImage={config.heroImage}
         />
         <PhotoCarousel images={config.carouselImages} />
         <RsvpSection onRsvpConfirmed={handleRsvpConfirmed} />
         
-        {showGatedContent && (
-          <div className="animate-fade-in-up duration-1000">
-            <EventInfo
-              locationName={config.locationName}
-              address={config.locationAddress}
-              time={config.time}
-              wazeLink={config.wazeLink}
-              mapUrl={config.mapUrl}
-            />
-            <GiftSection 
-                products={config.products} 
-                pixKey={config.pixKey} 
-            />
-          </div>
-        )}
+        <div className="relative">
+             <div className={cn(
+                "transition-all duration-700", 
+                !showGatedContent && "content-locked"
+             )}>
+                <EventInfo
+                  locationName={config.locationName}
+                  address={config.locationAddress}
+                  time={config.time}
+                  wazeLink={config.wazeLink}
+                  mapUrl={config.mapUrl}
+                />
+                <GiftSection 
+                    products={config.products} 
+                    pixKey={config.pixKey} 
+                />
+            </div>
+             {!showGatedContent && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/30 backdrop-blur-sm z-10 text-center p-4">
+                    <Lock className="w-16 h-16 text-primary mb-4" />
+                    <h3 className="font-headline text-2xl text-primary-foreground bg-primary/80 px-4 py-2 rounded-md shadow-lg">
+                        {config.texts?.rsvp_lock_message_title || "🤫 Segredo, hein?"}
+                    </h3>
+                    <p className="mt-2 text-lg text-primary-foreground max-w-md bg-primary/80 px-4 py-2 rounded-md shadow-lg">
+                       {config.texts?.rsvp_lock_message_subtitle || "Calma, curioso! Primeiro diz que vai, depois a gente te mostra onde é a festa e como nos ajudar a ficar menos duros."}
+                    </p>
+                </div>
+            )}
+        </div>
 
       </main>
       <Footer names={config.names} />

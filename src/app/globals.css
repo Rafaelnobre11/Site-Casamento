@@ -105,3 +105,9 @@
     }
   }
 }
+
+@layer components {
+    .content-locked {
+        @apply blur-md pointer-events-none select-none;
+    }
+}
