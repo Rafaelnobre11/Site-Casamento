@@ -61,10 +61,6 @@ const Hero: React.FC<HeroProps> = ({
           <Button asChild size="lg" className="animate-fade-in-up mt-8 rounded-full shadow-lg bg-white text-gray-800 hover:bg-gray-200" style={{ animationDelay: '0.7s' }}>
             <Link href="#rsvp">Confirmar Presença</Link>
           </Button>
-
-          <div className="mt-12 md:mt-16 animate-fade-in-up" style={{ animationDelay: '0.9s' }}>
-            {weddingDate && <Countdown targetDate={weddingDate} />}
-          </div>
         </div>
       </div>
     </section>
@@ -72,3 +68,5 @@ const Hero: React.FC<HeroProps> = ({
 };
 
 export default Hero;
+
+    

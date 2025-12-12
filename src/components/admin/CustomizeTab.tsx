@@ -1,14 +1,15 @@
 'use client';
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, ChangeEvent } from 'react';
 import { useFirestore } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle, Calendar, Clock } from 'lucide-react';
+import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle, Calendar, Clock, Upload } from 'lucide-react';
 import type { SiteConfig } from '@/types/siteConfig';
 
 interface CustomizeTabProps {
@@ -30,6 +31,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
+    const [isUploading, setIsUploading] = useState<string | null>(null);
 
     const [formState, setFormState] = useState<SiteConfig>(config);
     
@@ -66,6 +68,37 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         const newImages = (formState.carouselImages || []).filter((_, i) => i !== index);
         handleFieldChange('carouselImages', newImages);
     };
+    
+    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, field: 'heroImage' | 'carousel', index?: number) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const storage = getStorage();
+        const fileRef = ref(storage, `site_images/${field}_${Date.now()}_${file.name}`);
+        
+        const uploadKey = field === 'carousel' ? `carousel-${index}`: 'heroImage';
+        setIsUploading(uploadKey);
+
+        try {
+            const snapshot = await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            if (field === 'heroImage') {
+                handleFieldChange('heroImage', downloadURL);
+            } else if (field === 'carousel' && index !== undefined) {
+                const newImages = [...(formState.carouselImages || [])];
+                newImages[index] = downloadURL;
+                handleFieldChange('carouselImages', newImages);
+            }
+            toast({ title: 'Sucesso!', description: 'A imagem foi carregada e o URL foi atualizado.' });
+        } catch (error) {
+            console.error("Image upload error:", error);
+            toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
+        } finally {
+            setIsUploading(null);
+        }
+    };
+
 
     const handleSave = () => {
         startTransition(async () => {
@@ -85,7 +118,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
             }
 
             try {
-                await setDocument(firestore, 'config/site', updatedState, { merge: true });
+                await setDocument(firestore, 'config/site', updatedState);
                 toast({ title: "Salvo!", description: `Suas personalizações foram salvas com sucesso.` });
             } catch (error) {
                 console.error("Error saving config:", error);
@@ -193,20 +226,34 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><ImageIcon /> Imagens Principais</CardTitle>
-                        <CardDescription>Cole a URL da imagem da capa e gerencie a galeria de fotos do site.</CardDescription>
+                        <CardDescription>Faça o upload da imagem da capa e gerencie a galeria de fotos do site.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-2">
-                            <Label htmlFor="hero-image-url">URL da Foto da Capa (Hero)</Label>
-                            <Input id="hero-image-url" type="text" placeholder="https://exemplo.com/sua-foto.jpg" value={formState.heroImage || ''} onChange={(e) => handleFieldChange('heroImage', e.target.value)} />
+                            <Label htmlFor="hero-image-url">Foto da Capa (Hero)</Label>
+                            <div className="flex items-center gap-2">
+                                <Input id="hero-image-url" type="text" placeholder="Cole o URL ou faça upload" value={formState.heroImage || ''} onChange={(e) => handleFieldChange('heroImage', e.target.value)} />
+                                <Button asChild variant="outline">
+                                    <label htmlFor="hero-upload" className="cursor-pointer">
+                                        {isUploading === 'heroImage' ? <Loader2 className="animate-spin" /> : <Upload />}
+                                        <input id="hero-upload" type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, 'heroImage')} disabled={isUploading === 'heroImage'} />
+                                    </label>
+                                </Button>
+                            </div>
                              {formState.heroImage && <img src={formState.heroImage} alt="Preview" className="mt-2 rounded-md max-h-48 object-cover w-full" />}
                         </div>
                         <div className="space-y-4">
                             <Label className="font-medium d-block">Galeria de Fotos (Carrossel)</Label>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {(formState.carouselImages || []).map((img, index) => (
                                 <div key={index} className="flex items-center gap-2">
                                     <Input value={img} onChange={(e) => handleCarouselChange(index, e.target.value)} placeholder="URL da imagem" />
+                                     <Button asChild variant="outline" size="icon">
+                                        <label htmlFor={`carousel-upload-${index}`} className="cursor-pointer">
+                                            {isUploading === `carousel-${index}` ? <Loader2 className="animate-spin" /> : <Upload className="h-4 w-4" />}
+                                            <input id={`carousel-upload-${index}`} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, 'carousel', index)} disabled={isUploading === `carousel-${index}`} />
+                                        </label>
+                                    </Button>
                                     <Button variant="ghost" size="icon" onClick={() => handleCarouselRemove(index)}><Trash2 className="text-destructive" /></Button>
                                 </div>
                                 ))}
@@ -262,11 +309,13 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
             </div>
             
             <CardFooter className="justify-end sticky bottom-0 bg-background/95 py-4 border-t z-10 -mx-8 px-8">
-                 <Button onClick={handleSave} disabled={isPending} size="lg">
-                    {isPending ? <Loader2 className="animate-spin" /> : <Save />}
-                    Salvar Todas as Alterações
+                 <Button onClick={handleSave} disabled={isPending || !!isUploading} size="lg">
+                    {isPending || isUploading ? <Loader2 className="animate-spin" /> : <Save />}
+                    {isUploading ? 'Aguardando Upload...' : 'Salvar Todas as Alterações'}
                 </Button>
             </CardFooter>
         </div>
     );
 }
+
+    

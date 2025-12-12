@@ -67,3 +67,5 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [] }) => {
 }
 
 export default PhotoCarousel;
+
+    
