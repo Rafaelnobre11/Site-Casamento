@@ -96,18 +96,26 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 .then(res => res.json())
                 .then(data => {
                     if (!data.erro) {
-                        const fullAddress = `${data.logradouro}, ${formState.addressNumber || ''} - ${data.bairro}, ${data.localidade} - ${data.uf}`;
-                        const waze = `https://www.waze.com/ul?q=${encodeURIComponent(fullAddress)}`;
-                        const gmapsEmbed = `https://www.google.com/maps/embed?q=${encodeURIComponent(fullAddress)}`;
+                        const street = data.logradouro || '';
+                        const number = formState.addressNumber || '';
+                        const neighborhood = data.bairro || '';
+                        const city = data.localidade || '';
+                        const state = data.uf || '';
+                        
+                        const fullAddressForMap = `${street}, ${number}, ${city}, ${state}`.trim();
+                        const fullAddressForDisplay = `${street}, ${neighborhood} - ${city}/${state}`;
+                        
+                        const waze = `https://www.waze.com/ul?q=${encodeURIComponent(fullAddressForMap)}`;
+                        const gmapsEmbed = `https://www.google.com/maps/embed?q=${encodeURIComponent(fullAddressForMap)}`;
                         
                         setFormState(prev => ({
                             ...prev,
-                            locationAddress: `${data.logradouro}, ${data.bairro} - ${data.localidade}/${data.uf}`,
+                            locationAddress: fullAddressForDisplay,
                             wazeLink: waze,
                             mapUrl: gmapsEmbed,
                         }));
                     }
-                });
+                }).catch(err => console.error("Falha ao buscar CEP:", err));
         }
     }, [formState.addressCep, formState.addressNumber]);
 
@@ -255,5 +263,3 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         </div>
     );
 }
-
-    
