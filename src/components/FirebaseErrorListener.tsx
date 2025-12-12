@@ -6,14 +6,16 @@ import { errorEmitter } from '@/firebase/error-emitter';
 
 export function FirebaseErrorListener() {
   useEffect(() => {
-    const unsubscribe = errorEmitter.on('permission-error', (error) => {
+    const handleError = (error: any) => {
       // We are throwing this error to make it visible in the Next.js error overlay
       // during development. This helps with debugging security rules.
       throw error;
-    });
+    };
+    
+    errorEmitter.on('permission-error', handleError);
+
     return () => {
-      // @ts-expect-error - we are not using all of the EventEmitter methods.
-      unsubscribe();
+      errorEmitter.removeListener('permission-error', handleError);
     };
   }, []);
 
