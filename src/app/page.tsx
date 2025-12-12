@@ -45,8 +45,9 @@ export default function Home() {
 
   // Fallback to a default config if nothing is in the database
   const config = siteConfig || {
-    names: 'Jéssica & Lucas',
+    names: 'Cláudia & Rafael',
     date: '2025-09-21T16:00:00',
+    time: '16:00',
     locationName: 'Vila das Amoreiras',
     locationAddress: 'R. Funchal, 500 - Vila Olímpia, São Paulo - SP',
     mapUrl: 'https://maps.google.com/maps?q=Rua+Funchal%2C+500+-+Vila+Ol%C3%ADmpia%2C+S%C3%A3o+Paulo+-+SP&z=15&output=embed',

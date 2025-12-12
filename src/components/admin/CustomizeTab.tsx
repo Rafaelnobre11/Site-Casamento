@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle } from 'lucide-react';
+import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle, Calendar, Clock } from 'lucide-react';
 import type { SiteConfig } from '@/types/siteConfig';
 
 interface CustomizeTabProps {
@@ -87,7 +87,6 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 return;
             };
 
-            // Create a mutable copy to update before saving
             let updatedState = { ...formState };
 
             if (updatedState.locationAddress && updatedState.addressNumber) {
@@ -108,7 +107,6 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         });
     };
     
-    // Effect for CEP lookup
     useEffect(() => {
         const cep = formState.addressCep?.replace(/\D/g, '');
         if (cep && cep.length === 8) {
@@ -137,18 +135,28 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 <Card>
                     <CardHeader>
                         <CardTitle>Identidade do Casal</CardTitle>
-                        <CardDescription>Defina os nomes e a identidade visual do site.</CardDescription>
+                        <CardDescription>Defina os nomes, a identidade visual, data e hora do casamento.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="couple-names">Nome do Casal (ex: J & L)</Label>
-                            <Input id="couple-names" value={formState.names || ''} onChange={(e) => handleFieldChange('names', e.target.value)} />
+                         <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="couple-names">Nome do Casal (ex: Cláudia & Rafael)</Label>
+                                <Input id="couple-names" value={formState.names || ''} onChange={(e) => handleFieldChange('names', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="logo-image">Logo / Brasão (Opcional)</Label>
+                                <Input id="logo-image" type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'logoUrl')}/>
+                                {formState.logoUrl && <img src={formState.logoUrl} alt="Preview" className="mt-2 rounded-md max-h-20 object-contain bg-muted p-2" />}
+                            </div>
                         </div>
                         <div className="grid md:grid-cols-2 gap-6">
+                           <div className="space-y-2">
+                                <Label htmlFor="wedding-date" className="flex items-center gap-2"><Calendar /> Data do Casamento</Label>
+                                <Input id="wedding-date" type="date" value={formState.date?.substring(0, 10) || ''} onChange={(e) => handleFieldChange('date', `${e.target.value}T${formState.time || '16:00'}:00`)} />
+                            </div>
                             <div className="space-y-2">
-                                <Label htmlFor="logo-image">Logo / Brasão</Label>
-                                <Input id="logo-image" type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'logoUrl')}/>
-                                {formState.logoUrl && <img src={formState.logoUrl} alt="Preview" className="mt-2 rounded-md max-h-32 object-contain bg-muted p-2" />}
+                                <Label htmlFor="wedding-time" className="flex items-center gap-2"><Clock /> Hora da Cerimônia</Label>
+                                <Input id="wedding-time" type="time" value={formState.time || ''} onChange={(e) => handleFieldChange('time', e.target.value)} />
                             </div>
                         </div>
                     </CardContent>

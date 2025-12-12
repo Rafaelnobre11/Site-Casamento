@@ -59,17 +59,19 @@ const EventInfo: React.FC<EventInfoProps> = ({
           </div>
           
           <div className="lg:col-span-3 h-full min-h-[400px]">
-            <Card className="overflow-hidden shadow-lg h-full w-full">
-              <iframe
-                src={mapUrl || ''}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen={true}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
-            </Card>
+            {mapUrl && (
+              <Card className="overflow-hidden shadow-lg h-full w-full">
+                <iframe
+                  src={mapUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={true}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </Card>
+            )}
           </div>
         </div>
       </div>

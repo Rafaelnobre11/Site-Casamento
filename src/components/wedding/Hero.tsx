@@ -15,7 +15,7 @@ interface HeroProps {
 }
 
 const Hero: React.FC<HeroProps> = ({ 
-  names = 'Jéssica & Lucas', 
+  names = 'Cláudia & Rafael', 
   weddingDate = '2025-09-21T16:00:00',
   romanticQuote = "Duas almas, uma só história. O nosso 'para sempre' começa agora.",
   heroImage
@@ -23,11 +23,16 @@ const Hero: React.FC<HeroProps> = ({
   const defaultHeroImage = PlaceHolderImages.find((p) => p.id === 'hero-bg');
   const imageSrc = heroImage || defaultHeroImage?.imageUrl || 'https://picsum.photos/seed/wedding-hero/1920/1080';
 
-  const formattedDate = new Date(weddingDate).toLocaleDateString('pt-BR', {
+  const formattedDate = weddingDate ? new Date(weddingDate).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
-  });
+    timeZone: 'UTC' // Add timezone to avoid off-by-one day errors
+  }) : '';
+
+  const nameParts = names.split('&');
+  const name1 = nameParts[0] ? nameParts[0].trim() : '';
+  const name2 = nameParts[1] ? nameParts[1].trim() : '';
 
   return (
     <section id="home" className="relative h-[100vh] w-full text-white flex flex-col justify-center items-center">
@@ -48,7 +53,7 @@ const Hero: React.FC<HeroProps> = ({
             {formattedDate}
           </p>
           <h1 className="animate-fade-in-up font-headline text-6xl md:text-8xl lg:text-9xl my-2 md:my-4" style={{ animationDelay: '0.3s' }}>
-            {names}
+            {name1} <span className="text-primary">&amp;</span> {name2}
           </h1>
           <p className="animate-fade-in-up text-lg md:text-xl italic max-w-2xl font-light" style={{ animationDelay: '0.5s' }}>
             {romanticQuote}
@@ -58,7 +63,7 @@ const Hero: React.FC<HeroProps> = ({
           </Button>
 
           <div className="mt-12 md:mt-16 animate-fade-in-up" style={{ animationDelay: '0.9s' }}>
-            <Countdown targetDate={weddingDate} />
+            {weddingDate && <Countdown targetDate={weddingDate} />}
           </div>
         </div>
       </div>
