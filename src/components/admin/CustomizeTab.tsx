@@ -96,14 +96,13 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 .then(res => res.json())
                 .then(data => {
                     if (!data.erro) {
-                        const address = `${data.logradouro}, ${data.bairro} - ${data.localidade}/${data.uf}`;
-                        const waze = `https://www.waze.com/ul?q=${encodeURIComponent(`${address}, ${formState.addressNumber}`)}`;
-                        // Use the public, key-less embed URL
-                        const gmapsEmbed = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.0000000000005!2d-46.70000000000001!3d-23.580000000000005!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDM0JzQ4LjAiUyA0NsKwNDInMDAuMCJX!5e0!3m2!1sen!2sbr!4v1622573836063!5m2!1sen!2sbr&q=${encodeURIComponent(`${data.logradouro}, ${formState.addressNumber}, ${data.localidade} - ${data.uf}`)}`;
+                        const fullAddress = `${data.logradouro}, ${formState.addressNumber || ''} - ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                        const waze = `https://www.waze.com/ul?q=${encodeURIComponent(fullAddress)}`;
+                        const gmapsEmbed = `https://www.google.com/maps/embed?q=${encodeURIComponent(fullAddress)}`;
                         
                         setFormState(prev => ({
                             ...prev,
-                            locationAddress: address,
+                            locationAddress: `${data.logradouro}, ${data.bairro} - ${data.localidade}/${data.uf}`,
                             wazeLink: waze,
                             mapUrl: gmapsEmbed,
                         }));
@@ -256,3 +255,5 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         </div>
     );
 }
+
+    
