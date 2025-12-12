@@ -69,22 +69,22 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         handleFieldChange('carouselImages', newImages);
     };
     
-    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, field: 'heroImage' | 'carousel', index?: number) => {
+    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, field: 'heroImage' | 'carousel' | 'logoUrl', index?: number) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         const storage = getStorage();
         const fileRef = ref(storage, `site_images/${field}_${Date.now()}_${file.name}`);
         
-        const uploadKey = field === 'carousel' ? `carousel-${index}`: 'heroImage';
+        const uploadKey = field === 'carousel' ? `carousel-${index}`: field;
         setIsUploading(uploadKey);
 
         try {
             const snapshot = await uploadBytes(fileRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
 
-            if (field === 'heroImage') {
-                handleFieldChange('heroImage', downloadURL);
+            if (field === 'heroImage' || field === 'logoUrl') {
+                handleFieldChange(field, downloadURL);
             } else if (field === 'carousel' && index !== undefined) {
                 const newImages = [...(formState.carouselImages || [])];
                 newImages[index] = downloadURL;
@@ -165,7 +165,15 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="logo-url">URL do Logo / Brasão (Opcional)</Label>
-                                <Input id="logo-url" type="text" placeholder="Cole a URL da imagem aqui" value={formState.logoUrl || ''} onChange={(e) => handleFieldChange('logoUrl', e.target.value)} />
+                                <div className="flex items-center gap-2">
+                                    <Input id="logo-url" type="text" placeholder="Cole a URL ou faça upload" value={formState.logoUrl || ''} onChange={(e) => handleFieldChange('logoUrl', e.target.value)} />
+                                    <Button asChild variant="outline">
+                                        <label htmlFor="logo-upload" className="cursor-pointer">
+                                            {isUploading === 'logoUrl' ? <Loader2 className="animate-spin" /> : <Upload />}
+                                            <input id="logo-upload" type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} disabled={isUploading === 'logoUrl'} />
+                                        </label>
+                                    </Button>
+                                </div>
                                 {formState.logoUrl && <img src={formState.logoUrl} alt="Preview" className="mt-2 rounded-md max-h-20 object-contain bg-muted p-2" />}
                             </div>
                         </div>
@@ -317,5 +325,3 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         </div>
     );
 }
-
-    
