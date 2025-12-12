@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition, useEffect, useMemo } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useFirestore } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle, Sparkles } from 'lucide-react';
+import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle } from 'lucide-react';
 import type { SiteConfig } from '@/types/siteConfig';
 
 interface CustomizeTabProps {
@@ -88,17 +88,14 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
 
             if (updatedState.locationAddress && updatedState.addressNumber) {
                 const fullAddressForMap = `${updatedState.locationAddress}, ${updatedState.addressNumber}`;
-                const gmapsEmbedUrl = `https://www.google.com/maps/embed?q=${encodeURIComponent(fullAddressForMap)}`;
-                updatedState.mapUrl = gmapsEmbedUrl;
+                updatedState.mapUrl = `https://www.google.com/maps/embed?q=${encodeURIComponent(fullAddressForMap)}`;
             }
 
             await setDocument(firestore, 'config/site', updatedState);
-            setFormState(updatedState); // Sync local state with what was saved
             toast({ title: "Salvo!", description: `Suas personalizações foram salvas.` });
         });
     };
     
-    // Auto-fetch address from CEP when typing
     useEffect(() => {
         const cep = formState.addressCep?.replace(/\D/g, '');
         if (cep && cep.length === 8) {
@@ -110,7 +107,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                         const neighborhood = data.bairro || '';
                         const city = data.localidade || '';
                         const state = data.uf || '';
-                        const fullAddressForDisplay = `${street}, ${neighborhood}, ${city}, ${state}`;
+                        const fullAddressForDisplay = `${street}, ${neighborhood}, ${city} - ${state}`;
                         
                         setFormState(prev => ({
                             ...prev,
