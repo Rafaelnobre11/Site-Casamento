@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useFirestore } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -83,12 +83,39 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     const handleSave = () => {
         startTransition(async () => {
             if (!firestore) return;
-            await setDocument(firestore, 'config/site', formState);
+            // Before saving, recalculate the map URL to ensure it's up to date
+            const cep = formState.addressCep?.replace(/\D/g, '');
+             if (cep && cep.length === 8) {
+                 try {
+                    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                    const data = await res.json();
+                     if (!data.erro) {
+                        const street = data.logradouro || '';
+                        const number = formState.addressNumber || '';
+                        const city = data.localidade || '';
+                        const state = data.uf || '';
+                        const fullAddressForMap = `${street}, ${number}, ${city}, ${state}`.trim();
+                        const gmapsEmbed = `https://www.google.com/maps/embed?q=${encodeURIComponent(fullAddressForMap)}`;
+                        
+                        const updatedState = { ...formState, mapUrl: gmapsEmbed };
+                        setFormState(updatedState); // Update state before saving
+                        await setDocument(firestore, 'config/site', updatedState);
+                     } else {
+                        // If CEP is invalid, save without changing mapUrl
+                        await setDocument(firestore, 'config/site', formState);
+                     }
+                 } catch (err) {
+                    console.error("Falha ao buscar CEP no salvamento:", err);
+                    await setDocument(firestore, 'config/site', formState); // Save current state on fetch error
+                 }
+             } else {
+                 await setDocument(firestore, 'config/site', formState); // Save if no CEP
+             }
             toast({ title: "Salvo!", description: `Suas personalizações foram salvas.` });
         });
     };
     
-    // Auto-fetch address from CEP
+    // Auto-fetch address from CEP when typing
     useEffect(() => {
         const cep = formState.addressCep?.replace(/\D/g, '');
         if (cep && cep.length === 8) {
@@ -97,27 +124,34 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 .then(data => {
                     if (!data.erro) {
                         const street = data.logradouro || '';
-                        const number = formState.addressNumber || '';
                         const neighborhood = data.bairro || '';
                         const city = data.localidade || '';
                         const state = data.uf || '';
-                        
-                        const fullAddressForMap = `${street}, ${number}, ${city}, ${state}`.trim();
                         const fullAddressForDisplay = `${street}, ${neighborhood} - ${city}/${state}`;
-                        
-                        const waze = `https://www.waze.com/ul?q=${encodeURIComponent(fullAddressForMap)}`;
-                        const gmapsEmbed = `https://www.google.com/maps/embed?q=${encodeURIComponent(fullAddressForMap)}`;
                         
                         setFormState(prev => ({
                             ...prev,
                             locationAddress: fullAddressForDisplay,
-                            wazeLink: waze,
-                            mapUrl: gmapsEmbed,
                         }));
                     }
                 }).catch(err => console.error("Falha ao buscar CEP:", err));
         }
-    }, [formState.addressCep, formState.addressNumber]);
+    }, [formState.addressCep]);
+
+    // Memoize the map URL to prevent re-renders, but ensure it's calculated on load
+    const mapUrl = useMemo(() => {
+        const cep = formState.addressCep?.replace(/\D/g, '');
+        if (cep && cep.length === 8 && formState.addressNumber && formState.locationAddress) {
+             const addressParts = formState.locationAddress.split(/, | - /);
+             if (addressParts.length >= 3) {
+                 const street = addressParts[0];
+                 const cityState = addressParts.slice(2).join(', ');
+                 const fullAddressForMap = `${street}, ${formState.addressNumber}, ${cityState}`;
+                 return `https://www.google.com/maps/embed?q=${encodeURIComponent(fullAddressForMap)}`;
+             }
+        }
+        return formState.mapUrl || ''; // Fallback to whatever is in the state/db
+    }, [formState.addressCep, formState.addressNumber, formState.locationAddress, formState.mapUrl]);
 
     return (
         <div className="grid gap-6 relative">
