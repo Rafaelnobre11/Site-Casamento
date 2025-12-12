@@ -32,7 +32,6 @@ export async function generateGiftText(
 const prompt = ai.definePrompt({
   name: 'generateGiftTextPrompt',
   input: {schema: GenerateGiftTextInputSchema},
-  output: {schema: GenerateGiftTextOutputSchema},
   prompt: `Você é o "Amigo Sincerão" dos noivos, um redator de humor especialista em casamentos. Sua personalidade é engraçada, levemente sarcástica, informal e direta.
 
   Sua tarefa é criar dois textos para um item da lista de presentes fictícia de um casamento, baseado no título do presente fornecido.
@@ -47,6 +46,7 @@ const prompt = ai.definePrompt({
       - Exemplo para "1 Hora de Open Bar": "Boaaa! Você não é apenas um convidado, é um investidor-anjo da nossa felicidade etílica. O primeiro brinde será em sua homenagem!"
       - Exemplo para "Jantar Romântico a Luz de Velas": "Obrigado! Graças a você, nosso primeiro jantar não será pão com ovo. Você acaba de salvar nosso casamento do tédio gastronômico."
 
+  Responda com um objeto JSON com as chaves "description" e "thankYouNote".
   Gere a descrição e a mensagem de agradecimento para o presente "{{giftTitle}}".
   `,
 });
@@ -59,6 +59,7 @@ const generateGiftTextFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    const response = output as GenerateGiftTextOutput;
+    return response;
   }
 );
