@@ -82,20 +82,34 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
 
     const handleSave = () => {
         startTransition(async () => {
-            if (!firestore) return;
+            if (!firestore) {
+                toast({ variant: 'destructive', title: "Erro de Conexão", description: "Não foi possível conectar ao banco de dados." });
+                return;
+            };
 
+            // Create a mutable copy to update before saving
             let updatedState = { ...formState };
 
+            // --- Reliable Map and Waze Link Generation ---
             if (updatedState.locationAddress && updatedState.addressNumber) {
                 const fullAddressForMap = `${updatedState.locationAddress}, ${updatedState.addressNumber}`;
-                updatedState.mapUrl = `https://www.google.com/maps/embed?q=${encodeURIComponent(fullAddressForMap)}`;
+                const encodedAddress = encodeURIComponent(fullAddressForMap);
+                
+                updatedState.mapUrl = `https://www.google.com/maps/embed?q=${encodedAddress}`;
+                updatedState.wazeLink = `https://www.waze.com/ul?q=${encodedAddress}`;
             }
 
-            await setDocument(firestore, 'config/site', updatedState);
-            toast({ title: "Salvo!", description: `Suas personalizações foram salvas.` });
+            try {
+                await setDocument(firestore, 'config/site', updatedState);
+                toast({ title: "Salvo!", description: `Suas personalizações foram salvas com sucesso.` });
+            } catch (error) {
+                console.error("Error saving config:", error);
+                toast({ variant: 'destructive', title: "Erro ao Salvar", description: "Não foi possível salvar as configurações." });
+            }
         });
     };
     
+    // Effect for CEP lookup
     useEffect(() => {
         const cep = formState.addressCep?.replace(/\D/g, '');
         if (cep && cep.length === 8) {
@@ -211,7 +225,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><MapPin /> Localização do Evento</CardTitle>
-                        <CardDescription>Forneça os detalhes do endereço para o sistema gerar os mapas e links automaticamente.</CardDescription>
+                        <CardDescription>Forneça os detalhes do endereço para o sistema gerar os mapas e links automaticamente ao salvar.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
