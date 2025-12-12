@@ -14,11 +14,11 @@ interface EventInfoProps {
 }
 
 const EventInfo: React.FC<EventInfoProps> = ({
-  locationName = "Vila das Amoreiras",
-  address = "Rua Funchal, 500 - Vila Olímpia, São Paulo - SP",
-  time = "16:00",
-  wazeLink = "https://www.waze.com/ul?q=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo",
-  mapUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3656.749033036691!2d-46.6963980844747!3d-23.57791926830578!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce57a6e1f0c29f%3A0x1d3a0a3a7b6c7a7e!2sRua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo%20-%20SP%2C%2004551-060!5e0!3m2!1sen!2sbr!4v1622573836063!5m2!1sen!2sbr"
+  locationName,
+  address,
+  time,
+  wazeLink,
+  mapUrl
 }) => {
   return (
     <section id="event-info" className="w-full py-16 md:py-24 bg-white">
@@ -37,8 +37,8 @@ const EventInfo: React.FC<EventInfoProps> = ({
                 <MapPin className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold">{locationName}</h3>
-                <p className="text-muted-foreground">{address}</p>
+                <h3 className="text-lg font-bold">{locationName || "Nome do Local"}</h3>
+                <p className="text-muted-foreground">{address || "Endereço do evento"}</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -47,7 +47,7 @@ const EventInfo: React.FC<EventInfoProps> = ({
               </div>
               <div>
                 <h3 className="text-lg font-bold">Horário da Cerimônia</h3>
-                <p className="text-muted-foreground">Às {time}</p>
+                <p className="text-muted-foreground">Às {time || "16:00"}</p>
               </div>
             </div>
             <Button asChild size="lg" className="w-full bg-[#C5A086] hover:bg-[#b89176] text-white">
@@ -61,7 +61,7 @@ const EventInfo: React.FC<EventInfoProps> = ({
           <div className="lg:col-span-3 h-full min-h-[400px]">
             <Card className="overflow-hidden shadow-lg h-full w-full">
               <iframe
-                src={mapUrl}
+                src={mapUrl || ''}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
