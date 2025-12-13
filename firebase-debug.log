@@ -1733,3 +1733,21 @@
 [error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
 [debug] [2025-12-13T07:08:42.408Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
 [debug] [2025-12-13T07:08:42.409Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-13T08:04:43.629Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-13T08:04:43.629Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-13T08:04:43.638Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-13T08:04:43.639Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[debug] [2025-12-13T08:04:43.644Z] Checked if tokens are valid: false, expires at: 1765613318711
+[debug] [2025-12-13T08:04:43.644Z] Checked if tokens are valid: false, expires at: 1765613318711
+[debug] [2025-12-13T08:04:43.644Z] > refreshing access token with scopes: []
+[debug] [2025-12-13T08:04:43.645Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-13T08:04:43.645Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T08:04:43.687Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-13T08:04:43.687Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-13T08:04:43.711Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/meu-casamento-d28e1 [none]
+[debug] [2025-12-13T08:04:43.773Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/meu-casamento-d28e1 200
+[debug] [2025-12-13T08:04:43.774Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/meu-casamento-d28e1 {"projectNumber":"212546661288","projectId":"meu-casamento-d28e1","lifecycleState":"ACTIVE","name":"Meu Casamento","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-12-08T14:47:16.040397Z"}
