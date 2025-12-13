@@ -17,6 +17,23 @@ interface CustomizeTabProps {
     config: SiteConfig;
 }
 
+const ColorInput = ({ label, value, onChange, placeholder }: { label: string, value: string, onChange: (value: string) => void, placeholder?: string }) => (
+    <div className="space-y-2">
+        <Label>{label}</Label>
+        <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-md border-2 border-muted-foreground/20 p-1 bg-white">
+                <div className="w-full h-full rounded" style={{ backgroundColor: value || 'transparent' }}></div>
+            </div>
+            <Input 
+                value={value} 
+                onChange={(e) => onChange(e.target.value)} 
+                placeholder={placeholder}
+            />
+        </div>
+    </div>
+);
+
+
 export default function CustomizeTab({ config }: CustomizeTabProps) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
@@ -186,20 +203,20 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="p-4 border rounded-lg bg-background">
-                            <Label htmlFor="main-color" className="font-semibold mb-2 block">Cor Principal</Label>
+                            <Label htmlFor="main-color" className="font-semibold mb-2 block">Cor Principal (Gera Paleta Inteligente)</Label>
                             <div className="flex items-center gap-4">
-                                <div className="p-1 border rounded-md">
-                                    <div className="w-8 h-8 rounded" style={{ backgroundColor: formState.customColor || '#e85d3f' }} />
+                                <div className="p-1 border-2 border-muted-foreground/20 rounded-md bg-white">
+                                    <div className="w-10 h-10 rounded" style={{ backgroundColor: formState.customColor || '#e85d3f' }} />
                                 </div>
                                 <div className="flex-1">
                                     <Input 
                                         id="main-color"
                                         value={formState.customColor || ''}
                                         onChange={(e) => handleFieldChange('customColor', e.target.value)}
-                                        placeholder="#e85d3f ou terracotta" 
+                                        placeholder="ex: Marsala, Azul Serenity, #e85d3f" 
                                     />
                                     <p className="text-xs text-muted-foreground mt-2">
-                                      Escreva um código de cor (ex: #e85d3f) ou um nome em inglês (ex: 'terracotta').
+                                      Escreva um nome de cor (em português ou inglês) ou um código de cor.
                                     </p>
                                 </div>
                             </div>
@@ -215,25 +232,13 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                                 </AccordionTrigger>
                                 <AccordionContent className="pt-4">
                                     <div className="grid md:grid-cols-2 gap-x-6 gap-y-4 p-4 border rounded-lg bg-muted/50">
-                                        <div className="space-y-2">
-                                            <Label>Fundo do Botão</Label>
-                                            <Input value={formState.customColors?.buttonBg || ''} onChange={(e) => handleColorChange('buttonBg', e.target.value)} placeholder="Automático" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Texto do Botão</Label>
-                                            <Input value={formState.customColors?.buttonText || ''} onChange={(e) => handleColorChange('buttonText', e.target.value)} placeholder="Automático" />
-                                        </div>
-                                         <div className="space-y-2">
-                                            <Label>Texto dos Títulos</Label>
-                                            <Input value={formState.customColors?.headingText || ''} onChange={(e) => handleColorChange('headingText', e.target.value)} placeholder="Automático" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Texto do Corpo</Label>
-                                            <Input value={formState.customColors?.bodyText || ''} onChange={(e) => handleColorChange('bodyText', e.target.value)} placeholder="Automático" />
-                                        </div>
+                                        <ColorInput label="Fundo do Botão" value={formState.customColors?.buttonBg || ''} onChange={(value) => handleColorChange('buttonBg', value)} placeholder="Automático" />
+                                        <ColorInput label="Texto do Botão" value={formState.customColors?.buttonText || ''} onChange={(value) => handleColorChange('buttonText', value)} placeholder="Automático" />
+                                        <ColorInput label="Texto dos Títulos" value={formState.customColors?.headingText || ''} onChange={(value) => handleColorChange('headingText', value)} placeholder="Automático" />
+                                        <ColorInput label="Texto do Corpo" value={formState.customColors?.bodyText || ''} onChange={(value) => handleColorChange('bodyText', value)} placeholder="Automático" />
                                     </div>
                                      <p className="text-xs text-muted-foreground mt-2 px-1">
-                                        Deixe em branco para usar a paleta gerada automaticamente a partir da cor principal. Preencha para substituir uma cor específica.
+                                        Deixe em branco para usar a paleta gerada automaticamente. Preencha para substituir uma cor específica.
                                     </p>
                                 </AccordionContent>
                             </AccordionItem>
