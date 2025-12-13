@@ -17,6 +17,7 @@ import { Loader2, Frown, Users, Check, PartyPopper } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { getCharmingMessage, getWittyDeclineMessage } from '@/app/actions';
 
 const identificationSchema = z.object({
   name: z.string().min(3, { message: 'Por favor, insira o seu nome completo.' }),
@@ -28,10 +29,6 @@ const identificationSchema = z.object({
 const rsvpSchema = z.object({
   message: z.string().optional(),
   confirmedGuests: z.coerce.number().min(1, "Selecione o número de convidados."),
-  additionalGuests: z.array(z.object({
-    name: z.string().min(3, 'Nome do convidado adicional é obrigatório.'),
-    age: z.coerce.number().positive("Idade deve ser um número positivo.").optional(),
-  })).optional(),
 });
 
 type FormStage = 'initial' | 'found' | 'loading' | 'success' | 'declined' | 'error';
@@ -53,6 +50,7 @@ const SuccessIcon = () => (
 const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }) => {
   const [stage, setStage] = useState<FormStage>('initial');
   const [guestInfo, setGuestInfo] = useState<GuestInfo | null>(null);
+  const [generatedMessage, setGeneratedMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isPending, startTransition] = useTransition();
   const { firestore } = useFirebase();
@@ -64,15 +62,8 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
 
   const rsvpForm = useForm<z.infer<typeof rsvpSchema>>({
     resolver: zodResolver(rsvpSchema),
-    defaultValues: { message: '', confirmedGuests: 1, additionalGuests: [] },
+    defaultValues: { message: '', confirmedGuests: 1 },
   });
-  
-  const { fields, append, remove } = useFieldArray({
-    control: rsvpForm.control,
-    name: "additionalGuests",
-  });
-
-  const confirmedGuestsValue = rsvpForm.watch('confirmedGuests');
 
   async function handleSearchGuest({ name, phone }: z.infer<typeof identificationSchema>) {
     if (!firestore) {
@@ -104,7 +95,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
 
         if (dbFirstName === inputFirstName) {
            setGuestInfo({ id: guestDoc.id, name: guestData.name, maxGuests: guestData.maxGuests });
-           rsvpForm.reset({ confirmedGuests: guestData.maxGuests, message: '', additionalGuests: [] });
+           rsvpForm.reset({ confirmedGuests: guestData.maxGuests, message: '' });
            setStage('found');
         } else {
             setErrorMessage('O nome não corresponde ao telefone na nossa lista. Verifique os dados.');
@@ -127,15 +118,21 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
         status: willAttend ? 'confirmed' : 'declined',
         confirmedGuests: willAttend ? values.confirmedGuests : 0,
         message: values.message || '',
-        additionalGuests: values.additionalGuests || [],
       };
 
       await setDocument(firestore, `guests/${guestInfo.id}`, rsvpData, { merge: true });
 
       if (willAttend) {
+        const result = await getCharmingMessage({
+          guestName: guestInfo.name,
+          numberOfAttendees: values.confirmedGuests
+        });
+        setGeneratedMessage(result.message);
         onRsvpConfirmed();
         setStage('success');
       } else {
+        const result = await getWittyDeclineMessage({ guestName: guestInfo.name });
+        setGeneratedMessage(result.message);
         setStage('declined');
       }
     });
@@ -156,7 +153,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
           <div className="flex flex-col items-center text-center p-6 md:p-8 space-y-4 min-h-[350px] justify-center">
             <SuccessIcon />
             <h3 className="font-headline text-2xl text-primary mt-4">Presença Confirmada!</h3>
-            <p className="text-muted-foreground">Mal podemos esperar para celebrar com você. Obrigado!</p>
+            <p className="text-muted-foreground">{generatedMessage || 'Mal podemos esperar para celebrar com você. Obrigado!'}</p>
             <Button 
               onClick={() => {
                 const giftSection = document.getElementById('gifts');
@@ -176,7 +173,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
           <div className="flex flex-col items-center text-center p-6 md:p-8 space-y-4 min-h-[350px] justify-center">
             <Frown className="w-16 h-16 text-amber-500" />
             <h3 className="font-headline text-2xl text-primary mt-4">Que pena!</h3>
-            <p className="text-muted-foreground">Sentiremos sua falta, mas agradecemos por nos avisar.</p>
+            <p className="text-muted-foreground">{generatedMessage || 'Sentiremos sua falta, mas agradecemos por nos avisar.'}</p>
           </div>
         );
       case 'error':
@@ -205,16 +202,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Quantas pessoas irão?</FormLabel>
-                            <Select onValueChange={(value) => {
-                                field.onChange(parseInt(value));
-                                const count = parseInt(value);
-                                const diff = count > 1 ? count - 1 - fields.length : -fields.length;
-                                if (diff > 0) {
-                                    for (let i = 0; i < diff; i++) append({ name: '', age: undefined });
-                                } else if (diff < 0) {
-                                    for (let i = 0; i < -diff; i++) remove(fields.length - 1 - i);
-                                }
-                            }} defaultValue={String(field.value)}>
+                            <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={String(field.value)}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                                 <SelectContent>
                                     {Array.from({ length: guestInfo.maxGuests }, (_, i) => i + 1).map(num => (
@@ -226,38 +214,6 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
                           </FormItem>
                         )}
                       />
-                  )}
-
-                  {confirmedGuestsValue > 1 && (
-                     <div className="space-y-4 rounded-md border p-4">
-                        <h4 className="font-medium">Confirme os acompanhantes:</h4>
-                        {fields.map((field, index) => (
-                             <div key={field.id} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center">
-                                <FormField
-                                    control={rsvpForm.control}
-                                    name={`additionalGuests.${index}.name`}
-                                    render={({ field }) => (
-                                        <FormItem className="sm:col-span-3">
-                                            <FormLabel className="sr-only">Nome do Acompanhante</FormLabel>
-                                            <FormControl><Input placeholder={`Nome do acompanhante ${index + 1}`} {...field} /></FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={rsvpForm.control}
-                                    name={`additionalGuests.${index}.age`}
-                                    render={({ field }) => (
-                                        <FormItem className="sm:col-span-2">
-                                             <FormLabel className="sr-only">Idade</FormLabel>
-                                             <FormControl><Input type="number" placeholder="Idade (opcional)" {...field} /></FormControl>
-                                             <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        ))}
-                     </div>
                   )}
                   
                   <FormField
@@ -351,5 +307,3 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
 };
 
 export default RsvpSection;
-
-    
