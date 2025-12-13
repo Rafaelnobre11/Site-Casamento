@@ -9,29 +9,45 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle, Calendar, Clock, Upload, ChevronDown } from 'lucide-react';
+import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle, Calendar, Clock, Upload, ChevronDown, ChevronsUpDown, Check } from 'lucide-react';
 import type { SiteConfig } from '@/types/siteConfig';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { colorToHsl, colorStringToHex } from '@/lib/color-utils';
+import { cn } from '@/lib/utils';
+import { colorPalette } from '@/lib/color-palette';
+
 
 interface CustomizeTabProps {
     config: SiteConfig;
 }
 
-const ColorInput = ({ label, value, onChange, placeholder }: { label: string, value: string, onChange: (value: string) => void, placeholder?: string }) => (
-    <div className="space-y-2">
-        <Label>{label}</Label>
-        <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-md border-2 border-muted-foreground/20 p-1 bg-white">
-                <div className="w-full h-full rounded" style={{ backgroundColor: value || 'transparent' }}></div>
+const ColorInput = ({ label, value, onChange, placeholder }: { label: string, value: string, onChange: (value: string) => void, placeholder?: string }) => {
+    const displayValue = value || placeholder;
+    const hexColor = colorStringToHex(displayValue) || '#transparent';
+
+    return (
+        <div className="space-y-2">
+            <Label>{label}</Label>
+            <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-md border-2 border-muted-foreground/20 p-1 bg-white">
+                    <div className="w-full h-full rounded" style={{ backgroundColor: hexColor }}></div>
+                </div>
+                <Input 
+                    value={value || ''} 
+                    onChange={(e) => onChange(e.target.value)} 
+                    placeholder={placeholder}
+                />
             </div>
-            <Input 
-                value={value} 
-                onChange={(e) => onChange(e.target.value)} 
-                placeholder={placeholder}
-            />
         </div>
-    </div>
-);
+    );
+};
+
+const ColorSwatch = ({ color }: { color: string }) => {
+  const hexColor = colorStringToHex(color);
+  return <div className="w-4 h-4 rounded-full border" style={{ backgroundColor: hexColor || 'transparent' }} />;
+};
 
 
 export default function CustomizeTab({ config }: CustomizeTabProps) {
@@ -39,6 +55,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const [isUploading, setIsUploading] = useState(false);
+    const [openColorPopover, setOpenColorPopover] = useState(false);
 
     const [formState, setFormState] = useState<SiteConfig>(config);
     
@@ -155,6 +172,23 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         }
     }, [formState.addressCep]);
 
+    // Lógica para obter as cores da paleta gerada
+    const mainColor = formState.customColor || '#e85d3f';
+    const primaryHsl = colorToHsl(mainColor);
+    
+    let generatedHeadingText = '';
+    let generatedBodyText = '';
+    let generatedButtonBg = '';
+    let generatedButtonText = '';
+    if (primaryHsl) {
+        const { h, s, l } = primaryHsl;
+        generatedHeadingText = `hsl(${h}, ${s * 0.9}%, ${Math.max(15, l * 0.4)}%)`;
+        generatedBodyText = `hsl(${h}, ${s*0.3}%, ${Math.max(10, l * 0.2)}%)`;
+        generatedButtonBg = `hsl(${h}, ${s}%, ${l}%)`;
+        generatedButtonText = l > 60 ? 'hsl(0 0% 10%)' : 'hsl(0 0% 98%)';
+    }
+
+
     return (
         <div className="grid gap-6 relative">
             <div className="space-y-6 pb-24">
@@ -203,19 +237,63 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="p-4 border rounded-lg bg-background">
-                            <Label htmlFor="main-color" className="font-semibold mb-2 block">Cor Principal (Gera Paleta Inteligente)</Label>
+                             <Label htmlFor="main-color" className="font-semibold mb-2 block">Cor Principal (Gera Paleta Inteligente)</Label>
                             <div className="flex items-center gap-4">
                                 <div className="p-1 border-2 border-muted-foreground/20 rounded-md bg-white">
-                                    <div className="w-10 h-10 rounded" style={{ backgroundColor: formState.customColor || '#e85d3f' }} />
+                                    <div className="w-10 h-10 rounded" style={{ backgroundColor: colorStringToHex(formState.customColor || '#e85d3f') || 'transparent' }} />
                                 </div>
                                 <div className="flex-1">
-                                    <Input 
-                                        id="main-color"
-                                        value={formState.customColor || ''}
-                                        onChange={(e) => handleFieldChange('customColor', e.target.value)}
-                                        placeholder="ex: Marsala, Azul Serenity, #e85d3f" 
-                                    />
-                                    <p className="text-xs text-muted-foreground mt-2">
+                                    <Popover open={openColorPopover} onOpenChange={setOpenColorPopover}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={openColorPopover}
+                                                className="w-full justify-between font-normal h-11"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <ColorSwatch color={formState.customColor || '#e85d3f'} />
+                                                    {formState.customColor || "Selecione uma cor..."}
+                                                </div>
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[300px] p-0">
+                                            <Command>
+                                                <CommandInput 
+                                                    placeholder="Pesquisar cor (ex: Marsala, #e85d3f)" 
+                                                    onValueChange={(search) => handleFieldChange('customColor', search)}
+                                                />
+                                                <CommandList>
+                                                    <CommandEmpty>Nenhuma cor encontrada.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {colorPalette.map((color) => (
+                                                        <CommandItem
+                                                            key={color.name}
+                                                            value={color.name}
+                                                            onSelect={(currentValue) => {
+                                                                handleFieldChange('customColor', currentValue === formState.customColor ? '' : currentValue);
+                                                                setOpenColorPopover(false);
+                                                            }}
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <ColorSwatch color={color.hex} />
+                                                                {color.name}
+                                                            </div>
+                                                             <Check
+                                                                className={cn(
+                                                                    "ml-auto h-4 w-4",
+                                                                    formState.customColor === color.name ? "opacity-100" : "opacity-0"
+                                                                )}
+                                                            />
+                                                        </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
+                                     <p className="text-xs text-muted-foreground mt-2">
                                       Escreva um nome de cor (em português ou inglês) ou um código de cor.
                                     </p>
                                 </div>
@@ -231,11 +309,11 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="pt-4">
-                                    <div className="grid md:grid-cols-2 gap-x-6 gap-y-4 p-4 border rounded-lg bg-muted/50">
-                                        <ColorInput label="Fundo do Botão" value={formState.customColors?.buttonBg || ''} onChange={(value) => handleColorChange('buttonBg', value)} placeholder="Automático" />
-                                        <ColorInput label="Texto do Botão" value={formState.customColors?.buttonText || ''} onChange={(value) => handleColorChange('buttonText', value)} placeholder="Automático" />
-                                        <ColorInput label="Texto dos Títulos" value={formState.customColors?.headingText || ''} onChange={(value) => handleColorChange('headingText', value)} placeholder="Automático" />
-                                        <ColorInput label="Texto do Corpo" value={formState.customColors?.bodyText || ''} onChange={(value) => handleColorChange('bodyText', value)} placeholder="Automático" />
+                                     <div className="grid md:grid-cols-2 gap-x-6 gap-y-4 p-4 border rounded-lg bg-muted/50">
+                                        <ColorInput label="Fundo do Botão" value={formState.customColors?.buttonBg || ''} onChange={(value) => handleColorChange('buttonBg', value)} placeholder={colorStringToHex(generatedButtonBg)} />
+                                        <ColorInput label="Texto do Botão" value={formState.customColors?.buttonText || ''} onChange={(value) => handleColorChange('buttonText', value)} placeholder={colorStringToHex(generatedButtonText)} />
+                                        <ColorInput label="Texto dos Títulos" value={formState.customColors?.headingText || ''} onChange={(value) => handleColorChange('headingText', value)} placeholder={colorStringToHex(generatedHeadingText)} />
+                                        <ColorInput label="Texto do Corpo" value={formState.customColors?.bodyText || ''} onChange={(value) => handleColorChange('bodyText', value)} placeholder={colorStringToHex(generatedBodyText)} />
                                     </div>
                                      <p className="text-xs text-muted-foreground mt-2 px-1">
                                         Deixe em branco para usar a paleta gerada automaticamente. Preencha para substituir uma cor específica.
