@@ -15,9 +15,10 @@ interface LayoutTabProps {
 
 const componentNames: { [key: string]: string } = {
     hero: 'Capa Principal',
-    moments: 'Galeria de Fotos',
+    countdown: 'Contagem Regressiva',
+    carousel: 'Galeria de Fotos',
     rsvp: 'Confirmação de Presença',
-    info: 'Informações do Evento',
+    event: 'Informações do Evento',
     gifts: 'Lista de Presentes',
 };
 
@@ -49,10 +50,9 @@ export default function LayoutTab({ config }: LayoutTabProps) {
     // Ensure rsvp is always after hero and moments
     useEffect(() => {
         const heroIndex = layout.indexOf('hero');
-        const momentsIndex = layout.indexOf('moments');
         const rsvpIndex = layout.indexOf('rsvp');
 
-        const desiredRsvpIndex = Math.max(heroIndex, momentsIndex) + 1;
+        const desiredRsvpIndex = heroIndex + 1;
 
         if (rsvpIndex < desiredRsvpIndex) {
             const newLayout = layout.filter(item => item !== 'rsvp');
@@ -76,7 +76,7 @@ export default function LayoutTab({ config }: LayoutTabProps) {
                             <div className="flex items-center gap-3">
                                 <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
                                 <span className="font-medium">{componentNames[item] || item}</span>
-                                {(item === 'hero' || item === 'moments' || item === 'rsvp') && (
+                                {(item === 'hero' || item === 'rsvp') && (
                                      <span className="text-xs text-muted-foreground">(fixo)</span>
                                 )}
                             </div>
@@ -85,7 +85,7 @@ export default function LayoutTab({ config }: LayoutTabProps) {
                                     size="icon" 
                                     variant="ghost" 
                                     onClick={() => handleMove(index, 'up')} 
-                                    disabled={index === 0 || ['hero', 'moments', 'rsvp'].includes(item)}
+                                    disabled={index === 0 || ['hero', 'rsvp'].includes(item)}
                                 >
                                     <ArrowUp className="h-4 w-4" />
                                 </Button>
@@ -93,7 +93,7 @@ export default function LayoutTab({ config }: LayoutTabProps) {
                                     size="icon" 
                                     variant="ghost" 
                                     onClick={() => handleMove(index, 'down')} 
-                                    disabled={index === layout.length - 1 || ['hero', 'moments', 'rsvp'].includes(item)}
+                                    disabled={index === layout.length - 1 || ['hero', 'rsvp'].includes(item)}
                                 >
                                     <ArrowDown className="h-4 w-4" />
                                 </Button>
