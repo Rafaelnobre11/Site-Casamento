@@ -310,10 +310,10 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                                 </AccordionTrigger>
                                 <AccordionContent className="pt-4">
                                      <div className="grid md:grid-cols-2 gap-x-6 gap-y-4 p-4 border rounded-lg bg-muted/50">
-                                        <ColorInput label="Fundo do Botão" value={formState.customColors?.buttonBg || ''} onChange={(value) => handleColorChange('buttonBg', value)} placeholder={colorStringToHex(generatedButtonBg)} />
-                                        <ColorInput label="Texto do Botão" value={formState.customColors?.buttonText || ''} onChange={(value) => handleColorChange('buttonText', value)} placeholder={colorStringToHex(generatedButtonText)} />
-                                        <ColorInput label="Texto dos Títulos" value={formState.customColors?.headingText || ''} onChange={(value) => handleColorChange('headingText', value)} placeholder={colorStringToHex(generatedHeadingText)} />
-                                        <ColorInput label="Texto do Corpo" value={formState.customColors?.bodyText || ''} onChange={(value) => handleColorChange('bodyText', value)} placeholder={colorStringToHex(generatedBodyText)} />
+                                        <ColorInput label="Fundo do Botão" value={formState.customColors?.buttonBg || ''} onChange={(value) => handleColorChange('buttonBg', value)} placeholder={colorStringToHex(generatedButtonBg) || ''} />
+                                        <ColorInput label="Texto do Botão" value={formState.customColors?.buttonText || ''} onChange={(value) => handleColorChange('buttonText', value)} placeholder={colorStringToHex(generatedButtonText) || ''} />
+                                        <ColorInput label="Texto dos Títulos" value={formState.customColors?.headingText || ''} onChange={(value) => handleColorChange('headingText', value)} placeholder={colorStringToHex(generatedHeadingText) || ''} />
+                                        <ColorInput label="Texto do Corpo" value={formState.customColors?.bodyText || ''} onChange={(value) => handleColorChange('bodyText', value)} placeholder={colorStringToHex(generatedBodyText) || ''} />
                                     </div>
                                      <p className="text-xs text-muted-foreground mt-2 px-1">
                                         Deixe em branco para usar a paleta gerada automaticamente. Preencha para substituir uma cor específica.
@@ -418,3 +418,5 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         </div>
     );
 }
+
+    
