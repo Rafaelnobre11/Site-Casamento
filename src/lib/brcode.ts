@@ -16,16 +16,6 @@ const formatValue = (id: string, value: string): string => {
     return `${id}${length}${value}`;
 }
 
-const formatDescription = (description: string | undefined): string => {
-    if (!description) return '';
-
-    const id = '05'; // Additional Data Field Template
-    const template = formatValue('5F20', description); // Transaction description
-    const length = template.length.toString().padStart(2, '0');
-
-    return `${id}${length}${template}`;
-}
-
 const generateCRC16 = (payload: string): string => {
     let crc = 0xFFFF;
     const polynomial = 0x1021;
@@ -50,7 +40,6 @@ export const generateBRCode = ({
     merchantCity,
     txid = '***', // Default to a static transaction ID if not provided
     value,
-    description
 }: BRCodeParams): string => {
 
     // Payload Format Indicator (ID 00) - Obrigatório
@@ -59,7 +48,7 @@ export const generateBRCode = ({
     // Merchant Account Information (ID 26) - Obrigatório
     const gui = formatValue('00', 'br.gov.bcb.pix');
     const key = formatValue('01', pixKey);
-    const merchantAccountInfo = formatValue('26', `${gui}${key}${formatDescription(description)}`);
+    const merchantAccountInfo = formatValue('26', `${gui}${key}`);
     
     // Merchant Category Code (ID 52) - Obrigatório
     const merchantCategoryCode = '52040000';
@@ -67,17 +56,17 @@ export const generateBRCode = ({
     // Transaction Currency (ID 53) - Obrigatório (986 = BRL)
     const transactionCurrency = '5303986';
 
-    // Transaction Amount (ID 54) - Opcional
+    // Transaction Amount (ID 54) - Opcional, mas necessário para o nosso caso
     const transactionAmount = value ? formatValue('54', value.toFixed(2)) : '';
     
     // Country Code (ID 58) - Obrigatório
     const countryCode = '5802BR';
 
     // Merchant Name (ID 59) - Obrigatório
-    const merchantNameFormatted = formatValue('59', merchantName.substring(0, 25));
+    const merchantNameFormatted = formatValue('59', merchantName.substring(0, 25).normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
 
     // Merchant City (ID 60) - Obrigatório
-    const merchantCityFormatted = formatValue('60', merchantCity.substring(0, 15));
+    const merchantCityFormatted = formatValue('60', merchantCity.substring(0, 15).normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
 
     // Additional Data Field Template (ID 62) - Obrigatório
     const txidFormatted = formatValue('05', txid);
