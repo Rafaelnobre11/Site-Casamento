@@ -1,3 +1,4 @@
+
 'use client';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { SiteConfig } from '@/types/siteConfig';
@@ -8,14 +9,15 @@ export function SiteStyle() {
 
   if (!config) return null;
 
-  const primaryHsl = colorToHsl(config.customColor || '#e85d3f'); // Terracota como fallback
+  const primaryColor = config.customColor || '#e85d3f'; // Terracota como fallback
+  const primaryHsl = colorToHsl(primaryColor);
   
   if (!primaryHsl) return null;
   
   const { h, s, l } = primaryHsl;
 
   // Lógica de contraste para o texto do botão principal
-  const primaryRgb = hexToRgb(config.customColor);
+  const primaryRgb = hexToRgb(primaryColor);
   const primaryYiq = primaryRgb ? getYiq(primaryRgb) : 128; // Default to dark text if conversion fails
   const primaryFg = primaryYiq >= 128 ? '0 0% 10%' : '0 0% 98%';
 
