@@ -65,9 +65,9 @@ const GiftPaymentModal = ({ gift, pixKey, onClose }: GiftPaymentModalProps) => {
     }
 
     return (
-        <div className="flex flex-col md:flex-row gap-0 items-start bg-background rounded-lg overflow-hidden">
+        <div className="flex flex-col md:flex-row items-start bg-background rounded-lg w-full max-h-[90vh] md:max-h-none overflow-y-auto">
             {/* Coluna da Esquerda: Detalhes do Presente */}
-            <div className="w-full md:w-1/2 flex flex-col space-y-4 p-6 md:p-8">
+            <div className="w-full md:w-1/2 flex flex-col space-y-4 p-6 md:p-8 flex-shrink-0">
                 <div className="aspect-[4/3] w-full relative bg-muted/50 rounded-lg overflow-hidden border">
                      {gift.imageUrl ? (
                         <Image
@@ -91,7 +91,7 @@ const GiftPaymentModal = ({ gift, pixKey, onClose }: GiftPaymentModalProps) => {
             </div>
 
             {/* Coluna da Direita: Ações de Pagamento */}
-            <div className="w-full md:w-1/2 flex flex-col space-y-5 items-center text-center bg-muted/50 p-6 md:p-8 h-full justify-center">
+            <div className="w-full md:w-1/2 flex flex-col space-y-5 items-center text-center bg-muted/50 p-6 md:p-8 h-full justify-center flex-shrink-0">
                 <h4 className="font-headline text-lg text-primary">Presenteie com PIX</h4>
                 <div className="relative w-full max-w-[220px] mx-auto aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden border p-4">
                     {qrCodeUrl ? (
