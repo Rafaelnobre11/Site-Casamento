@@ -1,13 +1,14 @@
 'use client';
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, ChangeEvent } from 'react';
 import { useFirestore } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, PlusCircle, Sparkles, Save } from 'lucide-react';
+import { Loader2, Trash2, PlusCircle, Sparkles, Save, Upload } from 'lucide-react';
 import type { SiteConfig, Product } from '@/types/siteConfig';
 import { generateGiftText } from '@/app/actions';
 
@@ -20,6 +21,7 @@ export default function ShopTab({ config }: ShopTabProps) {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const [isGenerating, setIsGenerating] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState<string | null>(null);
 
     const [products, setProducts] = useState<Product[]>(config.products || []);
     const [pixKey, setPixKey] = useState(config.pixKey || '');
@@ -62,6 +64,33 @@ export default function ShopTab({ config }: ShopTabProps) {
              setIsGenerating(null);
         });
     };
+    
+    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, productId: string, index: number) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const storage = getStorage();
+        const fileRef = ref(storage, `site_images/gifts/${productId}_${Date.now()}_${file.name}`);
+        
+        setIsUploading(productId);
+
+        try {
+            const snapshot = await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            const newProducts = [...products];
+            newProducts[index].imageUrl = downloadURL;
+            setProducts(newProducts);
+            
+            toast({ title: 'Sucesso!', description: 'A imagem foi carregada e o URL foi atualizado.' });
+        } catch (error) {
+            console.error("Image upload error:", error);
+            toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
+        } finally {
+            setIsUploading(null);
+        }
+    };
+
 
     const addNewProduct = () => {
         const newId = `gift-${Date.now()}`;
@@ -70,7 +99,6 @@ export default function ShopTab({ config }: ShopTabProps) {
             title: 'Novo Presente Divertido',
             price: 'R$ 50,00',
             description: 'Uma nova forma de nos ajudar a pagar os boletos.',
-            // Gera um placeholder de imagem automático e único para cada novo produto
             imageUrl: `https://picsum.photos/seed/${newId}/400/250`,
             funnyNote: 'Obrigado por este presente aleatório e maravilhoso!',
         };
@@ -87,7 +115,6 @@ export default function ShopTab({ config }: ShopTabProps) {
     const handleSave = () => {
         startTransition(async () => {
             if (!firestore) return;
-            // Salva apenas os produtos que têm um título.
             const validProducts = products.filter(p => p.title && p.title.trim() !== '');
             await setDocument(firestore, 'config/site', { products: validProducts, pixKey: pixKey }, { merge: true });
             toast({ title: "Loja Salva!", description: "Sua lista de presentes e chave PIX foram atualizadas." });
@@ -153,7 +180,15 @@ export default function ShopTab({ config }: ShopTabProps) {
                                     
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="font-medium text-sm">URL da Imagem</label>
-                                        <Input value={product.imageUrl} onChange={(e) => handleProductChange(index, 'imageUrl', e.target.value)} />
+                                        <div className="flex items-center gap-2">
+                                            <Input value={product.imageUrl} onChange={(e) => handleProductChange(index, 'imageUrl', e.target.value)} />
+                                            <Button asChild variant="outline">
+                                                <label htmlFor={`product-upload-${product.id}`} className="cursor-pointer">
+                                                    {isUploading === product.id ? <Loader2 className="animate-spin" /> : <Upload />}
+                                                    <input id={`product-upload-${product.id}`} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, product.id, index)} disabled={isUploading === product.id} />
+                                                </label>
+                                            </Button>
+                                        </div>
                                         {product.imageUrl && <img src={product.imageUrl} alt="Preview" className="mt-2 rounded-md max-h-24 object-contain bg-muted p-1" />}
                                     </div>
                                 </div>
@@ -167,9 +202,9 @@ export default function ShopTab({ config }: ShopTabProps) {
                 </Card>
             </div>
              <CardFooter className="justify-end sticky bottom-0 bg-background/95 py-4 border-t z-10 -mx-8 px-8">
-                 <Button onClick={handleSave} disabled={isPending} size="lg">
-                    {isPending ? <Loader2 className="animate-spin" /> : <Save />}
-                    Salvar Loja e Chave PIX
+                 <Button onClick={handleSave} disabled={isPending || !!isUploading} size="lg">
+                    {isPending || isUploading ? <Loader2 className="animate-spin" /> : <Save />}
+                    {isUploading ? 'Aguardando Upload...' : 'Salvar Loja e Chave PIX'}
                 </Button>
             </CardFooter>
         </div>
