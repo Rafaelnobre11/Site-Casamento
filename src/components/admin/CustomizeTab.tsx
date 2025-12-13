@@ -16,17 +16,6 @@ interface CustomizeTabProps {
     config: SiteConfig;
 }
 
-const ColorInput = ({ label, value, onChange }: { label: string, value: string, onChange: (value: string) => void }) => (
-    <div className="space-y-2">
-        <Label>{label}</Label>
-        <div className="flex items-center gap-2">
-            <Input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="w-12 h-10 p-1" />
-            <Input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="#ffffff" />
-        </div>
-    </div>
-);
-
-
 export default function CustomizeTab({ config }: CustomizeTabProps) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
@@ -41,16 +30,6 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
 
     const handleFieldChange = (field: keyof SiteConfig, value: any) => {
         setFormState(prev => ({ ...prev, [field]: value }));
-    };
-    
-    const handleColorChange = (field: keyof SiteConfig['customColors'], value: string) => {
-        setFormState(prev => ({ 
-            ...prev, 
-            customColors: {
-                ...prev.customColors,
-                [field]: value
-            }
-        }));
     };
     
     const handleCarouselAdd = () => {
@@ -115,9 +94,12 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 updatedState.mapUrl = `https://maps.google.com/maps?q=${encodedAddress}&z=15&output=embed`;
                 updatedState.wazeLink = `https://www.waze.com/ul?q=${encodedAddress}`;
             }
+            
+            // Remover customColors para usar a paleta gerada
+            const { customColors, ...stateToSave } = updatedState;
 
             try {
-                await setDocument(firestore, 'config/site', updatedState);
+                await setDocument(firestore, 'config/site', stateToSave);
                 toast({ title: "Salvo!", description: `Suas personalizações foram salvas com sucesso.` });
             } catch (error) {
                 console.error("Error saving config:", error);
@@ -191,13 +173,13 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Palette /> Cores do Tema</CardTitle>
-                        <CardDescription>Escolha a cor principal para gerar uma paleta ou defina cada cor manualmente.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><Palette /> Cor Principal do Tema</CardTitle>
+                        <CardDescription>Escolha a cor principal para gerar uma paleta de cores coesa para todo o site.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="p-4 border rounded-lg bg-background">
-                            <h3 className="font-semibold mb-4">1. Cor Principal (Gera Paleta Inteligente)</h3>
-                            <div className="flex items-center gap-4">
+                            <Label htmlFor="main-color" className="font-semibold mb-4">Cor Principal</Label>
+                            <div className="flex items-center gap-4 mt-2">
                                 <Input 
                                     type="color" 
                                     value={formState.customColor || '#e85d3f'}
@@ -206,25 +188,15 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                                 />
                                 <div className="flex-1">
                                     <Input 
+                                        id="main-color"
                                         value={formState.customColor || ''}
                                         onChange={(e) => handleFieldChange('customColor', e.target.value)}
-                                        placeholder="Pesquisar cor (ex: #e85d3f)" 
+                                        placeholder="#e85d3f ou terracotta" 
                                     />
-                                    <p className="text-xs text-muted-foreground mt-2">Ao selecionar uma cor aqui, o site gera automaticamente as cores dos botões, textos e fundos para manter o contraste legível.</p>
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                      Escreva um código de cor (ex: #e85d3f) ou o nome de uma cor em inglês (ex: 'terracotta', 'navy blue'). O sistema criará a paleta automaticamente.
+                                    </p>
                                 </div>
-                            </div>
-                        </div>
-                        <div className="p-4 border rounded-lg bg-background">
-                            <h3 className="font-semibold mb-4">2. Cores Detalhadas (Avançado)</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <ColorInput label="Fundo do Menu" value={formState.customColors?.headerBg || ''} onChange={(v) => handleColorChange('headerBg', v)} />
-                                <ColorInput label="Texto do Menu" value={formState.customColors?.headerText || ''} onChange={(v) => handleColorChange('headerText', v)} />
-                                <ColorInput label="Fundo do Rodapé" value={formState.customColors?.footerBg || ''} onChange={(v) => handleColorChange('footerBg', v)} />
-                                <ColorInput label="Texto do Rodapé" value={formState.customColors?.footerText || ''} onChange={(v) => handleColorChange('footerText', v)} />
-                                <ColorInput label="Fundo dos Botões" value={formState.customColors?.buttonBg || ''} onChange={(v) => handleColorChange('buttonBg', v)} />
-                                <ColorInput label="Texto dos Botões" value={formState.customColors?.buttonText || ''} onChange={(v) => handleColorChange('buttonText', v)} />
-                                <ColorInput label="Cor dos Títulos" value={formState.customColors?.headingText || ''} onChange={(v) => handleColorChange('headingText', v)} />
-                                <ColorInput label="Cor dos Textos" value={formState.customColors?.bodyText || ''} onChange={(v) => handleColorChange('bodyText', v)} />
                             </div>
                         </div>
                     </CardContent>
