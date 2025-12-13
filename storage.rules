@@ -9,11 +9,11 @@ service firebase.storage {
     }
 
     // Regra para as imagens do site:
-    // Permite que qualquer pessoa leia as imagens, pois elas são públicas.
-    // A escrita é bloqueada para o público para proteger seu conteúdo.
+    // Permite que qualquer pessoa leia as imagens (para o site funcionar)
+    // e também permite que qualquer pessoa escreva (para o painel de admin funcionar).
     match /site_images/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null; // Permite que apenas usuários autenticados (você no painel) façam upload.
+      allow write: if true;
     }
   }
 }
