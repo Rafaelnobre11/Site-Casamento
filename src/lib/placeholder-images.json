@@ -3,7 +3,7 @@
     {
       "id": "hero-bg",
       "description": "A beautiful wedding couple embracing.",
-      "imageUrl": "https://images.unsplash.com/photo-1591604466107-ec97de577aff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx3ZWRkaW5nJTIwY291cGxlfGVufDB8fHx8MTc2NTU1ODM1Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2FSite%2Fhero-bg.jpg?alt=media",
       "width": 1920,
       "height": 1080,
       "imageHint": "wedding couple"
@@ -11,7 +11,7 @@
     {
       "id": "moment-1",
       "description": "Couple smiling and looking at each other.",
-      "imageUrl": "https://images.unsplash.com/photo-1668421915771-94a6b00076fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjb3VwbGUlMjBzbWlsaW5nfGVufDB8fHx8MTc2NTU3NjAyM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2FSite%2Fmoment-1.jpg?alt=media",
       "width": 800,
       "height": 800,
       "imageHint": "couple smiling"
@@ -19,7 +19,7 @@
     {
       "id": "moment-2",
       "description": "Couple holding hands.",
-      "imageUrl": "https://images.unsplash.com/photo-1592254765718-02cdd14502fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxob2xkaW5nJTIwaGFuZHN8ZW58MHx8fHwxNzY1NTI4ODI5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2FSite%2Fmoment-2.jpg?alt=media",
       "width": 800,
       "height": 800,
       "imageHint": "holding hands"
@@ -27,7 +27,7 @@
     {
       "id": "moment-3",
       "description": "Couple laughing together outdoors.",
-      "imageUrl": "https://images.unsplash.com/photo-1656017054238-f08a0e1482fe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb3VwbGUlMjBsYXVnaGluZ3xlbnwwfHx8fDE3NjU1OTAwNDZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2FSite%2Fmoment-3.jpg?alt=media",
       "width": 800,
       "height": 800,
       "imageHint": "couple laughing"
@@ -35,7 +35,7 @@
     {
       "id": "moment-4",
       "description": "A close-up shot of the wedding rings.",
-      "imageUrl": "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx3ZWRkaW5nJTIwcmluZ3N8ZW58MHx8fHwxNzY1NTYxNDAwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2FSite%2Fmoment-4.jpg?alt=media",
       "width": 800,
       "height": 800,
       "imageHint": "wedding rings"
@@ -43,7 +43,7 @@
     {
       "id": "rsvp-bg",
       "description": "Elegant wedding table decoration.",
-      "imageUrl": "https://images.unsplash.com/photo-1560494667-2fd47f82c9db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx3ZWRkaW5nJTIwZGVjb3JhdGlvbnxlbnwwfHx8fDE3NjU1NTM1NDN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2FSite%2Frsvp-bg.jpg?alt=media",
       "width": 1200,
       "height": 800,
       "imageHint": "wedding decoration"
@@ -51,56 +51,56 @@
     {
       "id": "map-placeholder",
       "description": "A map showing a location pin.",
-      "imageUrl": "https://images.unsplash.com/photo-1548345680-f5475ea5df84?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxtYXAlMjBsb2NhdGlvbnxlbnwwfHx8fDE3NjU1MzY1NjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2FSite%2Fmap-placeholder.jpg?alt=media",
       "width": 800,
       "height": 600,
       "imageHint": "map location"
     },
     {
       "id": "gift-cota-lua-de-mel",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/gifts%2Fgift-cota-lua-de-mel.png?alt=media",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2Fgifts%2Fgift-cota-lua-de-mel.png?alt=media",
       "width": 400,
       "height": 250
     },
     {
       "id": "gift-open-bar",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/gifts%2Fgift-open-bar.png?alt=media",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2Fgifts%2Fgift-open-bar.png?alt=media",
       "width": 400,
       "height": 250
     },
     {
       "id": "gift-anti-ressaca",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/gifts%2Fgift-anti-ressaca.png?alt=media",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2Fgifts%2Fgift-anti-ressaca.png?alt=media",
       "width": 400,
       "height": 250
     },
     {
       "id": "gift-jantar-romantico",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/gifts%2Fgift-jantar-romantico.png?alt=media",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2Fgifts%2Fgift-jantar-romantico.png?alt=media",
       "width": 400,
       "height": 250
     },
     {
       "id": "gift-curso-culinaria",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/gifts%2Fgift-curso-culinaria.png?alt=media",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2Fgifts%2Fgift-curso-culinaria.png?alt=media",
       "width": 400,
       "height": 250
     },
     {
       "id": "gift-streaming",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/gifts%2Fgift-streaming.png?alt=media",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2Fgifts%2Fgift-streaming.png?alt=media",
       "width": 400,
       "height": 250
     },
     {
       "id": "gift-paciencia-noivo",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/gifts%2Fgift-paciencia-noivo.png?alt=media",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2Fgifts%2Fgift-paciencia-noivo.png?alt=media",
       "width": 400,
       "height": 250
     },
     {
       "id": "gift-robo-aspirador",
-      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/gifts%2Fgift-robo-aspirador.png?alt=media",
+      "imageUrl": "https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2Fgifts%2Fgift-robo-aspirador.png?alt=media",
       "width": 400,
       "height": 250
     }

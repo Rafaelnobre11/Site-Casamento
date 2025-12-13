@@ -1,8 +1,7 @@
 'use client';
-import { useState, useTransition, useEffect, ChangeEvent } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +12,7 @@ import type { SiteConfig, Product } from '@/types/siteConfig';
 import { generateGiftText } from '@/app/actions';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import StorageImagePicker from '@/components/admin/StorageImagePicker'; // Importa o nosso novo componente
 
 interface ShopTabProps {
     config: SiteConfig;
@@ -23,10 +23,14 @@ export default function ShopTab({ config }: ShopTabProps) {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const [isGenerating, setIsGenerating] = useState<string | null>(null);
-    const [isUploading, setIsUploading] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState<string | null>(null); // Manter para feedback visual se necessário
 
     const [products, setProducts] = useState<Product[]>(config.products || []);
     const [pixKey, setPixKey] = useState(config.pixKey || '');
+    
+    // Estado para controlar o seletor de imagens
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const [activeProductIndex, setActiveProductIndex] = useState<number | null>(null);
 
     useEffect(() => {
         setProducts(config.products || []);
@@ -66,33 +70,21 @@ export default function ShopTab({ config }: ShopTabProps) {
              setIsGenerating(null);
         });
     };
-    
-    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, productId: string, index: number) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
 
-        const storage = getStorage();
-        const fileRef = ref(storage, `site_images/gifts/${productId}_${Date.now()}_${file.name}`);
-        
-        setIsUploading(productId);
-
-        try {
-            const snapshot = await uploadBytes(fileRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
-
-            const newProducts = [...products];
-            newProducts[index].imageUrl = downloadURL;
-            setProducts(newProducts);
-            
-            toast({ title: 'Sucesso!', description: 'A imagem foi carregada e o URL foi atualizado.' });
-        } catch (error) {
-            console.error("Image upload error:", error);
-            toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
-        } finally {
-            setIsUploading(null);
-        }
+    const openImagePicker = (index: number) => {
+        setActiveProductIndex(index);
+        setIsPickerOpen(true);
     };
 
+    const handleImageSelect = (imageUrl: string) => {
+        if (activeProductIndex === null) return;
+        
+        const newProducts = [...products];
+        newProducts[activeProductIndex].imageUrl = imageUrl;
+        setProducts(newProducts);
+        toast({ title: 'Sucesso!', description: 'A imagem foi selecionada do banco de dados.' });
+        setActiveProductIndex(null);
+    };
 
     const addNewProduct = () => {
         const newId = `gift-${Date.now()}`;
@@ -101,7 +93,7 @@ export default function ShopTab({ config }: ShopTabProps) {
             title: 'Novo Presente Divertido',
             price: 'R$ 50,00',
             description: 'Uma nova forma de nos ajudar a pagar os boletos.',
-            imageUrl: `https://picsum.photos/seed/${newId}/400/250`,
+            imageUrl: 'https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2Fgifts%2Fgift-placeholder.png?alt=media', // Um placeholder genérico
             funnyNote: 'Obrigado por este presente aleatório e maravilhoso!',
         };
         setProducts([...products, newProduct]);
@@ -128,13 +120,20 @@ export default function ShopTab({ config }: ShopTabProps) {
         if (placeholder) {
             return { width: placeholder.width, height: placeholder.height };
         }
-        // Fallback for uploaded images - these dimensions might not be perfect but prevent build errors
+        // Fallback para imagens selecionadas - dimensões podem não ser perfeitas mas evitam erros
         return { width: 400, height: 250 };
     }
 
 
     return (
         <div className="space-y-6 relative">
+            {/* O Modal do seletor de imagens agora faz parte da página */}
+            <StorageImagePicker 
+                open={isPickerOpen}
+                onOpenChange={setIsPickerOpen}
+                onImageSelect={handleImageSelect}
+            />
+
              <div className="space-y-6 pb-24">
                 <Card>
                     <CardHeader>
@@ -198,12 +197,10 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                 {product.imageUrl && (
                                                     <Image src={product.imageUrl} alt="Preview" width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
                                                 )}
-                                                <Button asChild variant="outline">
-                                                    <label htmlFor={`product-upload-${product.id}`} className="cursor-pointer">
-                                                        {isUploading === product.id ? <Loader2 className="animate-spin" /> : <Upload />}
-                                                        {product.imageUrl ? 'Alterar Imagem' : 'Fazer Upload'}
-                                                        <input id={`product-upload-${product.id}`} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, product.id, index)} disabled={isUploading === product.id} />
-                                                    </label>
+                                                 {/* BOTÃO MODIFICADO */}
+                                                <Button variant="outline" onClick={() => openImagePicker(index)}>
+                                                    <Upload />
+                                                    {product.imageUrl ? 'Alterar Imagem' : 'Escolher Imagem'}
                                                 </Button>
                                             </div>
                                         </div>

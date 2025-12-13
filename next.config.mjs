@@ -17,6 +17,16 @@ const nextConfig = {
         hostname: 'picsum.photos',
         port: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'imgur.com',
+        port: '',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgflip.com',
+        port: '',
+      },
     ],
   },
 };
