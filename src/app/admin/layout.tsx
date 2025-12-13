@@ -1,21 +1,37 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
+import { signOut } from 'firebase/auth';
+import { useFirebase } from '@/firebase/provider';
+import LoginDialog from '@/components/admin/LoginDialog';
 
 const ADMIN_EMAIL = 'rafael.nobre.d@gmail.com';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
-  const router = useRouter();
+  const { auth } = useFirebase();
+  const [isLoginOpen, setLoginOpen] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/admin/login');
+    if (!loading) {
+      if (!user) {
+        // Se não há usuário, o modal de login deve estar aberto.
+        setLoginOpen(true);
+      } else if (user.email === ADMIN_EMAIL) {
+        // Se o usuário é o admin, fecha o modal.
+        setLoginOpen(false);
+      } else {
+        // Se é um usuário logado mas não é o admin, desloga e abre o modal.
+        if (auth) {
+            signOut(auth);
+        }
+        setLoginOpen(true);
+      }
     }
-  }, [user, loading, router]);
+  }, [user, loading, auth]);
 
   if (loading) {
     return (
@@ -25,25 +41,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
     );
   }
-
-  if (user && user.email === ADMIN_EMAIL) {
-    return <>{children}</>;
-  }
   
-  if (user && user.email !== ADMIN_EMAIL) {
-     router.push('/admin/login');
-     return (
-        <div className="flex h-screen w-full items-center justify-center bg-muted/40 text-center p-4">
-            <div>
-                <h1 className="text-2xl font-bold text-destructive">Acesso Negado</h1>
-                <p className="text-muted-foreground mt-2">
-                    Este painel é restrito. Você será redirecionado para a página de login.
-                </p>
-            </div>
-        </div>
-    );
+  const handleLoginSuccess = () => {
+    setLoginOpen(false);
   }
 
-  // Fallback em caso de race conditions, redireciona para login.
-  return null;
+  return (
+    <>
+      <LoginDialog isOpen={isLoginOpen} onLoginSuccess={handleLoginSuccess} />
+      <div className={isLoginOpen ? 'blur-sm pointer-events-none' : ''}>
+        {children}
+      </div>
+    </>
+  );
 }
