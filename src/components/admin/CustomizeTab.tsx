@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useTransition, useEffect, ChangeEvent } from 'react';
 import { useFirebase } from '@/firebase';
@@ -68,79 +69,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
-    const [isUploading, setIsUploading] = useState(false);
-    const [openColorPopover, setOpenColorPopover] = useState(false);
-
-    const [formState, setFormState] = useState<SiteConfig>(config);
-    
-    useEffect(() => {
-        setFormState(config);
-    }, [config]);
-
-    const handleFieldChange = (field: keyof SiteConfig, value: any) => {
-        setFormState(prev => ({ ...prev, [field]: value }));
-    };
-
-    const handleColorChange = (field: keyof SiteConfig['customColors'], value: string) => {
-        setFormState(prev => ({
-            ...prev,
-            customColors: {
-                ...(prev.customColors || {}),
-                [field]: value,
-            }
-        }));
-    };
-
-    const resetDetailedColors = () => {
-         setFormState(prev => ({
-            ...prev,
-            customColors: {}
-        }));
-        toast({ title: 'Cores Restauradas', description: 'As cores detalhadas foram redefinidas para o padrão automático.' });
-    };
-    
-    const handleCarouselAdd = () => {
-        const newImages = [...(formState.carouselImages || []), 'https://picsum.photos/seed/new/800/600'];
-        handleFieldChange('carouselImages', newImages);
-    };
-
-    const handleCarouselChange = (index: number, value: string) => {
-        const newImages = [...(formState.carouselImages || [])];
-        newImages[index] = value;
-        handleFieldChange('carouselImages', newImages);
-    };
-
-    const handleCarouselRemove = (index: number) => {
-        const newImages = (formState.carouselImages || []).filter((_, i) => i !== index);
-        handleFieldChange('carouselImages', newImages);
-    };
-    
-    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, field: 'heroImage' | 'carousel' | 'logoUrl', index?: number) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const storage = getStorage();
-        const fileRef = ref(storage, `site_images/${field}_${Date.now()}_${file.name}`);
-        
-        setIsUploading(true);
-
-        try {
-            const snapshot = await uploadBytes(fileRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
-
-            if (field === 'heroImage' || field === 'logoUrl') {
-                handleFieldChange(field, downloadURL);
-            } else if (field === 'carousel' && index !== undefined) {
-                const newImages = [...(formState.carouselImages || [])];
-                newImages[index] = downloadURL;
-                handleFieldChange('carouselImages', newImages);
-            }
-            toast({ title: 'Sucesso!', description: 'A imagem foi carregada e o URL foi atualizado.' });
-        } catch (error) {
-            console.error("Image upload error:", error);
-            toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
-        } finally {
-            setIsUploading(false);
+    const [isUploading, setIsUploading(false);
         }
     };
 
@@ -153,9 +82,12 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
             };
 
             let updatedState = { ...formState };
+            
+            const addressForMap = updatedState.locationAddress;
+            const numberForMap = updatedState.addressNumber;
 
-            if (updatedState.locationAddress && updatedState.addressNumber) {
-                const fullAddressForMap = `${updatedState.locationAddress}, ${updatedState.addressNumber}`;
+            if (addressForMap && numberForMap) {
+                const fullAddressForMap = `${addressForMap}, ${numberForMap}`;
                 const encodedAddress = encodeURIComponent(fullAddressForMap);
                 
                 updatedState.mapUrl = `https://maps.google.com/maps?q=${encodedAddress}&z=15&output=embed`;
@@ -211,7 +143,9 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         generatedHeroHeadingText = `hsl(${h}, ${s * 0.1}%, ${Math.min(99, l + (100 - l) * 0.98)}%)`;
         generatedBodyText = `hsl(${h}, ${s * 0.3}%, ${Math.max(15, l * 0.25)}%)`;
         generatedButtonBg = `hsl(${h}, ${s}%, ${l}%)`;
-        const primaryRgb = hexToRgb(colorStringToHex(mainColor));
+
+        const mainColorHex = colorStringToHex(mainColor);
+        const primaryRgb = mainColorHex ? hexToRgb(mainColorHex) : null;
         const buttonYiq = primaryRgb ? getYiq(primaryRgb) : 128;
         generatedButtonText = buttonYiq >= 128 ? '#000000' : '#FFFFFF';
     }
@@ -450,3 +384,5 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         </div>
     );
 }
+
+    
