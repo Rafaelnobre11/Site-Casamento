@@ -33,8 +33,7 @@ const GiftModalContent = ({ gift, pixKey, onClose }: { gift: Product; pixKey: st
             value: value,
             merchantName: "CASAMENTO CLAUDIA & RAFAEL",
             merchantCity: "SAO PAULO",
-            txid: `GIFT-${gift.id.substring(0,10)}-${Date.now()}`.substring(0, 25),
-            description: `Presente: ${gift.title}`
+            txid: '***',
         });
         setBrCode(code);
 
@@ -125,7 +124,7 @@ const GiftSection: React.FC<GiftSectionProps> = ({ products = [], pixKey }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFullListOpen, setIsFullListOpen] = useState(false);
   
-  const finalPixKey = pixKey || "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8";
+  const finalPixKey = pixKey || "7bc9bb94-0ec6-499b-8f8c-1eeb1394f382";
 
   const handlePresentearClick = (gift: Product) => {
     setSelectedGift(gift);
