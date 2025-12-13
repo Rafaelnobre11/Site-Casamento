@@ -4,12 +4,19 @@
 import { MapPin, Clock, Navigation, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface EventInfoProps {
   locationName?: string;
   address?: string;
   time?: string;
   wazeLink?: string;
+  googleMapsLink?: string;
   mapUrl?: string;
   date?: string; 
   texts?: { [key: string]: string };
@@ -20,6 +27,7 @@ const EventInfo: React.FC<EventInfoProps> = ({
   address,
   time,
   wazeLink,
+  googleMapsLink,
   mapUrl,
   date,
   texts = {},
@@ -69,12 +77,24 @@ const EventInfo: React.FC<EventInfoProps> = ({
                 <p className="text-sm text-gray-500">{address || "Endereço do evento"}</p>
               </div>
             </div>
-            <Button asChild size="lg" className="w-full max-w-xs mx-auto lg:mx-0">
-              <a href={wazeLink} target="_blank" rel="noopener noreferrer">
-                <Navigation className="mr-2 h-5 w-5" />
-                {texts.info_button || 'Como Chegar'}
-              </a>
-            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="lg" className="w-full max-w-xs mx-auto lg:mx-0">
+                  <Navigation className="mr-2 h-5 w-5" />
+                  {texts.info_button || 'Como Chegar'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuItem asChild>
+                  <a href={googleMapsLink} target="_blank" rel="noopener noreferrer">Abrir no Google Maps</a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a href={wazeLink} target="_blank" rel="noopener noreferrer">Abrir no Waze</a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
           </div>
           
           <div className="lg:col-span-3 w-full">
@@ -99,5 +119,3 @@ const EventInfo: React.FC<EventInfoProps> = ({
 };
 
 export default EventInfo;
-
-    

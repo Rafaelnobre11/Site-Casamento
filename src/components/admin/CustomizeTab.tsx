@@ -160,6 +160,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 
                 updatedState.mapUrl = `https://maps.google.com/maps?q=${encodedAddress}&z=15&output=embed`;
                 updatedState.wazeLink = `https://www.waze.com/ul?q=${encodedAddress}`;
+                updatedState.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
             }
             
             try {

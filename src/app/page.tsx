@@ -51,6 +51,7 @@ export default function Home() {
     locationAddress: 'R. Funchal, 500 - Vila Olímpia, São Paulo - SP',
     mapUrl: 'https://maps.google.com/maps?q=Rua+Funchal%2C+500+-+Vila+Ol%C3%ADmpia%2C+S%C3%A3o+Paulo+-+SP&z=15&output=embed',
     wazeLink: 'https://www.waze.com/ul?q=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo',
+    googleMapsLink: 'https://www.google.com/maps/search/?api=1&query=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo',
     products: defaultGifts,
     layoutOrder: defaultLayoutOrder,
     texts: {
@@ -123,6 +124,7 @@ export default function Home() {
                   address={config.locationAddress}
                   time={config.time}
                   wazeLink={config.wazeLink}
+                  googleMapsLink={config.googleMapsLink}
                   mapUrl={config.mapUrl}
                   date={config.date}
                   texts={config.texts}

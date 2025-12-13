@@ -33,6 +33,7 @@ export type SiteConfig = {
   locationAddress?: string;
   mapUrl?: string;
   wazeLink?: string;
+  googleMapsLink?: string;
   isContentLocked?: boolean;
   pixKey?: string;
   carouselImages?: string[];
