@@ -31,7 +31,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
-    const [isUploading, setIsUploading] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     const [formState, setFormState] = useState<SiteConfig>(config);
     
@@ -76,8 +76,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         const storage = getStorage();
         const fileRef = ref(storage, `site_images/${field}_${Date.now()}_${file.name}`);
         
-        const uploadKey = field === 'carousel' ? `carousel-${index}`: field;
-        setIsUploading(uploadKey);
+        setIsUploading(true);
 
         try {
             const snapshot = await uploadBytes(fileRef, file);
@@ -95,7 +94,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
             console.error("Image upload error:", error);
             toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
         } finally {
-            setIsUploading(null);
+            setIsUploading(false);
         }
     };
 
@@ -169,8 +168,8 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                                     <Input id="logo-url" type="text" placeholder="Cole a URL ou faça upload" value={formState.logoUrl || ''} onChange={(e) => handleFieldChange('logoUrl', e.target.value)} />
                                     <Button asChild variant="outline">
                                         <label htmlFor="logo-upload" className="cursor-pointer">
-                                            {isUploading === 'logoUrl' ? <Loader2 className="animate-spin" /> : <Upload />}
-                                            <input id="logo-upload" type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} disabled={isUploading === 'logoUrl'} />
+                                            {isUploading ? <Loader2 className="animate-spin" /> : <Upload />}
+                                            <input id="logo-upload" type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoUrl')} disabled={isUploading} />
                                         </label>
                                     </Button>
                                 </div>
@@ -243,8 +242,8 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                                 <Input id="hero-image-url" type="text" placeholder="Cole o URL ou faça upload" value={formState.heroImage || ''} onChange={(e) => handleFieldChange('heroImage', e.target.value)} />
                                 <Button asChild variant="outline">
                                     <label htmlFor="hero-upload" className="cursor-pointer">
-                                        {isUploading === 'heroImage' ? <Loader2 className="animate-spin" /> : <Upload />}
-                                        <input id="hero-upload" type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, 'heroImage')} disabled={isUploading === 'heroImage'} />
+                                        {isUploading ? <Loader2 className="animate-spin" /> : <Upload />}
+                                        <input id="hero-upload" type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, 'heroImage')} disabled={isUploading} />
                                     </label>
                                 </Button>
                             </div>
@@ -258,8 +257,8 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                                     <Input value={img} onChange={(e) => handleCarouselChange(index, e.target.value)} placeholder="URL da imagem" />
                                      <Button asChild variant="outline" size="icon">
                                         <label htmlFor={`carousel-upload-${index}`} className="cursor-pointer">
-                                            {isUploading === `carousel-${index}` ? <Loader2 className="animate-spin" /> : <Upload className="h-4 w-4" />}
-                                            <input id={`carousel-upload-${index}`} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, 'carousel', index)} disabled={isUploading === `carousel-${index}`} />
+                                            {isUploading ? <Loader2 className="animate-spin" /> : <Upload className="h-4 w-4" />}
+                                            <input id={`carousel-upload-${index}`} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, 'carousel', index)} disabled={isUploading} />
                                         </label>
                                     </Button>
                                     <Button variant="ghost" size="icon" onClick={() => handleCarouselRemove(index)}><Trash2 className="text-destructive" /></Button>
@@ -317,7 +316,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
             </div>
             
             <CardFooter className="justify-end sticky bottom-0 bg-background/95 py-4 border-t z-10 -mx-8 px-8">
-                 <Button onClick={handleSave} disabled={isPending || !!isUploading} size="lg">
+                 <Button onClick={handleSave} disabled={isPending || isUploading} size="lg">
                     {isPending || isUploading ? <Loader2 className="animate-spin" /> : <Save />}
                     {isUploading ? 'Aguardando Upload...' : 'Salvar Todas as Alterações'}
                 </Button>
