@@ -44,13 +44,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button"
     
     // Prioritize explicit className for variant over default.
-    const finalClassName = cn(
-        (variant === 'default' && !className?.includes('btn-primary')) ? buttonVariants({ variant: 'default', size, className: cn('btn-primary', className) }) : buttonVariants({ variant, size, className })
-    );
+    if (variant === "default" && !className?.includes("btn-primary")) {
+        return (
+            <Comp
+                className={cn(buttonVariants({ variant, size, className: cn('btn-primary', className) }))}
+                ref={ref}
+                {...props}
+            />
+        );
+    }
 
     return (
       <Comp
-        className={finalClassName}
+        className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
       />
