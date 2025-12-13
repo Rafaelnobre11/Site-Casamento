@@ -12,7 +12,7 @@ import type { SiteConfig, Product } from '@/types/siteConfig';
 import { generateGiftText } from '@/app/actions';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import StorageImagePicker from '@/components/admin/StorageImagePicker'; // Importa o nosso novo componente
+import StorageImagePicker from '@/components/admin/StorageImagePicker';
 
 interface ShopTabProps {
     config: SiteConfig;
@@ -27,7 +27,6 @@ export default function ShopTab({ config }: ShopTabProps) {
     const [products, setProducts] = useState<Product[]>(config.products || []);
     const [pixKey, setPixKey] = useState(config.pixKey || '');
     
-    // Estado para controlar o seletor de imagens
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [activeProductIndex, setActiveProductIndex] = useState<number | null>(null);
 
@@ -120,7 +119,6 @@ export default function ShopTab({ config }: ShopTabProps) {
         if (placeholder) {
             return { width: placeholder.width, height: placeholder.height };
         }
-        // Fallback para imagens selecionadas - dimensões podem não ser perfeitas mas evitam erros
         return { width: 400, height: 250 };
     }
 
@@ -131,7 +129,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                 open={isPickerOpen}
                 onOpenChange={setIsPickerOpen}
                 onImageSelect={handleImageSelect}
-                uploadFolder="site_images/gifts"
+                folderPath="site_images/gifts"
             />
 
              <div className="space-y-6 pb-24">

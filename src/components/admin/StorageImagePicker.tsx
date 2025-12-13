@@ -11,57 +11,51 @@ interface StorageImagePickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onImageSelect: (url: string) => void;
-  uploadFolder?: string; // Pasta para onde as novas imagens serão enviadas
+  folderPath: string; 
 }
 
-export default function StorageImagePicker({ open, onOpenChange, onImageSelect, uploadFolder = 'site_images/uploads' }: StorageImagePickerProps) {
+export default function StorageImagePicker({ open, onOpenChange, onImageSelect, folderPath }: StorageImagePickerProps) {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchImages = async () => {
+    if (!folderPath) return;
+
     setIsLoading(true);
     setError(null);
+
     try {
       const storage = getStorage();
-      const folderPaths = ['site_images/Site', 'site_images/gifts', 'site_images/uploads'];
+      const folderRef = ref(storage, folderPath);
+      const res = await listAll(folderRef);
+      const urls = await Promise.all(res.items.map(itemRef => getDownloadURL(itemRef)));
       
-      const promises = folderPaths.map(async (path) => {
-        try {
-          const folderRef = ref(storage, path);
-          const res = await listAll(folderRef);
-          return Promise.all(res.items.map(itemRef => getDownloadURL(itemRef)));
-        } catch (e: any) {
-          if (e.code === 'storage/object-not-found') {
-            console.warn(`Pasta não encontrada ou vazia: ${path}`);
-            return []; // Retorna um array vazio se a pasta não existir
-          }
-          throw e; // Lança outros erros
-        }
-      });
-
-      const results = await Promise.all(promises);
-      const urls = results.flat(); // Achata o array de arrays
+      // Ordena as imagens pela mais recente (funciona se o nome do ficheiro incluir um timestamp)
+      const sortedUrls = urls.sort((a, b) => b.localeCompare(a));
       
-      // Usa um Set para garantir URLs únicos e depois converte de volta para array
-      setImageUrls(prev => Array.from(new Set([...prev, ...urls])));
+      setImageUrls(sortedUrls);
 
     } catch (e: any) {
-      console.error("Erro detalhado ao buscar imagens:", e);
-      setError("Falha ao carregar imagens do banco de dados.");
+      console.error(`Erro ao buscar imagens da pasta "${folderPath}":`, e);
+      if (e.code === 'storage/object-not-found') {
+        // Se a pasta não existe, não é um erro fatal, apenas não há imagens.
+        setImageUrls([]);
+      } else {
+        setError("Falha ao carregar imagens do banco de dados.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-
   useEffect(() => {
     if (open) {
       fetchImages();
     }
-  }, [open]);
+  }, [open, folderPath]);
 
   const handleLocalImageSelect = (url: string) => {
     onImageSelect(url);
@@ -77,8 +71,10 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect, 
     if (!file) return;
 
     setIsUploading(true);
+    setError(null);
     const storage = getStorage();
-    const fileRef = ref(storage, `${uploadFolder}/${Date.now()}_${file.name}`);
+    // Usa um timestamp no nome para facilitar a ordenação
+    const fileRef = ref(storage, `${folderPath}/${Date.now()}_${file.name}`);
     
     try {
         const snapshot = await uploadBytes(fileRef, file);
@@ -86,6 +82,7 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect, 
         
         // Adiciona a nova imagem no início da lista para feedback imediato
         setImageUrls(prev => [downloadURL, ...prev]);
+        
         // Opcional: seleciona a imagem recém-carregada automaticamente
         handleLocalImageSelect(downloadURL);
         
@@ -135,9 +132,9 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect, 
               </div>
             )}
             {!isLoading && !error && imageUrls.length === 0 && (
-              <div className="flex justify-center items-center h-full min-h-[200px]">
+              <div className="flex flex-col justify-center items-center h-full min-h-[200px]">
                 <div className="text-center text-gray-500">
-                  <p>Nenhuma imagem encontrada.</p>
+                  <p>Nenhuma imagem encontrada nesta pasta.</p>
                   <p className="text-sm">Faça um upload para começar.</p>
                 </div>
               </div>
@@ -151,9 +148,9 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect, 
                 onChange={handleImageUpload}
                 className="hidden"
                 accept="image/png, image/jpeg, image/gif, image/webp"
-                disabled={isUploading}
+                disabled={isUploading || isLoading}
             />
-          <Button variant="default" onClick={handleUploadClick} disabled={isUploading}>
+          <Button variant="default" onClick={handleUploadClick} disabled={isUploading || isLoading}>
             {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
             {isUploading ? 'A carregar...' : 'Fazer Upload'}
           </Button>
