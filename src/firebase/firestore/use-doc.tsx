@@ -29,7 +29,7 @@ export function useDoc<T = DocumentData>(
 
     const ref = doc(firestore, path);
 
-    const handleSnapshot = (snapshot: DocumentSnapshot<DocumentData>) => {
+    const handleSnapshot = (snapshot: DocumentSnapshot) => {
       if (snapshot.exists()) {
         const docData = { ...snapshot.data(), id: snapshot.id } as T;
         setData(docData);

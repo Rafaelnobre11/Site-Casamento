@@ -2,7 +2,7 @@
 
 import { type User, onIdTokenChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { useFirebase } from '../provider.tsx';
+import { useFirebase } from '../provider';
 
 export type FirebaseUser = User | null;
 
