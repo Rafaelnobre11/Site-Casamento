@@ -46,7 +46,7 @@ const Hero: React.FC<HeroProps> = ({
           <p className="animate-fade-in-up uppercase tracking-[0.3em] text-sm md:text-base" style={{ animationDelay: '0.1s' }}>
             {weddingDate || "21 de Setembro de 2024"}
           </p>
-          <h1 className="animate-fade-in-up font-headline text-5xl sm:text-6xl md:text-8xl my-4" style={{ animationDelay: '0.3s' }}>
+          <h1 className="animate-fade-in-up font-hero-headline font-headline text-5xl sm:text-6xl md:text-8xl my-4" style={{ animationDelay: '0.3s' }}>
             <span className="block sm:inline">{name1}</span>
             <span className="text-primary text-4xl sm:text-6xl md:text-8xl mx-2 sm:mx-4">&amp;</span>
             <span className="block sm:inline">{name2}</span>

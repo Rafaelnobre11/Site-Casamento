@@ -19,6 +19,7 @@ export type SiteConfig = {
     buttonBg?: string;
     buttonText?: string;
     headingText?: string;
+    heroHeadingText?: string;
     bodyText?: string;
   };
   names?: string;

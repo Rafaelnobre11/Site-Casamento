@@ -199,6 +199,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     const primaryHsl = colorToHsl(mainColor);
     
     let generatedHeadingText = '#111827';
+    let generatedHeroHeadingText = '#FFFFFF';
     let generatedBodyText = '#4b5563';
     let generatedButtonBg = '#e85d3f';
     let generatedButtonText = '#ffffff';
@@ -206,6 +207,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     if (primaryHsl) {
         const { h, s, l } = primaryHsl;
         generatedHeadingText = `hsl(${h}, ${s * 0.9}%, ${Math.max(15, l * 0.35)}%)`;
+        generatedHeroHeadingText = `hsl(${h}, ${s * 0.1}%, ${Math.min(99, l + (100 - l) * 0.98)}%)`;
         generatedBodyText = `hsl(${h}, ${s * 0.3}%, ${Math.max(15, l * 0.25)}%)`;
         generatedButtonBg = `hsl(${h}, ${s}%, ${l}%)`;
         const primaryRgb = hexToRgb(colorStringToHex(mainColor));
@@ -343,10 +345,11 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                                 Deixe em branco para usar a paleta gerada automaticamente. Preencha para substituir uma cor específica.
                             </p>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <ColorInput label="Texto Títulos (Geral)" value={formState.customColors?.headingText || ''} onChange={(value) => handleColorChange('headingText', value)} placeholder={colorStringToHex(generatedHeadingText) || ''} />
+                                <ColorInput label="Texto Títulos (Hero)" value={formState.customColors?.heroHeadingText || ''} onChange={(value) => handleColorChange('heroHeadingText', value)} placeholder={colorStringToHex(generatedHeroHeadingText) || ''} />
+                                <ColorInput label="Texto do Corpo" value={formState.customColors?.bodyText || ''} onChange={(value) => handleColorChange('bodyText', value)} placeholder={colorStringToHex(generatedBodyText) || ''} />
                                 <ColorInput label="Fundo do Botão" value={formState.customColors?.buttonBg || ''} onChange={(value) => handleColorChange('buttonBg', value)} placeholder={colorStringToHex(generatedButtonBg) || ''} />
                                 <ColorInput label="Texto do Botão" value={formState.customColors?.buttonText || ''} onChange={(value) => handleColorChange('buttonText', value)} placeholder={colorStringToHex(generatedButtonText) || ''} />
-                                <ColorInput label="Texto dos Títulos" value={formState.customColors?.headingText || ''} onChange={(value) => handleColorChange('headingText', value)} placeholder={colorStringToHex(generatedHeadingText) || ''} />
-                                <ColorInput label="Texto do Corpo" value={formState.customColors?.bodyText || ''} onChange={(value) => handleColorChange('bodyText', value)} placeholder={colorStringToHex(generatedBodyText) || ''} />
                             </div>
                         </div>
                     </CardContent>

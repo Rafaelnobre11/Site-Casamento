@@ -59,6 +59,10 @@ export function SiteStyle() {
     .font-headline {
       color: ${customColors.headingText || `hsl(${h}, ${s * 0.9}%, ${Math.max(15, l * 0.35)}%)`};
     }
+
+    .font-hero-headline {
+      color: ${customColors.heroHeadingText || `hsl(${h}, ${s * 0.1}%, ${Math.min(99, l + (100 - l) * 0.98)}%)`};
+    }
     
     body {
         color: ${customColors.bodyText || `hsl(${h}, ${s * 0.3}, ${Math.max(15, l * 0.25)}%)`};
