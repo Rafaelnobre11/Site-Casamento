@@ -20,7 +20,7 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
   
   const navLinks = [
     { href: '#carousel', label: texts.nav_story || 'Nossa História' },
-    { href: '#event-info', label: texts.nav_info || 'O Grande Dia' },
+    { href: '#event', label: texts.nav_info || 'O Grande Dia' },
     { href: '#gifts', label: texts.nav_gifts || 'Presentes' },
   ];
 
@@ -32,20 +32,44 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const NavContent = () => (
+  const NavContent = ({ isMobile = false }) => (
     <>
-      {navLinks.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className="text-sm font-medium transition-colors hover:text-primary"
-          onClick={() => setMobileMenuOpen(false)}
-        >
-          {link.label}
-        </Link>
-      ))}
+      {navLinks.map((link) => {
+        const linkProps = {
+          href: link.href,
+          className: cn(
+            'font-medium transition-colors hover:text-primary',
+            isMobile ? 'text-lg py-2' : 'text-sm'
+          )
+        };
+
+        if (isMobile) {
+          return (
+            <SheetClose asChild key={link.href}>
+              <Link {...linkProps}>{link.label}</Link>
+            </SheetClose>
+          );
+        }
+        
+        return (
+          <Link key={link.href} {...linkProps}>
+            {link.label}
+          </Link>
+        );
+      })}
     </>
   );
+
+  const HeaderLogo = ({ isMobile = false }) => (
+    <Link href="/" className="flex items-center gap-2 shrink-0" onClick={() => setMobileMenuOpen(false)}>
+        {logoUrl ? (
+            <Image src={logoUrl} alt="Logo" width={isMobile ? 32 : 36} height={isMobile ? 32 : 36} className={cn(isMobile ? 'h-8' : 'h-9', 'w-auto')} />
+        ) : (
+            <span className={cn('font-headline font-bold', isMobile ? 'text-base' : 'text-lg md:text-xl')}>{names || 'J & L'}</span>
+        )}
+    </Link>
+  );
+
 
   return (
     <header
@@ -56,14 +80,8 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
           : 'bg-transparent'
       )}
     >
-      <div className="container mx-auto flex h-20 max-w-7xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
-            {logoUrl ? (
-                <Image src={logoUrl} alt="Logo" width={40} height={40} className="h-10 w-auto" />
-            ) : (
-                <span className="font-headline text-xl font-bold">{names || 'J & L'}</span>
-            )}
-        </Link>
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:h-20 max-w-7xl">
+        <HeaderLogo />
 
         <nav className="hidden items-center gap-6 md:flex">
           <NavContent />
@@ -82,15 +100,9 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
                   <span className="sr-only">Abrir menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] bg-background p-0">
-                 <div className="flex items-center justify-between p-6 border-b">
-                    <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-                        {logoUrl ? (
-                            <Image src={logoUrl} alt="Logo" width={32} height={32} className="h-8 w-auto" />
-                        ) : (
-                            <span className="font-headline text-lg font-bold">{names || 'J & L'}</span>
-                        )}
-                    </Link>
+              <SheetContent side="right" className="w-[300px] bg-background p-0 flex flex-col">
+                 <div className="flex items-center justify-between p-4 border-b">
+                    <HeaderLogo isMobile />
                     <SheetClose asChild>
                          <Button variant="ghost" size="icon">
                             <X className="h-6 w-6" />
@@ -98,14 +110,16 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
                         </Button>
                     </SheetClose>
                  </div>
-                <div className="flex h-full flex-col">
-                    <nav className="mt-6 flex flex-col gap-6 px-6">
-                        <NavContent />
+                <div className="flex-grow flex flex-col">
+                    <nav className="mt-8 flex flex-col gap-6 px-6">
+                        <NavContent isMobile />
                     </nav>
                     <div className="mt-auto p-6">
-                        <Button asChild className="w-full rounded-full shadow hover:shadow-lg">
-                            <Link href="#rsvp" onClick={() => setMobileMenuOpen(false)}>{texts.nav_rsvp || 'Confirmar Presença'}</Link>
+                      <SheetClose asChild>
+                        <Button asChild size="lg" className="w-full rounded-full shadow-lg">
+                            <Link href="#rsvp">{texts.nav_rsvp || 'Confirmar Presença'}</Link>
                         </Button>
+                      </SheetClose>
                     </div>
                 </div>
               </SheetContent>

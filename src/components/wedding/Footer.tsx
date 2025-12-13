@@ -10,9 +10,9 @@ interface FooterProps {
 const Footer: React.FC<FooterProps> = ({ names = 'O Casal' }) => {
   return (
     <footer className="w-full bg-[#FBF9F6] border-t border-[#EAE2DA]">
-      <div className="container mx-auto max-w-7xl px-4 py-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-center">
-        <p className="font-headline text-lg text-[#C5A086]">{names}</p>
-        <p className="text-sm text-gray-500">
+      <div className="container mx-auto max-w-7xl px-4 py-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p className="font-headline text-lg text-[#C5A086] text-center sm:text-left">{names}</p>
+        <p className="text-sm text-gray-500 text-center">
           &copy; {new Date().getFullYear()} Feito com ❤️. Todos os direitos reservados.
         </p>
         <Link 

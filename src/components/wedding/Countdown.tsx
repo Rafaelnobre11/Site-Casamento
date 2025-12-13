@@ -49,19 +49,19 @@ const Countdown: React.FC<CountdownProps> = ({ targetDate }) => {
   ];
 
   return (
-    <div className="flex justify-center items-center gap-4 md:gap-8">
+    <div className="flex justify-center items-start gap-2 sm:gap-4 md:gap-8">
       {countdownItems.map((item, index) => (
         <div key={item.label} className="flex items-center">
           <div className="text-center">
-            <div className="font-headline text-4xl md:text-6xl text-white">
+            <div className="font-headline text-3xl sm:text-4xl md:text-6xl text-white">
               {formatNumber(item.value)}
             </div>
-            <div className="text-xs md:text-sm uppercase tracking-widest text-white/80">
+            <div className="text-[10px] sm:text-xs uppercase tracking-widest text-white/80 mt-1">
               {item.label}
             </div>
           </div>
           {index < countdownItems.length - 1 && (
-            <span className="font-headline text-4xl md:text-6xl text-white/50 mx-2 md:mx-4">:</span>
+            <span className="font-headline text-2xl sm:text-4xl md:text-6xl text-white/50 mx-1 sm:mx-2 md:mx-4">:</span>
           )}
         </div>
       ))}

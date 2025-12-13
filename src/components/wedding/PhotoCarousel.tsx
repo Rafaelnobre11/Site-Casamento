@@ -24,11 +24,13 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [] }) => {
 
   return (
     <section id="carousel" className="w-full py-16 md:py-24 bg-white">
-      <div className="container mx-auto max-w-6xl px-4 text-center">
-        <h2 className="font-headline text-4xl md:text-5xl text-[#C5A086] mb-4">Nossa História em Fotos</h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto mb-12">
-          Uma pequena viagem através de momentos especiais que nos trouxeram até aqui.
-        </p>
+      <div className="container mx-auto max-w-7xl px-0 text-center">
+        <div className="px-4">
+            <h2 className="font-headline text-4xl md:text-5xl text-[#C5A086] mb-4">Nossa História em Fotos</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-12">
+              Uma pequena viagem através de momentos especiais que nos trouxeram até aqui.
+            </p>
+        </div>
         <Carousel
           plugins={[Autoplay({ delay: 4000, stopOnInteraction: true })]}
           opts={{
@@ -37,18 +39,17 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [] }) => {
           }}
           className="w-full"
         >
-          <CarouselContent className="-ml-4">
+          <CarouselContent className="-ml-2 md:-ml-4">
             {finalImages.map((imageUrl, index) => (
-              <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+              <CarouselItem key={index} className="pl-2 md:pl-4 basis-4/5 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                 <div className="p-1">
-                  <Card className="overflow-hidden rounded-lg shadow-md border-transparent">
-                    <CardContent className="relative flex aspect-square items-center justify-center p-0">
+                  <Card className="overflow-hidden rounded-lg shadow-md border-transparent aspect-square">
+                    <CardContent className="relative flex items-center justify-center p-0 h-full w-full">
                       {imageUrl && <Image
                         src={imageUrl}
                         alt={`Momento ${index + 1}`}
-                        width={600}
-                        height={600}
-                        className="w-full h-full object-cover transition-transform duration-500 ease-in-out hover:scale-110"
+                        fill
+                        className="object-cover transition-transform duration-500 ease-in-out hover:scale-110"
                         data-ai-hint="couple smiling"
                       />}
                        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
@@ -58,8 +59,8 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [] }) => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="hidden sm:flex" />
-          <CarouselNext className="hidden sm:flex" />
+          <CarouselPrevious className="hidden lg:flex left-4" />
+          <CarouselNext className="hidden lg:flex right-4" />
         </Carousel>
       </div>
     </section>
@@ -67,5 +68,3 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [] }) => {
 }
 
 export default PhotoCarousel;
-
-    

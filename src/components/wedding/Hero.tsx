@@ -4,7 +4,6 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import Countdown from './Countdown';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 interface HeroProps {
@@ -35,7 +34,7 @@ const Hero: React.FC<HeroProps> = ({
   const name2 = nameParts[1] ? nameParts[1].trim() : '';
 
   return (
-    <section id="home" className="relative h-[100vh] w-full text-white flex flex-col justify-center items-center">
+    <section id="home" className="relative min-h-screen w-full text-white flex flex-col justify-center items-center">
       {imageSrc && <Image
         src={imageSrc}
         alt="Imagem do casal"
@@ -47,15 +46,17 @@ const Hero: React.FC<HeroProps> = ({
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
 
-      <div className="relative z-10 flex h-full flex-col items-center justify-end text-center pb-20 md:pb-24">
+      <div className="relative z-10 flex h-full flex-col items-center justify-end text-center pb-16 sm:pb-20 md:pb-24">
         <div className="container mx-auto flex flex-col items-center px-4">
           <p className="animate-fade-in-up uppercase tracking-[0.2em] text-sm md:text-base" style={{ animationDelay: '0.1s' }}>
             {formattedDate}
           </p>
-          <h1 className="animate-fade-in-up font-headline text-6xl md:text-8xl lg:text-9xl my-2 md:my-4" style={{ animationDelay: '0.3s' }}>
-            {name1} <span className="text-primary">&amp;</span> {name2}
+          <h1 className="animate-fade-in-up font-headline text-5xl sm:text-6xl md:text-8xl my-4" style={{ animationDelay: '0.3s' }}>
+            <span className="block sm:inline">{name1}</span>
+            <span className="text-primary text-4xl sm:text-6xl md:text-8xl mx-2 sm:mx-4">&amp;</span>
+            <span className="block sm:inline">{name2}</span>
           </h1>
-          <p className="animate-fade-in-up text-lg md:text-xl italic max-w-2xl font-light" style={{ animationDelay: '0.5s' }}>
+          <p className="animate-fade-in-up text-base md:text-lg lg:text-xl italic max-w-2xl font-light" style={{ animationDelay: '0.5s' }}>
             {romanticQuote}
           </p>
           <Button asChild size="lg" className="animate-fade-in-up mt-8 rounded-full shadow-lg bg-white text-gray-800 hover:bg-gray-200" style={{ animationDelay: '0.7s' }}>
@@ -68,5 +69,3 @@ const Hero: React.FC<HeroProps> = ({
 };
 
 export default Hero;
-
-    

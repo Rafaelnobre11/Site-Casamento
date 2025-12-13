@@ -30,9 +30,9 @@ const EventInfo: React.FC<EventInfoProps> = ({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
-          <div className="lg:col-span-2 space-y-8">
-            <div className="flex items-start gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-center">
+          <div className="lg:col-span-2 space-y-8 text-center lg:text-left">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4">
               <div className="flex-shrink-0 bg-[#FBF9F6] text-[#C5A086] p-3 rounded-full shadow-sm">
                 <MapPin className="h-6 w-6" />
               </div>
@@ -41,7 +41,7 @@ const EventInfo: React.FC<EventInfoProps> = ({
                 <p className="text-muted-foreground">{address || "Endereço do evento"}</p>
               </div>
             </div>
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4">
               <div className="flex-shrink-0 bg-[#FBF9F6] text-[#C5A086] p-3 rounded-full shadow-sm">
                 <Clock className="h-6 w-6" />
               </div>
@@ -50,7 +50,7 @@ const EventInfo: React.FC<EventInfoProps> = ({
                 <p className="text-muted-foreground">Às {time || "16:00"}</p>
               </div>
             </div>
-            <Button asChild size="lg" className="w-full bg-[#C5A086] hover:bg-[#b89176] text-white">
+            <Button asChild size="lg" className="w-full max-w-xs mx-auto lg:mx-0 bg-[#C5A086] hover:bg-[#b89176] text-white">
               <a href={wazeLink} target="_blank" rel="noopener noreferrer">
                 <Navigation className="mr-2 h-5 w-5" />
                 Abrir no Waze
@@ -58,9 +58,9 @@ const EventInfo: React.FC<EventInfoProps> = ({
             </Button>
           </div>
           
-          <div className="lg:col-span-3 h-full min-h-[400px]">
+          <div className="lg:col-span-3 w-full">
             {mapUrl && (
-              <Card className="overflow-hidden shadow-lg h-full w-full">
+              <Card className="overflow-hidden shadow-lg w-full aspect-[4/3] lg:aspect-video">
                 <iframe
                   src={mapUrl}
                   width="100%"

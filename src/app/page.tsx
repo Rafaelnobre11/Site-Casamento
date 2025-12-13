@@ -13,17 +13,16 @@ import GiftSection from '@/components/wedding/GiftSection';
 import Footer from '@/components/wedding/Footer';
 import Header from '@/components/landing-page/Header';
 import { defaultGifts } from '@/lib/default-gifts';
-import { cn } from '@/lib/utils';
 import Countdown from '@/components/wedding/Countdown';
 
-const defaultLayoutOrder = ['hero', 'carousel', 'countdown', 'rsvp', 'event', 'gifts'];
+const defaultLayoutOrder = ['hero', 'countdown', 'carousel', 'rsvp', 'event', 'gifts'];
 
 export default function Home() {
   const [isRsvpConfirmed, setIsRsvpConfirmed] = useState(false);
   const { data: siteConfig, loading } = useDoc<SiteConfig>('config/site');
 
   useEffect(() => {
-    // Persist RSVP confirmation across reloads
+    // Check local storage to see if RSVP was already confirmed
     if (localStorage.getItem('rsvpConfirmed') === 'true') {
       setIsRsvpConfirmed(true);
     }
@@ -43,8 +42,8 @@ export default function Home() {
     );
   }
 
-  // Fallback to a default config if nothing is in the database
-  const config = siteConfig || {
+  // Define default config
+  const defaultConfig = {
     names: 'Cláudia & Rafael',
     date: '2025-09-21T16:00:00',
     time: '16:00',
@@ -57,8 +56,11 @@ export default function Home() {
     texts: {},
     customColors: {},
     carouselImages: [],
-    isContentLocked: true, // Default to locked
+    isContentLocked: false, // Default to unlocked
   };
+
+  // Merge siteConfig with defaultConfig
+  const config = { ...defaultConfig, ...siteConfig };
   
   const isContentLocked = config.isContentLocked;
   const showGatedContent = isRsvpConfirmed || !isContentLocked;
@@ -73,21 +75,19 @@ export default function Home() {
           romanticQuote={config.texts?.hero_subtitle || "Duas almas, uma só história. O nosso 'para sempre' começa agora."}
           heroImage={config.heroImage}
         />
-        <PhotoCarousel images={config.carouselImages} />
         
         {config.date && (
-            <div className="bg-[#C5A086] py-12">
+            <div className="bg-[#C5A086] py-8 md:py-12">
                 <Countdown targetDate={config.date} />
             </div>
         )}
 
+        <PhotoCarousel images={config.carouselImages} />
+
         <RsvpSection onRsvpConfirmed={handleRsvpConfirmed} />
         
-        <div className="relative">
-             <div className={cn(
-                "transition-all duration-700", 
-                !showGatedContent && "blur-md pointer-events-none select-none"
-             )}>
+        {showGatedContent ? (
+            <>
                 <EventInfo
                   locationName={config.locationName}
                   address={config.locationAddress}
@@ -99,19 +99,14 @@ export default function Home() {
                     products={config.products} 
                     pixKey={config.pixKey} 
                 />
+            </>
+        ) : (
+            <div className="text-center py-16 px-4 sm:px-6 lg:px-8 bg-gray-50/50 rounded-lg shadow-inner max-w-2xl mx-auto my-12">
+                <Lock className="mx-auto h-10 w-10 text-gray-400" />
+                <h3 className="mt-4 text-xl font-semibold text-gray-800">Calma lá, ansioso!</h3>
+                <p className="mt-2 text-md text-gray-600">Primeiro confirme sua presença para ver os detalhes.</p>
             </div>
-             {!showGatedContent && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/30 backdrop-blur-sm z-10 text-center p-4">
-                    <Lock className="w-16 h-16 text-primary mb-4" />
-                    <h3 className="font-headline text-2xl text-primary-foreground bg-primary/80 px-4 py-2 rounded-md shadow-lg">
-                        {config.texts?.rsvp_lock_message_title || "🤫 Segredo, hein?"}
-                    </h3>
-                    <p className="mt-2 text-lg text-primary-foreground max-w-md bg-primary/80 px-4 py-2 rounded-md shadow-lg">
-                       {config.texts?.rsvp_lock_message_subtitle || "Calma, curioso! Primeiro diz que vai, depois a gente te mostra onde é a festa e como nos ajudar a ficar menos duros."}
-                    </p>
-                </div>
-            )}
-        </div>
+        )}
 
       </main>
       <Footer names={config.names} />

@@ -85,7 +85,6 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
         const guestDoc = querySnapshot.docs[0];
         const guestData = guestDoc.data();
         
-        // Basic name check (first name)
         const dbFirstName = guestData.name.split(' ')[0].toLowerCase();
         const inputFirstName = name.split(' ')[0].toLowerCase();
 
@@ -129,7 +128,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
   const renderContent = () => {
     if (isPending || stage === 'loading') {
       return (
-        <div className="flex flex-col items-center justify-center p-8 min-h-[300px]">
+        <div className="flex flex-col items-center justify-center p-8 min-h-[350px]">
           <Loader2 className="h-12 w-12 animate-spin text-[#C5A086]" />
         </div>
       );
@@ -138,7 +137,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
     switch (stage) {
       case 'success':
         return (
-          <div className="flex flex-col items-center text-center p-8 space-y-4 min-h-[300px] justify-center">
+          <div className="flex flex-col items-center text-center p-6 md:p-8 space-y-4 min-h-[350px] justify-center">
             <SuccessIcon />
             <h3 className="font-headline text-2xl text-[#C5A086] mt-4">Presença Confirmada!</h3>
             <p className="text-muted-foreground">Mal podemos esperar para celebrar com você. Obrigado!</p>
@@ -146,7 +145,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
         );
       case 'declined':
         return (
-          <div className="flex flex-col items-center text-center p-8 space-y-4 min-h-[300px] justify-center">
+          <div className="flex flex-col items-center text-center p-6 md:p-8 space-y-4 min-h-[350px] justify-center">
             <Frown className="w-16 h-16 text-amber-500" />
             <h3 className="font-headline text-2xl text-[#C5A086] mt-4">Que pena!</h3>
             <p className="text-muted-foreground">Sentiremos sua falta, mas agradecemos por nos avisar.</p>
@@ -154,7 +153,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
         );
       case 'error':
         return (
-            <div className="flex flex-col items-center text-center p-8 space-y-4 min-h-[300px] justify-center">
+            <div className="flex flex-col items-center text-center p-6 md:p-8 space-y-4 min-h-[350px] justify-center">
                 <Frown className="w-16 h-16 text-destructive" />
                 <h3 className="font-headline text-2xl text-destructive mt-4">Ops! Algo deu errado.</h3>
                 <p className="text-muted-foreground">{errorMessage}</p>
@@ -164,11 +163,11 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
       case 'found':
         return (
           <>
-            <CardHeader className="text-center">
-              <CardTitle className="font-headline text-3xl text-[#C5A086]">Olá, {guestInfo?.name.split(' ')[0]}!</CardTitle>
+            <CardHeader className="text-center px-4 pt-6 md:px-6 md:pt-8">
+              <CardTitle className="font-headline text-2xl md:text-3xl text-[#C5A086]">Olá, {guestInfo?.name.split(' ')[0]}!</CardTitle>
               <CardDescription>Seu convite é válido para até {guestInfo?.maxGuests} {guestInfo?.maxGuests === 1 ? 'pessoa' : 'pessoas'}.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-6 md:px-6 md:pb-8">
               <Form {...rsvpForm}>
                 <form className="space-y-6">
                   <div className="flex items-center justify-center gap-2 rounded-md border bg-muted p-3 text-center">
@@ -189,7 +188,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
                       </FormItem>
                     )}
                   />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col-reverse sm:grid sm:grid-cols-2 gap-4">
                     <Button type="button" variant="outline" onClick={rsvpForm.handleSubmit(v => handleRsvpSubmit(v, false))} disabled={isPending}>
                        Não poderei comparecer
                     </Button>
@@ -206,11 +205,11 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
       default:
         return (
           <>
-            <CardHeader className="text-center">
+            <CardHeader className="text-center px-4 pt-6 md:px-6 md:pt-8">
               <CardTitle className="font-headline text-3xl md:text-4xl text-[#C5A086]">Confirme sua Presença</CardTitle>
               <CardDescription>Por favor, preencha seus dados para encontrarmos seu convite.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-6 md:px-6 md:pb-8">
               <Form {...idForm}>
                 <form onSubmit={idForm.handleSubmit(handleSearchGuest)} className="space-y-4">
                   <FormField

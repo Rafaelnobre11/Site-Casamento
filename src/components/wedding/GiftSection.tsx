@@ -86,15 +86,15 @@ const GiftSection: React.FC<GiftSectionProps> = ({ products = [], pixKey }) => {
             Sua presença é o nosso maior presente. Mas, se você também quiser nos mimar, criamos uma lista de presentes simbólica com muito carinho.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {products.slice(0, 6).map((gift) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {products.slice(0, 8).map((gift) => (
               <GiftCard key={gift.id} gift={gift} />
             ))}
           </div>
           
-          {products.length > 6 && (
+          {products.length > 8 && (
             <Button variant="outline" className="mt-12 border-[#C5A086] text-[#C5A086] hover:bg-[#C5A086] hover:text-white" onClick={() => setIsFullListOpen(true)}>
-              Ver Lista de Presentes Completa
+              Ver mais presentes
             </Button>
           )}
         </div>
