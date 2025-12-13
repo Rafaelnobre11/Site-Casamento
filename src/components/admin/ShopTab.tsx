@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Trash2, PlusCircle, Sparkles, Save, Upload } from 'lucide-react';
 import type { SiteConfig, Product } from '@/types/siteConfig';
 import { generateGiftText } from '@/app/actions';
+import Image from 'next/image';
 
 interface ShopTabProps {
     config: SiteConfig;
@@ -179,17 +180,19 @@ export default function ShopTab({ config }: ShopTabProps) {
                                     </div>
                                     
                                     <div className="space-y-2 md:col-span-2">
-                                        <label className="font-medium text-sm">URL da Imagem</label>
-                                        <div className="flex items-center gap-2">
-                                            <Input value={product.imageUrl} onChange={(e) => handleProductChange(index, 'imageUrl', e.target.value)} />
+                                        <label className="font-medium text-sm">Imagem do Produto</label>
+                                        <div className="flex items-center gap-4">
+                                            {product.imageUrl && (
+                                                <Image src={product.imageUrl} alt="Preview" width={96} height={96} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
+                                            )}
                                             <Button asChild variant="outline">
                                                 <label htmlFor={`product-upload-${product.id}`} className="cursor-pointer">
                                                     {isUploading === product.id ? <Loader2 className="animate-spin" /> : <Upload />}
+                                                    {product.imageUrl ? 'Alterar Imagem' : 'Fazer Upload'}
                                                     <input id={`product-upload-${product.id}`} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, product.id, index)} disabled={isUploading === product.id} />
                                                 </label>
                                             </Button>
                                         </div>
-                                        {product.imageUrl && <img src={product.imageUrl} alt="Preview" className="mt-2 rounded-md max-h-24 object-contain bg-muted p-1" />}
                                     </div>
                                 </div>
                             ))}
@@ -203,7 +206,7 @@ export default function ShopTab({ config }: ShopTabProps) {
             </div>
              <CardFooter className="justify-end sticky bottom-0 bg-background/95 py-4 border-t z-10 -mx-8 px-8">
                  <Button onClick={handleSave} disabled={isPending || !!isUploading} size="lg">
-                    {isPending || isUploading ? <Loader2 className="animate-spin" /> : <Save />}
+                    {isPending || !!isUploading ? <Loader2 className="animate-spin" /> : <Save />}
                     {isUploading ? 'Aguardando Upload...' : 'Salvar Loja e Chave PIX'}
                 </Button>
             </CardFooter>
