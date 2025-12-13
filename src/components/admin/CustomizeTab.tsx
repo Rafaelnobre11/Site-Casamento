@@ -18,6 +18,7 @@ import { colorToHsl, colorStringToHex, hexToRgb, getYiq } from '@/lib/color-util
 import { cn } from '@/lib/utils';
 import { colorPalette } from '@/lib/color-palette';
 
+type CustomColors = NonNullable<SiteConfig['customColors']>;
 
 interface CustomizeTabProps {
     config: SiteConfig;
@@ -72,29 +73,19 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     const [isUploading, setIsUploading] = useState(false);
     const [openColorPopover, setOpenColorPopover] = useState(false);
     
-    const [formState, setFormState] = useState<SiteConfig>({
+    const [formState, setFormState] = useState<SiteConfig>(() => ({
         ...config,
         isContentLocked: config.isContentLocked !== undefined ? config.isContentLocked : true,
         customColors: {
-            headingText: '',
-            heroHeadingText: '',
-            bodyText: '',
-            buttonBg: '',
-            buttonText: '',
             ...config.customColors,
         },
-    });
+    }));
 
     useEffect(() => {
         setFormState({
             ...config,
             isContentLocked: config.isContentLocked !== undefined ? config.isContentLocked : true,
             customColors: {
-                headingText: '',
-                heroHeadingText: '',
-                bodyText: '',
-                buttonBg: '',
-                buttonText: '',
                 ...config.customColors,
             },
         });
@@ -104,7 +95,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         setFormState(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleColorChange = (field: keyof SiteConfig['customColors'], value: string) => {
+    const handleColorChange = (field: keyof CustomColors, value: string) => {
         setFormState(prev => ({
             ...prev,
             customColors: { ...prev.customColors, [field]: value }
@@ -152,7 +143,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 newImages[index] = downloadURL;
                 handleFieldChange('carouselImages', newImages);
             } else {
-                handleFieldChange(field, downloadURL);
+                handleFieldChange(field as keyof SiteConfig, downloadURL);
             }
             
             toast({ title: 'Sucesso!', description: 'Sua imagem foi carregada e o URL foi atualizado.' });
@@ -234,6 +225,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         generatedHeroHeadingText = `hsl(${h}, ${s * 0.1}%, ${Math.min(99, l + (100 - l) * 0.98)}%)`;
         generatedBodyText = `hsl(${h}, ${s * 0.3}%, ${Math.max(15, l * 0.25)}%)`;
         generatedButtonBg = `hsl(${h}, ${s}%, ${l}%)`;
+        
         const mainColorHex = colorStringToHex(mainColor);
         const primaryRgb = mainColorHex ? hexToRgb(mainColorHex) : null;
         const buttonYiq = primaryRgb ? getYiq(primaryRgb) : 128;
@@ -474,6 +466,3 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         </div>
     );
 }
-
-    
-    

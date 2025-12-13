@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { maskPhone } from '@/lib/masks';
@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Frown, Users, Check, PartyPopper } from 'lucide-react';
+import { Loader2, Frown, PartyPopper, Check } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
@@ -202,7 +202,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Quantas pessoas irão?</FormLabel>
-                            <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={String(field.value)}>
+                            <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={String(field.value || '')}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                                 <SelectContent>
                                     {Array.from({ length: guestInfo.maxGuests }, (_, i) => i + 1).map(num => (
