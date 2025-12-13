@@ -86,7 +86,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
             ...config,
             isContentLocked: config.isContentLocked !== undefined ? config.isContentLocked : true,
             customColors: {
-                ...config.customColors,
+                ...(config.customColors || {}),
             },
         });
     }, [config]);
