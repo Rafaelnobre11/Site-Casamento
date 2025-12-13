@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { useDoc } from '@/firebase/firestore/use-doc';
@@ -24,17 +25,6 @@ export default function AdminPage() {
         );
     }
     
-    // Create a processed config object
-    const processedConfig = {
-        ...(siteConfig || {}), // Start with loaded config or empty object
-    };
-
-    // If products are explicitly null/undefined or an empty array in Firestore, populate with defaults.
-    // This ensures that if the user deletes all gifts, the default list reappears.
-    if (!processedConfig.products || processedConfig.products.length === 0) {
-        processedConfig.products = defaultGifts;
-    }
-    
     // Ensure other fields have default values if they are missing
     const config: SiteConfig = {
         names: 'Cláudia & Rafael',
@@ -43,10 +33,16 @@ export default function AdminPage() {
         texts: {},
         customColors: {},
         carouselImages: [],
+        products: [], // Initialize as an empty array to satisfy TypeScript
         layoutOrder: ['hero', 'countdown', 'carousel', 'rsvp', 'event', 'gifts'],
-        ...processedConfig, // Spread the processed config over the defaults
+        ...(siteConfig || {}), // Spread the loaded config over the defaults
     };
 
+    // If products are explicitly null/undefined or an empty array in Firestore, populate with defaults.
+    // This ensures that if the user deletes all gifts, the default list reappears.
+    if (!config.products || config.products.length === 0) {
+        config.products = defaultGifts;
+    }
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/50">
