@@ -18,13 +18,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        // Se não há usuário, o modal de login deve estar aberto.
         setLoginOpen(true);
       } else if (user.email === ADMIN_EMAIL) {
-        // Se o usuário é o admin, fecha o modal.
         setLoginOpen(false);
       } else {
-        // Se é um usuário logado mas não é o admin, desloga e abre o modal.
         if (auth) {
             signOut(auth);
         }
@@ -46,12 +43,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setLoginOpen(false);
   }
 
-  return (
-    <>
-      <LoginDialog isOpen={isLoginOpen} onLoginSuccess={handleLoginSuccess} />
-      <div className={isLoginOpen ? 'blur-sm pointer-events-none' : ''}>
-        {children}
-      </div>
-    </>
-  );
+  // Renderização condicional segura.
+  // O conteúdo do painel (children) só é renderizado se o login for bem-sucedido.
+  if (isLoginOpen) {
+    return (
+        <div className="h-screen w-full bg-muted/40">
+            <LoginDialog isOpen={isLoginOpen} onLoginSuccess={handleLoginSuccess} />
+        </div>
+    );
+  }
+
+  return <>{children}</>;
 }
