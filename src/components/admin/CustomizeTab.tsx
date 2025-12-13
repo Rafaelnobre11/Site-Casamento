@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle, Calendar, Clock, Upload } from 'lucide-react';
+import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle, Calendar, Clock, Upload, ChevronDown } from 'lucide-react';
 import type { SiteConfig } from '@/types/siteConfig';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 interface CustomizeTabProps {
     config: SiteConfig;
@@ -30,6 +31,16 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
 
     const handleFieldChange = (field: keyof SiteConfig, value: any) => {
         setFormState(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleColorChange = (field: keyof SiteConfig['customColors'], value: string) => {
+        setFormState(prev => ({
+            ...prev,
+            customColors: {
+                ...prev.customColors,
+                [field]: value,
+            }
+        }));
     };
     
     const handleCarouselAdd = () => {
@@ -95,11 +106,8 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 updatedState.wazeLink = `https://www.waze.com/ul?q=${encodedAddress}`;
             }
             
-            // Remover customColors para usar a paleta gerada
-            const { customColors, ...stateToSave } = updatedState;
-
             try {
-                await setDocument(firestore, 'config/site', stateToSave);
+                await setDocument(firestore, 'config/site', updatedState);
                 toast({ title: "Salvo!", description: `Suas personalizações foram salvas com sucesso.` });
             } catch (error) {
                 console.error("Error saving config:", error);
@@ -173,19 +181,16 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Palette /> Cor Principal do Tema</CardTitle>
-                        <CardDescription>Escolha a cor principal para gerar uma paleta de cores coesa para todo o site.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><Palette /> Cores do Tema</CardTitle>
+                        <CardDescription>Escolha a cor principal para gerar uma paleta coesa ou ajuste as cores detalhadas manualmente.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-4">
                         <div className="p-4 border rounded-lg bg-background">
-                            <Label htmlFor="main-color" className="font-semibold mb-4">Cor Principal</Label>
-                            <div className="flex items-center gap-4 mt-2">
-                                <Input 
-                                    type="color" 
-                                    value={formState.customColor || '#e85d3f'}
-                                    onChange={(e) => handleFieldChange('customColor', e.target.value)}
-                                    className="w-24 h-12 p-1"
-                                />
+                            <Label htmlFor="main-color" className="font-semibold mb-2 block">Cor Principal</Label>
+                            <div className="flex items-center gap-4">
+                                <div className="p-1 border rounded-md">
+                                    <div className="w-8 h-8 rounded" style={{ backgroundColor: formState.customColor || '#e85d3f' }} />
+                                </div>
                                 <div className="flex-1">
                                     <Input 
                                         id="main-color"
@@ -194,11 +199,45 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                                         placeholder="#e85d3f ou terracotta" 
                                     />
                                     <p className="text-xs text-muted-foreground mt-2">
-                                      Escreva um código de cor (ex: #e85d3f) ou o nome de uma cor em inglês (ex: 'terracotta', 'navy blue'). O sistema criará a paleta automaticamente.
+                                      Escreva um código de cor (ex: #e85d3f) ou um nome em inglês (ex: 'terracotta').
                                     </p>
                                 </div>
                             </div>
                         </div>
+
+                         <Accordion type="single" collapsible>
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>
+                                    <div className="flex items-center gap-2 text-sm font-medium">
+                                        <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                                        Cores Detalhadas (Avançado)
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="pt-4">
+                                    <div className="grid md:grid-cols-2 gap-x-6 gap-y-4 p-4 border rounded-lg bg-muted/50">
+                                        <div className="space-y-2">
+                                            <Label>Fundo do Botão</Label>
+                                            <Input value={formState.customColors?.buttonBg || ''} onChange={(e) => handleColorChange('buttonBg', e.target.value)} placeholder="Automático" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Texto do Botão</Label>
+                                            <Input value={formState.customColors?.buttonText || ''} onChange={(e) => handleColorChange('buttonText', e.target.value)} placeholder="Automático" />
+                                        </div>
+                                         <div className="space-y-2">
+                                            <Label>Texto dos Títulos</Label>
+                                            <Input value={formState.customColors?.headingText || ''} onChange={(e) => handleColorChange('headingText', e.target.value)} placeholder="Automático" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Texto do Corpo</Label>
+                                            <Input value={formState.customColors?.bodyText || ''} onChange={(e) => handleColorChange('bodyText', e.target.value)} placeholder="Automático" />
+                                        </div>
+                                    </div>
+                                     <p className="text-xs text-muted-foreground mt-2 px-1">
+                                        Deixe em branco para usar a paleta gerada automaticamente a partir da cor principal. Preencha para substituir uma cor específica.
+                                    </p>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
                     </CardContent>
                 </Card>
 

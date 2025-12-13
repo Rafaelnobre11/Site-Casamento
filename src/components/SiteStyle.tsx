@@ -9,6 +9,7 @@ import { SiteConfig } from '@/types/siteConfig';
 function colorToHsl(colorStr: string | undefined): { h: number; s: number; l: number } | null {
   if (!colorStr) return null;
 
+  // Usa um elemento temporário para obter o valor RGB computado, lidando com nomes de cores
   const tempEl = document.createElement('div');
   tempEl.style.color = colorStr;
   document.body.appendChild(tempEl);
@@ -19,13 +20,9 @@ function colorToHsl(colorStr: string | undefined): { h: number; s: number; l: nu
   const rgbMatch = computedColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
   if (!rgbMatch) return null;
 
-  let r = parseInt(rgbMatch[1], 10);
-  let g = parseInt(rgbMatch[2], 10);
-  let b = parseInt(rgbMatch[3], 10);
-
-  r /= 255;
-  g /= 255;
-  b /= 255;
+  let r = parseInt(rgbMatch[1], 10) / 255;
+  let g = parseInt(rgbMatch[2], 10) / 255;
+  let b = parseInt(rgbMatch[3], 10) / 255;
 
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
@@ -59,25 +56,24 @@ export function SiteStyle() {
 
   const primaryHsl = colorToHsl(config.customColor);
   
+  // Se não houver cor primária válida, não faz nada
   if (!primaryHsl) return null;
   
-  // Gera uma paleta de cores a partir da cor primária
   const { h, s, l } = primaryHsl;
   
-  // Foreground: Preto ou branco dependendo da luminosidade da cor primária
-  const primaryFg = l > 50 ? '0 0% 10%' : '0 0% 98%';
-
-  // Accent: uma versão mais clara/escura da cor primária
+  // Calcula cores da paleta com base na cor primária
+  const primaryFg = l > 60 ? '0 0% 10%' : '0 0% 98%';
   const accentL = l > 50 ? Math.max(0, l - 10) : Math.min(100, l + 10);
-
-  // Background: Um tom muito claro e com baixa saturação da cor primária
   const bgL = Math.max(96, l + (96-l) * 0.8);
   const bgS = Math.min(15, s);
+
+  // Verifica as cores customizadas do admin painel
+  const customColors = config.customColors || {};
 
   const style = `
     :root {
       --background: ${h} ${bgS}% ${bgL}%;
-      --foreground: 222 47% 11%; /* Mantém um cinza escuro para texto principal */
+      --foreground: ${customColors.bodyText ? colorToHsl(customColors.bodyText)?.h + ' ' + colorToHsl(customColors.bodyText)?.s + '% ' + colorToHsl(customColors.bodyText)?.l + '%' : '222 47% 11%'};
       
       --primary: ${h} ${s}% ${l}%;
       --primary-foreground: ${primaryFg};
@@ -85,7 +81,7 @@ export function SiteStyle() {
       --secondary: ${h} ${s}% ${l + (100 - l) * 0.8}%;
       --secondary-foreground: ${h} ${s}% ${l > 50 ? Math.max(0, l-40) : Math.min(100, l+40)}%;
       
-      --muted: ${h} ${s}% ${l + (100-l) * 0.9}%;
+      --muted: ${h} ${s}% ${l + (100 - l) * 0.9}%;
       --muted-foreground: 215 14% 44%;
 
       --accent: ${h} ${s}% ${accentL}%;
@@ -95,6 +91,19 @@ export function SiteStyle() {
       --input: ${h} ${s}% ${l + (100 - l) * 0.85}%;
       --ring: ${h} ${s}% ${l}%;
     }
+
+    .font-headline {
+        color: ${customColors.headingText || `hsl(${h}, ${s}%, ${l > 50 ? Math.max(0, l-30) : Math.min(100, l+30)}%)`};
+    }
+    
+    .btn-primary {
+        background-color: ${customColors.buttonBg || `hsl(${h}, ${s}%, ${l}%)`};
+        color: ${customColors.buttonText || `hsl(${primaryFg})`};
+    }
+    .btn-primary:hover {
+        background-color: ${customColors.buttonBg ? colorToHsl(customColors.buttonBg)?.h + ' ' + colorToHsl(customColors.buttonBg)?.s + '% ' + (colorToHsl(customColors.buttonBg).l - 5) + '%' : `hsl(${h}, ${s}%, ${l-5}%)`};
+    }
+
   `;
 
   return (
