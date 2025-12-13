@@ -15,19 +15,12 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ 
   names = 'Cláudia & Rafael', 
-  weddingDate = '2025-09-21T16:00:00',
-  romanticQuote = "Duas almas, uma só história. O nosso 'para sempre' começa agora.",
+  weddingDate = "21 de Setembro de 2024 - O dia do nosso 'sim' (e do open bar).",
+  romanticQuote = "A gente se enrolou e finalmente vai casar!",
   heroImage
 }) => {
   const defaultHeroImage = PlaceHolderImages.find((p) => p.id === 'hero-bg');
   const imageSrc = heroImage || defaultHeroImage?.imageUrl;
-
-  const formattedDate = weddingDate ? new Date(weddingDate).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC' // Add timezone to avoid off-by-one day errors
-  }) : '';
 
   const nameParts = names.split('&');
   const name1 = nameParts[0] ? nameParts[0].trim() : '';
@@ -49,7 +42,7 @@ const Hero: React.FC<HeroProps> = ({
       <div className="relative z-10 flex h-full flex-col items-center justify-end text-center pb-16 sm:pb-20 md:pb-24">
         <div className="container mx-auto flex flex-col items-center px-4">
           <p className="animate-fade-in-up uppercase tracking-[0.2em] text-sm md:text-base" style={{ animationDelay: '0.1s' }}>
-            {formattedDate}
+            {romanticQuote}
           </p>
           <h1 className="animate-fade-in-up font-headline text-5xl sm:text-6xl md:text-8xl my-4" style={{ animationDelay: '0.3s' }}>
             <span className="block sm:inline">{name1}</span>
@@ -57,7 +50,7 @@ const Hero: React.FC<HeroProps> = ({
             <span className="block sm:inline">{name2}</span>
           </h1>
           <p className="animate-fade-in-up text-base md:text-lg lg:text-xl italic max-w-2xl font-light" style={{ animationDelay: '0.5s' }}>
-            {romanticQuote}
+            {weddingDate}
           </p>
           <Button asChild size="lg" className="animate-fade-in-up mt-8 rounded-full shadow-lg bg-white text-gray-800 hover:bg-gray-200" style={{ animationDelay: '0.7s' }}>
             <Link href="#rsvp">Confirmar Presença</Link>

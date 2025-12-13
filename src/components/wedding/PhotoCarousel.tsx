@@ -16,9 +16,10 @@ import { Card, CardContent } from '@/components/ui/card';
 
 interface PhotoCarouselProps {
   images?: string[];
+  texts?: { [key: string]: string };
 }
 
-const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [] }) => {
+const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [], texts = {} }) => {
   const defaultMomentImages = PlaceHolderImages.filter((p) => p.id.startsWith('moment-')).map(p => p.imageUrl);
   const finalImages = images.length > 0 ? images : defaultMomentImages;
 
@@ -26,9 +27,9 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [] }) => {
     <section id="carousel" className="w-full py-16 md:py-24 bg-white">
       <div className="container mx-auto max-w-7xl px-0 text-center">
         <div className="px-4">
-            <h2 className="font-headline text-4xl md:text-5xl text-[#C5A086] mb-4">Nossa História em Fotos</h2>
+            <h2 className="font-headline text-4xl md:text-5xl text-[#C5A086] mb-4">{texts.carousel_title || 'Nossa História em Fotos'}</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto mb-12">
-              Uma pequena viagem através de momentos especiais que nos trouxeram até aqui.
+              {texts.carousel_subtitle || 'Uma pequena viagem através de momentos especiais que nos trouxeram até aqui.'}
             </p>
         </div>
         <Carousel

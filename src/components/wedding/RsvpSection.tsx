@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -38,6 +39,7 @@ type GuestInfo = { id: string; name: string; maxGuests: number };
 
 interface RsvpSectionProps {
   onRsvpConfirmed: () => void;
+  texts?: { [key: string]: string };
 }
 
 const SuccessIcon = () => (
@@ -48,7 +50,7 @@ const SuccessIcon = () => (
     </div>
 );
 
-const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
+const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }) => {
   const [stage, setStage] = useState<FormStage>('initial');
   const [guestInfo, setGuestInfo] = useState<GuestInfo | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -272,10 +274,10 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
                   />
                   <div className="flex flex-col-reverse sm:grid sm:grid-cols-2 gap-4">
                     <Button type="button" variant="outline" onClick={rsvpForm.handleSubmit(v => handleRsvpSubmit(v, false))} disabled={isPending}>
-                       Não poderei comparecer
+                       {texts.rsvp_decline_button || 'Não poderei comparecer'}
                     </Button>
                     <Button type="button" className="w-full bg-[#C5A086] hover:bg-[#b89176] text-white" onClick={rsvpForm.handleSubmit(v => handleRsvpSubmit(v, true))} disabled={isPending}>
-                      <PartyPopper className="mr-2"/> Sim, eu vou!
+                      <PartyPopper className="mr-2"/>{texts.rsvp_confirm_button || 'Sim, eu vou!'}
                     </Button>
                   </div>
                 </form>
@@ -288,8 +290,8 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
         return (
           <>
             <CardHeader className="text-center px-4 pt-6 md:px-6 md:pt-8">
-              <CardTitle className="font-headline text-3xl md:text-4xl text-[#C5A086]">Confirme sua Presença</CardTitle>
-              <CardDescription>Por favor, preencha seus dados para encontrarmos seu convite.</CardDescription>
+              <CardTitle className="font-headline text-3xl md:text-4xl text-[#C5A086]">{texts.rsvp_title || 'Confirme sua Presença'}</CardTitle>
+              <CardDescription>{texts.rsvp_subtitle || 'Por favor, preencha seus dados para encontrarmos seu convite.'}</CardDescription>
             </CardHeader>
             <CardContent className="px-4 pb-6 md:px-6 md:pb-8">
               <Form {...idForm}>
@@ -327,7 +329,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
                   />
                   <Button type="submit" className="w-full bg-[#C5A086] hover:bg-[#b89176] text-white" disabled={isPending}>
                     <Check className="mr-2"/>
-                    Buscar meu Convite
+                    {texts.rsvp_find_button || 'Buscar meu Convite'}
                   </Button>
                 </form>
               </Form>

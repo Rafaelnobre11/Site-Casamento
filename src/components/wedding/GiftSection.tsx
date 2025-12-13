@@ -16,6 +16,7 @@ import QRCode from 'qrcode';
 interface GiftSectionProps {
   products?: Product[];
   pixKey?: string;
+  texts?: { [key: string]: string };
 }
 
 const GiftModalContent = ({ gift, pixKey, onClose }: { gift: Product; pixKey: string; onClose: () => void; }) => {
@@ -119,7 +120,7 @@ const GiftModalContent = ({ gift, pixKey, onClose }: { gift: Product; pixKey: st
 };
 
 
-const GiftSection: React.FC<GiftSectionProps> = ({ products = [], pixKey }) => {
+const GiftSection: React.FC<GiftSectionProps> = ({ products = [], pixKey, texts = {} }) => {
   const [selectedGift, setSelectedGift] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFullListOpen, setIsFullListOpen] = useState(false);
@@ -167,9 +168,9 @@ const GiftSection: React.FC<GiftSectionProps> = ({ products = [], pixKey }) => {
     <>
       <section id="gifts" className="w-full py-16 md:py-24 bg-[#FBF9F6]">
         <div className="container mx-auto max-w-6xl px-4 text-center">
-          <h2 className="font-headline text-4xl md:text-5xl text-[#C5A086] mb-4">Lista de Presentes</h2>
+          <h2 className="font-headline text-4xl md:text-5xl text-[#C5A086] mb-4">{texts.gifts_title || 'Lista de Presentes'}</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-12">
-            Sua presença é o nosso maior presente. Mas, se você também quiser nos mimar, criamos uma lista de presentes simbólica com muito carinho.
+            {texts.gifts_subtitle || 'Sua presença é o nosso maior presente. Mas, se você também quiser nos mimar, criamos uma lista de presentes simbólica com muito carinho.'}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
@@ -180,7 +181,7 @@ const GiftSection: React.FC<GiftSectionProps> = ({ products = [], pixKey }) => {
           
           {products.length > 8 && (
             <Button variant="outline" className="mt-12 border-[#C5A086] text-[#C5A086] hover:bg-[#C5A086] hover:text-white" onClick={() => setIsFullListOpen(true)}>
-              Ver todos os presentes
+              {texts.gifts_button || 'Ver todos os presentes'}
             </Button>
           )}
         </div>

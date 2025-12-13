@@ -12,6 +12,7 @@ interface EventInfoProps {
   wazeLink?: string;
   mapUrl?: string;
   date?: string; 
+  texts?: { [key: string]: string };
 }
 
 const EventInfo: React.FC<EventInfoProps> = ({
@@ -21,6 +22,7 @@ const EventInfo: React.FC<EventInfoProps> = ({
   wazeLink,
   mapUrl,
   date,
+  texts = {},
 }) => {
 
   const formattedDate = date 
@@ -31,9 +33,9 @@ const EventInfo: React.FC<EventInfoProps> = ({
     <section id="event-info" className="w-full py-16 md:py-24 bg-white">
       <div className="container mx-auto max-w-5xl px-4">
         <div className="text-center mb-12">
-          <h2 className="font-headline text-4xl md:text-5xl text-[#C5A086]">O Grande Dia</h2>
+          <h2 className="font-headline text-4xl md:text-5xl text-[#C5A086]">{texts.info_title || 'O Grande Dia'}</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mt-4">
-            Todas as informações que você precisa para celebrar conosco sem preocupações.
+            {texts.info_subtitle || 'Todas as informações que você precisa para celebrar conosco sem preocupações.'}
           </p>
         </div>
 
@@ -70,7 +72,7 @@ const EventInfo: React.FC<EventInfoProps> = ({
             <Button asChild size="lg" className="w-full max-w-xs mx-auto lg:mx-0 bg-[#C5A086] hover:bg-[#b89176] text-white">
               <a href={wazeLink} target="_blank" rel="noopener noreferrer">
                 <Navigation className="mr-2 h-5 w-5" />
-                Como Chegar
+                {texts.info_button || 'Como Chegar'}
               </a>
             </Button>
           </div>
