@@ -129,10 +129,15 @@ const GiftSection: React.FC<GiftSectionProps> = ({ products = [], pixKey }) => {
   const handlePresentearClick = (gift: Product) => {
     setSelectedGift(gift);
     setIsModalOpen(true);
-    setIsFullListOpen(false); // Close full list if open
   };
 
-  const GiftCard = ({ gift }: { gift: Product }) => (
+  const handleClosePaymentModal = () => {
+    setIsModalOpen(false);
+    // Give a little time for the modal to close before resetting the gift
+    setTimeout(() => setSelectedGift(null), 300);
+  }
+
+  const GiftCard = ({ gift, onGiftClick }: { gift: Product; onGiftClick: (g: Product) => void; }) => (
     <Card className="text-left overflow-hidden group flex flex-col border-[#EAE2DA] shadow-sm hover:shadow-lg transition-shadow duration-300">
       <CardContent className="p-0 relative">
         <div className="aspect-square w-full relative">
@@ -150,7 +155,7 @@ const GiftSection: React.FC<GiftSectionProps> = ({ products = [], pixKey }) => {
       <div className="p-4 md:p-6 flex flex-col flex-grow">
         <h3 className="font-bold text-base md:text-lg text-gray-800">{gift.title}</h3>
         <p className="text-sm text-muted-foreground mt-1 flex-grow">{gift.description}</p>
-        <Button className="w-full mt-4 bg-[#C5A086] hover:bg-[#b89176] text-white" onClick={() => handlePresentearClick(gift)}>
+        <Button className="w-full mt-4 bg-[#C5A086] hover:bg-[#b89176] text-white" onClick={() => onGiftClick(gift)}>
           <Gift className="mr-2 h-4 w-4" />
           Presentear
         </Button>
@@ -169,24 +174,17 @@ const GiftSection: React.FC<GiftSectionProps> = ({ products = [], pixKey }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {products.slice(0, 8).map((gift) => (
-              <GiftCard key={gift.id} gift={gift} />
+              <GiftCard key={gift.id} gift={gift} onGiftClick={handlePresentearClick} />
             ))}
           </div>
           
           {products.length > 8 && (
             <Button variant="outline" className="mt-12 border-[#C5A086] text-[#C5A086] hover:bg-[#C5A086] hover:text-white" onClick={() => setIsFullListOpen(true)}>
-              Ver mais presentes
+              Ver todos os presentes
             </Button>
           )}
         </div>
       </section>
-
-      {/* Main Gift Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          {selectedGift && <GiftModalContent gift={selectedGift} pixKey={finalPixKey} onClose={() => setIsModalOpen(false)} />}
-        </DialogContent>
-      </Dialog>
       
       {/* Full Gift List Modal */}
       <Dialog open={isFullListOpen} onOpenChange={setIsFullListOpen}>
@@ -198,13 +196,20 @@ const GiftSection: React.FC<GiftSectionProps> = ({ products = [], pixKey }) => {
             <div className="flex-grow overflow-y-auto -mx-6 px-6 py-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((gift) => (
-                        <GiftCard key={gift.id} gift={gift} />
+                        <GiftCard key={gift.id} gift={gift} onGiftClick={handlePresentearClick} />
                     ))}
                 </div>
             </div>
              <DialogClose asChild>
                 <Button variant="outline" className="mt-4 border-[#C5A086] text-[#C5A086] hover:bg-[#C5A086] hover:text-white">Fechar</Button>
             </DialogClose>
+        </DialogContent>
+      </Dialog>
+
+      {/* Main Gift Modal for Payment */}
+      <Dialog open={isModalOpen} onOpenChange={(open) => { if (!open) handleClosePaymentModal(); }}>
+        <DialogContent className="sm:max-w-2xl">
+          {selectedGift && <GiftModalContent gift={selectedGift} pixKey={finalPixKey} onClose={handleClosePaymentModal} />}
         </DialogContent>
       </Dialog>
     </>
