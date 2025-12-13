@@ -14,6 +14,7 @@ import Footer from '@/components/wedding/Footer';
 import Header from '@/components/landing-page/Header';
 import { defaultGifts } from '@/lib/default-gifts';
 import Countdown from '@/components/wedding/Countdown';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const defaultLayoutOrder = ['hero', 'countdown', 'carousel', 'rsvp', 'event', 'gifts'];
 
@@ -55,6 +56,7 @@ export default function Home() {
     googleMapsLink: 'https://www.google.com/maps/search/?api=1&query=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo',
     products: defaultGifts,
     layoutOrder: defaultLayoutOrder,
+    heroImage: PlaceHolderImages.find(p => p.id === 'hero-bg')?.imageUrl,
     texts: {
       nav_story: "Nossa Novela",
       nav_info: "Onde Vai Ser o Rolê",
