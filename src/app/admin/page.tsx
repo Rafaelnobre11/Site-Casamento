@@ -9,6 +9,7 @@ import TextsTab from '@/components/admin/TextsTab';
 import ShopTab from '@/components/admin/ShopTab';
 import LayoutTab from '@/components/admin/LayoutTab';
 import type { SiteConfig } from '@/types/siteConfig';
+import { defaultGifts } from '@/lib/default-gifts';
 
 export default function AdminPage() {
     const { data: siteConfig, loading: loadingConfig } = useDoc<SiteConfig>('config/site');
@@ -23,14 +24,29 @@ export default function AdminPage() {
         );
     }
     
-    // Fallback to a default config if nothing is in the database
-    const config = siteConfig || {
+    // Create a processed config object
+    const processedConfig = {
+        ...(siteConfig || {}), // Start with loaded config or empty object
+    };
+
+    // If products are explicitly null/undefined or an empty array in Firestore, populate with defaults.
+    // This ensures that if the user deletes all gifts, the default list reappears.
+    if (!processedConfig.products || processedConfig.products.length === 0) {
+        processedConfig.products = defaultGifts;
+    }
+    
+    // Ensure other fields have default values if they are missing
+    const config: SiteConfig = {
+        names: 'Cláudia & Rafael',
+        date: '2025-09-21T16:00:00',
+        time: '16:00',
         texts: {},
         customColors: {},
-        products: [],
         carouselImages: [],
-        layoutOrder: ['hero', 'moments', 'rsvp', 'info', 'gifts']
+        layoutOrder: ['hero', 'countdown', 'carousel', 'rsvp', 'event', 'gifts'],
+        ...processedConfig, // Spread the processed config over the defaults
     };
+
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/50">

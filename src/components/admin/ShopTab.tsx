@@ -64,12 +64,14 @@ export default function ShopTab({ config }: ShopTabProps) {
     };
 
     const addNewProduct = () => {
+        const newId = `gift-${Date.now()}`;
         const newProduct: Product = {
-            id: `gift-${Date.now()}`,
+            id: newId,
             title: 'Novo Presente Divertido',
             price: 'R$ 50,00',
             description: 'Uma nova forma de nos ajudar a pagar os boletos.',
-            imageUrl: 'https://picsum.photos/seed/newgift/400/250',
+            // Gera um placeholder de imagem automático e único para cada novo produto
+            imageUrl: `https://picsum.photos/seed/${newId}/400/250`,
             funnyNote: 'Obrigado por este presente aleatório e maravilhoso!',
         };
         setProducts([...products, newProduct]);
@@ -85,7 +87,9 @@ export default function ShopTab({ config }: ShopTabProps) {
     const handleSave = () => {
         startTransition(async () => {
             if (!firestore) return;
-            await setDocument(firestore, 'config/site', { products: products, pixKey: pixKey });
+            // Salva apenas os produtos que têm um título.
+            const validProducts = products.filter(p => p.title && p.title.trim() !== '');
+            await setDocument(firestore, 'config/site', { products: validProducts, pixKey: pixKey }, { merge: true });
             toast({ title: "Loja Salva!", description: "Sua lista de presentes e chave PIX foram atualizadas." });
         });
     };
@@ -150,6 +154,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="font-medium text-sm">URL da Imagem</label>
                                         <Input value={product.imageUrl} onChange={(e) => handleProductChange(index, 'imageUrl', e.target.value)} />
+                                        {product.imageUrl && <img src={product.imageUrl} alt="Preview" className="mt-2 rounded-md max-h-24 object-contain bg-muted p-1" />}
                                     </div>
                                 </div>
                             ))}
