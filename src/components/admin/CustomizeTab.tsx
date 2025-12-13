@@ -69,7 +69,98 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
-    const [isUploading, setIsUploading(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [openColorPopover, setOpenColorPopover] = useState(false);
+    
+    const [formState, setFormState] = useState<SiteConfig>({
+        ...config,
+        isContentLocked: config.isContentLocked !== undefined ? config.isContentLocked : true,
+        customColors: {
+            headingText: '',
+            heroHeadingText: '',
+            bodyText: '',
+            buttonBg: '',
+            buttonText: '',
+            ...config.customColors,
+        },
+    });
+
+    useEffect(() => {
+        setFormState({
+            ...config,
+            isContentLocked: config.isContentLocked !== undefined ? config.isContentLocked : true,
+            customColors: {
+                headingText: '',
+                heroHeadingText: '',
+                bodyText: '',
+                buttonBg: '',
+                buttonText: '',
+                ...config.customColors,
+            },
+        });
+    }, [config]);
+
+    const handleFieldChange = (field: keyof SiteConfig, value: any) => {
+        setFormState(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleColorChange = (field: keyof SiteConfig['customColors'], value: string) => {
+        setFormState(prev => ({
+            ...prev,
+            customColors: { ...prev.customColors, [field]: value }
+        }));
+    };
+    
+    const resetDetailedColors = () => {
+        handleColorChange('headingText', '');
+        handleColorChange('heroHeadingText', '');
+        handleColorChange('bodyText', '');
+        handleColorChange('buttonBg', '');
+        handleColorChange('buttonText', '');
+    }
+
+    const handleCarouselChange = (index: number, value: string) => {
+        const newImages = [...(formState.carouselImages || [])];
+        newImages[index] = value;
+        handleFieldChange('carouselImages', newImages);
+    };
+
+    const handleCarouselAdd = () => {
+        const newImages = [...(formState.carouselImages || []), `https://picsum.photos/seed/${Date.now()}/800/800`];
+        handleFieldChange('carouselImages', newImages);
+    };
+
+    const handleCarouselRemove = (index: number) => {
+        const newImages = (formState.carouselImages || []).filter((_, i) => i !== index);
+        handleFieldChange('carouselImages', newImages);
+    };
+    
+    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'heroImage' | 'carousel', index?: number) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const storage = getStorage();
+        const fileRef = ref(storage, `site_images/${field}_${Date.now()}_${file.name}`);
+        
+        try {
+            const snapshot = await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            if (field === 'carousel' && index !== undefined) {
+                const newImages = [...(formState.carouselImages || [])];
+                newImages[index] = downloadURL;
+                handleFieldChange('carouselImages', newImages);
+            } else {
+                handleFieldChange(field, downloadURL);
+            }
+            
+            toast({ title: 'Sucesso!', description: 'Sua imagem foi carregada e o URL foi atualizado.' });
+        } catch (error) {
+            console.error("Image upload error:", error);
+            toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -143,7 +234,6 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         generatedHeroHeadingText = `hsl(${h}, ${s * 0.1}%, ${Math.min(99, l + (100 - l) * 0.98)}%)`;
         generatedBodyText = `hsl(${h}, ${s * 0.3}%, ${Math.max(15, l * 0.25)}%)`;
         generatedButtonBg = `hsl(${h}, ${s}%, ${l}%)`;
-
         const mainColorHex = colorStringToHex(mainColor);
         const primaryRgb = mainColorHex ? hexToRgb(mainColorHex) : null;
         const buttonYiq = primaryRgb ? getYiq(primaryRgb) : 128;
@@ -385,4 +475,5 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     );
 }
 
+    
     
