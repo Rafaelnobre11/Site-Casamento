@@ -23,6 +23,11 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [], texts = {} }
   const defaultMomentImages = PlaceHolderImages.filter((p) => p.id.startsWith('moment-')).map(p => p.imageUrl);
   const finalImages = images.length > 0 ? images : defaultMomentImages;
 
+  const findImageDimensions = (url: string) => {
+    const placeholder = PlaceHolderImages.find(p => p.imageUrl === url);
+    return { width: placeholder?.width || 800, height: placeholder?.height || 800 };
+  }
+
   return (
     <section id="carousel" className="w-full py-16 md:py-24 bg-background">
       <div className="container mx-auto max-w-7xl px-0 text-center">
@@ -41,7 +46,9 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [], texts = {} }
           className="w-full"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
-            {finalImages.map((imageUrl, index) => (
+            {finalImages.map((imageUrl, index) => {
+              const { width, height } = findImageDimensions(imageUrl);
+              return (
               <CarouselItem key={index} className="pl-2 md:pl-4 basis-4/5 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                 <div className="p-1">
                   <Card className="overflow-hidden rounded-xl shadow-md border-transparent aspect-square">
@@ -49,8 +56,9 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [], texts = {} }
                       {imageUrl && <Image
                         src={imageUrl}
                         alt={`Momento ${index + 1}`}
-                        fill
-                        className="object-cover transition-transform duration-500 ease-in-out hover:scale-110"
+                        width={width}
+                        height={height}
+                        className="object-cover h-full w-full transition-transform duration-500 ease-in-out hover:scale-110"
                         data-ai-hint="couple smiling"
                          sizes="(max-width: 768px) 80vw, (max-width: 1200px) 50vw, 33vw"
                       />}
@@ -59,7 +67,7 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [], texts = {} }
                   </Card>
                 </div>
               </CarouselItem>
-            ))}
+            )})}
           </CarouselContent>
           <CarouselPrevious className="hidden lg:flex left-4 text-primary bg-background/70 hover:bg-background" />
           <CarouselNext className="hidden lg:flex right-4 text-primary bg-background/70 hover:bg-background" />
@@ -70,5 +78,3 @@ const PhotoCarousel: React.FC<PhotoCarouselProps> = ({ images = [], texts = {} }
 }
 
 export default PhotoCarousel;
-
-    

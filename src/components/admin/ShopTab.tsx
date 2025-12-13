@@ -12,6 +12,7 @@ import { Loader2, Trash2, PlusCircle, Sparkles, Save, Upload } from 'lucide-reac
 import type { SiteConfig, Product } from '@/types/siteConfig';
 import { generateGiftText } from '@/app/actions';
 import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 interface ShopTabProps {
     config: SiteConfig;
@@ -121,6 +122,16 @@ export default function ShopTab({ config }: ShopTabProps) {
             toast({ title: "Loja Salva!", description: "Sua lista de presentes e chave PIX foram atualizadas." });
         });
     };
+    
+    const findImageDimensions = (url: string) => {
+        const placeholder = PlaceHolderImages.find(p => p.imageUrl === url);
+        if (placeholder) {
+            return { width: placeholder.width, height: placeholder.height };
+        }
+        // Fallback for uploaded images - these dimensions might not be perfect but prevent build errors
+        return { width: 400, height: 250 };
+    }
+
 
     return (
         <div className="space-y-6 relative">
@@ -145,57 +156,60 @@ export default function ShopTab({ config }: ShopTabProps) {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-4">
-                            {products.map((product, index) => (
-                                <div key={product.id} className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-lg relative">
-                                    <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeProduct(index)}>
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                    <div className="space-y-2">
-                                        <label className="font-medium text-sm">Título</label>
-                                        <Input value={product.title} onChange={(e) => handleProductChange(index, 'title', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="font-medium text-sm">Preço (texto)</label>
-                                        <Input value={product.price} onChange={(e) => handleProductChange(index, 'price', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2 md:col-span-2 relative">
-                                        <label className="font-medium text-sm">Descrição</label>
-                                        <Textarea value={product.description} onChange={(e) => handleProductChange(index, 'description', e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2 md:col-span-2 relative">
-                                        <label className="font-medium text-sm">Frase de Agradecimento</label>
-                                        <Input value={product.funnyNote} onChange={(e) => handleProductChange(index, 'funnyNote', e.target.value)} />
-                                    </div>
-
-                                    <div className="md:col-span-2">
-                                        <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            onClick={() => handleGenerateText(index)}
-                                            disabled={isGenerating === product.id}
-                                        >
-                                            {isGenerating === product.id ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                                            Gerar Textos com IA
+                            {products.map((product, index) => {
+                                const { width, height } = findImageDimensions(product.imageUrl);
+                                return (
+                                    <div key={product.id} className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-lg relative">
+                                        <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeProduct(index)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
                                         </Button>
-                                    </div>
-                                    
-                                    <div className="space-y-2 md:col-span-2">
-                                        <label className="font-medium text-sm">Imagem do Produto</label>
-                                        <div className="flex items-center gap-4">
-                                            {product.imageUrl && (
-                                                <Image src={product.imageUrl} alt="Preview" width={96} height={96} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
-                                            )}
-                                            <Button asChild variant="outline">
-                                                <label htmlFor={`product-upload-${product.id}`} className="cursor-pointer">
-                                                    {isUploading === product.id ? <Loader2 className="animate-spin" /> : <Upload />}
-                                                    {product.imageUrl ? 'Alterar Imagem' : 'Fazer Upload'}
-                                                    <input id={`product-upload-${product.id}`} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, product.id, index)} disabled={isUploading === product.id} />
-                                                </label>
+                                        <div className="space-y-2">
+                                            <label className="font-medium text-sm">Título</label>
+                                            <Input value={product.title} onChange={(e) => handleProductChange(index, 'title', e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="font-medium text-sm">Preço (texto)</label>
+                                            <Input value={product.price} onChange={(e) => handleProductChange(index, 'price', e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2 md:col-span-2 relative">
+                                            <label className="font-medium text-sm">Descrição</label>
+                                            <Textarea value={product.description} onChange={(e) => handleProductChange(index, 'description', e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2 md:col-span-2 relative">
+                                            <label className="font-medium text-sm">Frase de Agradecimento</label>
+                                            <Input value={product.funnyNote} onChange={(e) => handleProductChange(index, 'funnyNote', e.target.value)} />
+                                        </div>
+
+                                        <div className="md:col-span-2">
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm"
+                                                onClick={() => handleGenerateText(index)}
+                                                disabled={isGenerating === product.id}
+                                            >
+                                                {isGenerating === product.id ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                                                Gerar Textos com IA
                                             </Button>
                                         </div>
+                                        
+                                        <div className="space-y-2 md:col-span-2">
+                                            <label className="font-medium text-sm">Imagem do Produto</label>
+                                            <div className="flex items-center gap-4">
+                                                {product.imageUrl && (
+                                                    <Image src={product.imageUrl} alt="Preview" width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
+                                                )}
+                                                <Button asChild variant="outline">
+                                                    <label htmlFor={`product-upload-${product.id}`} className="cursor-pointer">
+                                                        {isUploading === product.id ? <Loader2 className="animate-spin" /> : <Upload />}
+                                                        {product.imageUrl ? 'Alterar Imagem' : 'Fazer Upload'}
+                                                        <input id={`product-upload-${product.id}`} type="file" className="sr-only" accept="image/*" onChange={(e) => handleImageUpload(e, product.id, index)} disabled={isUploading === product.id} />
+                                                    </label>
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                         <Button variant="outline" onClick={addNewProduct}>
                             <PlusCircle className="mr-2" />

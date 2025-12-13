@@ -9,6 +9,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Gift } from 'lucide-react';
 import type { Product } from '@/types/siteConfig';
 import GiftPaymentModal from './GiftPaymentModal';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 interface GiftCardProps {
   gift: Product;
@@ -25,6 +26,16 @@ const GiftCard = ({ gift, pixKey }: GiftCardProps) => {
     const handleClosePaymentModal = () => {
         setIsModalOpen(false);
     }
+    
+    const findImageDimensions = (url: string) => {
+        const placeholder = PlaceHolderImages.find(p => p.imageUrl === url);
+        if (placeholder) {
+            return { width: placeholder.width, height: placeholder.height };
+        }
+        return { width: 400, height: 250 };
+    }
+    
+    const { width, height } = findImageDimensions(gift.imageUrl);
 
     return (
         <>
@@ -37,8 +48,9 @@ const GiftCard = ({ gift, pixKey }: GiftCardProps) => {
                         <Image
                             src={gift.imageUrl}
                             alt={gift.title}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            width={width}
+                            height={height}
+                            className="object-cover h-full w-full transition-transform duration-500 group-hover:scale-105"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             loading="lazy"
                         />

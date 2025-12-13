@@ -23,6 +23,9 @@ const Hero: React.FC<HeroProps> = ({
 }) => {
   const defaultHeroImage = PlaceHolderImages.find((p) => p.id === 'hero-bg');
   const imageSrc = heroImage || defaultHeroImage?.imageUrl;
+  const imageWidth = defaultHeroImage?.width || 1920;
+  const imageHeight = defaultHeroImage?.height || 1080;
+
 
   const nameParts = names.split('&');
   const name1 = nameParts[0] ? nameParts[0].trim() : '';

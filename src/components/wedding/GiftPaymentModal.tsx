@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import type { Product } from '@/types/siteConfig';
 import { generateBRCode } from '@/lib/brcode';
 import QRCode from 'qrcode';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 interface GiftPaymentModalProps {
     gift: Product;
@@ -51,6 +52,16 @@ const GiftPaymentModal = ({ gift, pixKey, onClose }: GiftPaymentModalProps) => {
         setTimeout(() => setIsCopied(false), 3000);
     };
 
+    const findImageDimensions = (url: string) => {
+        const placeholder = PlaceHolderImages.find(p => p.imageUrl === url);
+        if (placeholder) {
+            return { width: placeholder.width, height: placeholder.height };
+        }
+        return { width: 400, height: 300 };
+    }
+
+    const { width, height } = findImageDimensions(gift.imageUrl);
+
     if (paymentConfirmed) {
         return (
             <div className="flex flex-col items-center justify-center text-center p-8 space-y-4 bg-background rounded-lg">
@@ -73,8 +84,9 @@ const GiftPaymentModal = ({ gift, pixKey, onClose }: GiftPaymentModalProps) => {
                         <Image
                             src={gift.imageUrl}
                             alt={gift.title}
-                            fill
-                            className="object-cover"
+                            width={width}
+                            height={height}
+                            className="object-cover h-full w-full"
                             sizes="(max-width: 768px) 100vw, 50vw"
                         />
                     ) : (
