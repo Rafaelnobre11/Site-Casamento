@@ -39,7 +39,7 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
         const linkProps = {
           href: link.href,
           className: cn(
-            'font-medium transition-colors hover:text-primary',
+            'font-medium transition-transform hover:scale-105',
             isMobile ? 'text-lg py-2' : 'text-sm'
           )
         };

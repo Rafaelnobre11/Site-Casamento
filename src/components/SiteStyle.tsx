@@ -48,62 +48,74 @@ function colorToHsl(colorStr: string | undefined): { h: number; s: number; l: nu
   };
 }
 
+/**
+ * Calcula o YIQ para determinar se uma cor de fundo precisa de texto claro ou escuro.
+ */
+function getYiq(color: {r: number, g: number, b: number}): number {
+    return ((color.r * 299) + (color.g * 587) + (color.b * 114)) / 1000;
+}
+
+function hexToRgb(hex: string): {r: number, g: number, b: number} | null {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
 
 export function SiteStyle() {
   const { data: config } = useDoc<SiteConfig>('config/site');
 
   if (!config) return null;
 
-  const primaryHsl = colorToHsl(config.customColor);
+  const primaryHsl = colorToHsl(config.customColor || '#e85d3f');
   
-  // Se não houver cor primária válida, não faz nada
   if (!primaryHsl) return null;
   
   const { h, s, l } = primaryHsl;
   
-  // Calcula cores da paleta com base na cor primária
-  const primaryFg = l > 60 ? '0 0% 10%' : '0 0% 98%';
-  const accentL = l > 50 ? Math.max(0, l - 10) : Math.min(100, l + 10);
-  const bgL = Math.max(96, l + (96-l) * 0.8);
-  const bgS = Math.min(15, s);
+  const primaryRgb = hexToRgb(config.customColor || '#e85d3f');
+  const buttonYiq = primaryRgb ? getYiq(primaryRgb) : 128;
+  const buttonColor = buttonYiq >= 128 ? 'hsl(0 0% 10%)' : 'hsl(0 0% 98%)';
 
-  // Verifica as cores customizadas do admin painel
   const customColors = config.customColors || {};
 
   const style = `
     :root {
-      --background: ${h} ${bgS}% ${bgL}%;
-      --foreground: ${customColors.bodyText ? colorToHsl(customColors.bodyText)?.h + ' ' + colorToHsl(customColors.bodyText)?.s + '% ' + colorToHsl(customColors.bodyText)?.l + '%' : '222 47% 11%'};
+      --background: ${h} ${s * 0.15} ${Math.min(98, l + (100 - l) * 0.9)};
+      --foreground: ${customColors.bodyText ? colorToHsl(customColors.bodyText)?.h + ' ' + colorToHsl(customColors.bodyText)?.s + '% ' + colorToHsl(customColors.bodyText)?.l + '%' : `${h} ${s*0.3} ${Math.max(10, l * 0.3)}`};
       
       --primary: ${h} ${s}% ${l}%;
-      --primary-foreground: ${primaryFg};
+      --primary-foreground: ${l > 60 ? '0 0% 10%' : '0 0% 98%'};
 
-      --secondary: ${h} ${s}% ${l + (100 - l) * 0.8}%;
+      --secondary: ${h} ${s * 0.8}% ${l > 50 ? l * 0.9 : l * 1.1}%;
       --secondary-foreground: ${h} ${s}% ${l > 50 ? Math.max(0, l-40) : Math.min(100, l+40)}%;
       
-      --muted: ${h} ${s}% ${l + (100 - l) * 0.9}%;
-      --muted-foreground: 215 14% 44%;
+      --muted: ${h} ${s * 0.2} ${Math.min(96, l + (100 - l) * 0.85)}%;
+      --muted-foreground: ${h} ${s*0.25} ${Math.max(30, l * 0.5)}%;
 
-      --accent: ${h} ${s}% ${accentL}%;
-      --accent-foreground: ${primaryFg};
+      --accent: ${h} ${s * 0.9}% ${l > 50 ? l * 0.95 : l * 1.05}%;
+      --accent-foreground: ${l > 60 ? '0 0% 10%' : '0 0% 98%'};
       
-      --border: ${h} ${s}% ${l + (100 - l) * 0.7}%;
-      --input: ${h} ${s}% ${l + (100 - l) * 0.85}%;
+      --border: ${h} ${s * 0.3} ${Math.min(92, l + (100 - l) * 0.7)}%;
+      --input: ${h} ${s * 0.25} ${Math.min(94, l + (100 - l) * 0.8)}%;
       --ring: ${h} ${s}% ${l}%;
     }
 
     .font-headline {
-        color: ${customColors.headingText || `hsl(${h}, ${s}%, ${l > 50 ? Math.max(0, l-30) : Math.min(100, l+30)}%)`};
+      color: ${customColors.headingText || `hsl(${h}, ${s * 0.9}%, ${Math.max(15, l * 0.5)}%)`};
     }
     
     .btn-primary {
-        background-color: ${customColors.buttonBg || `hsl(${h}, ${s}%, ${l}%)`};
-        color: ${customColors.buttonText || `hsl(${primaryFg})`};
-    }
-    .btn-primary:hover {
-        background-color: ${customColors.buttonBg ? colorToHsl(customColors.buttonBg)?.h + ' ' + colorToHsl(customColors.buttonBg)?.s + '% ' + (colorToHsl(customColors.buttonBg).l - 5) + '%' : `hsl(${h}, ${s}%, ${l-5}%)`};
+      background-color: ${customColors.buttonBg || `hsl(${h}, ${s}%, ${l}%)`};
+      color: ${customColors.buttonText || buttonColor};
     }
 
+    .btn-primary:hover {
+        background-color: ${customColors.buttonBg ? `color-mix(in srgb, ${customColors.buttonBg}, black 10%)` : `hsl(${h}, ${s}%, ${l-5}%)`};
+    }
   `;
 
   return (

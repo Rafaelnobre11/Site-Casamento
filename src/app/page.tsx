@@ -57,21 +57,23 @@ export default function Home() {
       nav_story: "Nossa Novela",
       nav_info: "Onde Vai Ser o Rolê",
       nav_gifts: "Manda PIX",
-      nav_rsvp: "Bora Confirmar!",
-      hero_subtitle: "A gente se enrolou e vai casar!",
-      hero_date: "21 de Setembro de 2024 - O dia do nosso 'sim' (e do open bar).",
-      rsvp_title: "E aí, vai ou racha?",
-      rsvp_subtitle: "Nosso buffet não é vidente. Confirme pra gente não pagar por quem não vem!",
+      nav_rsvp: "Bora beber de graça!",
+      hero_date: "21 de Setembro de 2024",
+      hero_subtitle: "O amor é lindo, a festa é cara e a gente aceita PIX em vez de faqueiro de prata.",
+      carousel_title: "Nossa História em Fotos",
+      carousel_subtitle: "Uma pequena viagem através de momentos especiais que nos trouxeram até aqui.",
+      rsvp_title: "Bora ou não bora?",
+      rsvp_subtitle: "Precisamos saber quantos pratos lavar. Por favor, não nos deixe no vácuo.",
       rsvp_find_button: "Achar meu convite",
       rsvp_confirm_button: "Bora Festejar! 🥳",
       rsvp_decline_button: "Vou dar o cano 😔",
       rsvp_lock_message_title: "🤫 Segredo, hein?",
-      rsvp_lock_message_subtitle: "Calma, curioso! Primeiro diz que vai, depois a gente te mostra onde é a festa e como nos ajudar a ficar menos duros.",
+      rsvp_lock_message_subtitle: "Calma lá, ansioso(a)! Primeiro confirma que você vem...",
       info_title: "Onde Vai Ser o Rolê",
       info_subtitle: "Anote tudo pra não se perder e, por favor, não atrase a noiva (mais ainda).",
       info_button: "Traçar Rota",
-      gifts_title: "Manda um PIX!",
-      gifts_subtitle: "O melhor presente é sua presença. Mas se quiser nos ajudar a começar a vida sem dívidas, aceitamos contribuições. Nada de faqueiro, por favor!",
+      gifts_title: "Ajude os Pombinhos",
+      gifts_subtitle: "Presentes que valem mais que um abraço.",
       gifts_button: "Ver todos os presentes",
     },
     customColors: {},
@@ -93,18 +95,19 @@ export default function Home() {
   const showGatedContent = isRsvpConfirmed || !isContentLocked;
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#FBF9F6] text-[#4a4a4a]">
+    <div className="flex min-h-[100dvh] flex-col bg-background text-foreground">
       <Header texts={config.texts} names={config.names} logoUrl={config.logoUrl} />
       <main className="flex-1">
         <Hero 
           names={config.names}
-          weddingDate={config.texts?.hero_date || config.date}
+          weddingDate={config.texts?.hero_date}
           romanticQuote={config.texts?.hero_subtitle}
           heroImage={config.heroImage}
+          texts={config.texts}
         />
         
         {config.date && (
-            <div className="bg-[#C5A086] py-8 md:py-12">
+            <div className="bg-primary/90 py-8 md:py-12">
                 <Countdown targetDate={config.date} />
             </div>
         )}
@@ -131,10 +134,10 @@ export default function Home() {
                 />
             </>
         ) : (
-            <div className="text-center py-16 px-4 sm:px-6 lg:px-8 bg-gray-50/50 rounded-lg shadow-inner max-w-2xl mx-auto my-12">
-                <Lock className="mx-auto h-10 w-10 text-gray-400" />
-                <h3 className="mt-4 text-xl font-semibold text-gray-800">{config.texts.rsvp_lock_message_title || 'Calma lá, ansioso!'}</h3>
-                <p className="mt-2 text-md text-gray-600">{config.texts.rsvp_lock_message_subtitle || 'Primeiro confirma que você vem...'}</p>
+            <div className="text-center py-16 px-4 sm:px-6 lg:px-8 bg-muted/50 rounded-lg shadow-inner max-w-2xl mx-auto my-12">
+                <Lock className="mx-auto h-10 w-10 text-muted-foreground" />
+                <h3 className="mt-4 text-xl font-semibold font-headline">{config.texts.rsvp_lock_message_title}</h3>
+                <p className="mt-2 text-md text-muted-foreground">{config.texts.rsvp_lock_message_subtitle}</p>
             </div>
         )}
 

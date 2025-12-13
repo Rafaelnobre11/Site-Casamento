@@ -21,24 +21,24 @@ const textFields = {
         nav_story: { label: "Link 'Nossa História'", default: "Nossa Novela" },
         nav_info: { label: "Link 'Informações'", default: "Onde Vai Ser o Rolê" },
         nav_gifts: { label: "Link 'Presentes'", default: "Manda PIX" },
-        nav_rsvp: { label: "Botão 'Confirmar Presença'", default: "Bora Confirmar!" },
+        nav_rsvp: { label: "Botão 'Confirmar Presença'", default: "Bora beber de graça!" },
     },
     "Capa (Hero)": {
-        hero_subtitle: { label: "Frase Romântica/Divertida", default: "A gente se enrolou e finalmente vai casar!" },
-        hero_date: { label: "Texto da Data", default: "21 de Setembro de 2024 - O dia do nosso 'sim' (e do open bar)." },
+        hero_date: { label: "Texto da Data", default: "21 de Setembro de 2024" },
+        hero_subtitle: { label: "Frase de Efeito", default: "O amor é lindo, a festa é cara e a gente aceita PIX em vez de faqueiro de prata." },
     },
      "Galeria de Fotos": {
         carousel_title: { label: "Título da Seção", default: "Nossa História em Fotos" },
         carousel_subtitle: { label: "Subtítulo da Seção", default: "Uma pequena viagem através de momentos especiais que nos trouxeram até aqui." },
     },
     "Confirmação (RSVP)": {
-        rsvp_title: { label: "Título da Seção", default: "E aí, vai ou racha?" },
-        rsvp_subtitle: { label: "Subtítulo da Seção", default: "Nosso buffet não é vidente. Confirme pra gente não pagar por quem não vem!" },
+        rsvp_title: { label: "Título da Seção", default: "Bora ou não bora?" },
+        rsvp_subtitle: { label: "Subtítulo da Seção", default: "Precisamos saber quantos pratos lavar. Por favor, não nos deixe no vácuo." },
         rsvp_find_button: { label: "Botão 'Buscar Convite'", default: "Achar meu convite" },
         rsvp_confirm_button: { label: "Botão 'Confirmar Presença'", default: "Bora Festejar! 🥳" },
         rsvp_decline_button: { label: "Botão 'Recusar'", default: "Vou dar o cano 😔" },
         rsvp_lock_message_title: { label: "Título Conteúdo Bloqueado", default: "🤫 Segredo, hein?" },
-        rsvp_lock_message_subtitle: { label: "Subtítulo Conteúdo Bloqueado", default: "Calma, curioso! Primeiro diz que vai, depois a gente mostra o resto." },
+        rsvp_lock_message_subtitle: { label: "Subtítulo Conteúdo Bloqueado", default: "Calma lá, ansioso(a)! Primeiro confirma que você vem..." },
     },
     "Informações (Local)": {
         info_title: { label: "Título da Seção", default: "Onde Vai Ser o Rolê" },
@@ -46,8 +46,8 @@ const textFields = {
         info_button: { label: "Botão 'Como Chegar'", default: "Traçar Rota" },
     },
     "Presentes (Loja)": {
-        gifts_title: { label: "Título da Seção", default: "Manda um PIX!" },
-        gifts_subtitle: { label: "Subtítulo da Seção", default: "O melhor presente é sua presença. Mas se quiser nos ajudar a começar a vida sem dívidas, aceitamos contribuições." },
+        gifts_title: { label: "Título da Seção", default: "Ajude os Pombinhos" },
+        gifts_subtitle: { label: "Subtítulo da Seção", default: "Presentes que valem mais que um abraço." },
         gifts_button: { label: "Botão 'Ver Todos'", default: "Ver todos os presentes" },
     },
 };
