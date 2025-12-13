@@ -1,28 +1,33 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    reactStrictMode: true,
-    images: {
-        remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: 'firebasestorage.googleapis.com',
-                port: '',
-                pathname: '/**',
-            },
-             {
-                protocol: 'https',
-                hostname: 'picsum.photos',
-                port: '',
-                pathname: '/**',
-            },
-            {
-                protocol: 'https',
-                hostname: 'i.imgflip.com',
-                port: '',
-                pathname: '/**',
-            },
-        ],
-    },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imgur.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgflip.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
