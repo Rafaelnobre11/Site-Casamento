@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -98,10 +97,8 @@ export default function Home() {
   const isContentLocked = config.isContentLocked;
   const showGatedContent = isRsvpConfirmed || !isContentLocked;
 
-  return (
-    <div className="flex min-h-[100dvh] flex-col bg-background text-foreground">
-      <Header texts={config.texts} names={config.names} logoUrl={config.logoUrl} />
-      <main className="flex-1">
+  const components: { [key: string]: React.ReactNode } = {
+    hero: (
         <Hero 
           names={config.names}
           weddingDate={config.texts?.hero_date}
@@ -109,37 +106,53 @@ export default function Home() {
           heroImage={config.heroImage}
           texts={config.texts}
         />
-        
-        {config.date && (
-            <div className="bg-primary/90 py-8 md:py-12">
-                <Countdown targetDate={config.date} />
-            </div>
-        )}
-
+    ),
+    countdown: config.date ? (
+        <div className="bg-primary/90 py-8 md:py-12">
+            <Countdown targetDate={config.date} />
+        </div>
+    ) : null,
+    carousel: (
         <PhotoCarousel images={config.carouselImages} texts={config.texts} />
-
+    ),
+    rsvp: (
         <RsvpSection onRsvpConfirmed={handleRsvpConfirmed} texts={config.texts} />
+    ),
+    event: showGatedContent ? (
+        <EventInfo
+          locationName={config.locationName}
+          address={config.locationAddress}
+          addressNumber={config.addressNumber}
+          time={config.time}
+          wazeLink={config.wazeLink}
+          googleMapsLink={config.googleMapsLink}
+          mapUrl={config.mapUrl}
+          date={config.date}
+          texts={config.texts}
+        />
+    ) : null,
+     gifts: showGatedContent ? (
+        <GiftSection 
+            products={config.products} 
+            pixKey={config.pixKey}
+            texts={config.texts} 
+        />
+    ) : null,
+  };
+
+  const layoutOrder = config.layoutOrder || defaultLayoutOrder;
+
+
+  return (
+    <div className="flex min-h-[100dvh] flex-col bg-background text-foreground">
+      <Header texts={config.texts} names={config.names} logoUrl={config.logoUrl} />
+      <main className="flex-1">
         
-        {showGatedContent ? (
-            <>
-                <EventInfo
-                  locationName={config.locationName}
-                  address={config.locationAddress}
-                  addressNumber={config.addressNumber}
-                  time={config.time}
-                  wazeLink={config.wazeLink}
-                  googleMapsLink={config.googleMapsLink}
-                  mapUrl={config.mapUrl}
-                  date={config.date}
-                  texts={config.texts}
-                />
-                <GiftSection 
-                    products={config.products} 
-                    pixKey={config.pixKey}
-                    texts={config.texts} 
-                />
-            </>
-        ) : (
+        {layoutOrder.map(key => components[key] ? (
+            <div key={key}>{components[key]}</div>
+        ) : null)}
+
+        {!showGatedContent && (
             <div className="text-center py-16 px-4 sm:px-6 lg:px-8 bg-muted/50 rounded-lg shadow-inner max-w-2xl mx-auto my-12">
                 <Lock className="mx-auto h-10 w-10 text-muted-foreground" />
                 <h3 className="mt-4 text-xl font-semibold font-headline">{config.texts.rsvp_lock_message_title}</h3>
