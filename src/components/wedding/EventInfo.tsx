@@ -14,6 +14,7 @@ import {
 interface EventInfoProps {
   locationName?: string;
   address?: string;
+  addressNumber?: string;
   time?: string;
   wazeLink?: string;
   googleMapsLink?: string;
@@ -25,6 +26,7 @@ interface EventInfoProps {
 const EventInfo: React.FC<EventInfoProps> = ({
   locationName,
   address,
+  addressNumber,
   time,
   wazeLink,
   googleMapsLink,
@@ -36,6 +38,8 @@ const EventInfo: React.FC<EventInfoProps> = ({
   const formattedDate = date 
     ? new Date(date).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
     : "Data do evento";
+    
+  const fullAddress = addressNumber ? `${address}, ${addressNumber}` : address;
 
   return (
     <section id="event-info" className="w-full py-16 md:py-24 bg-background">
@@ -74,7 +78,7 @@ const EventInfo: React.FC<EventInfoProps> = ({
               <div>
                 <h3 className="text-lg font-bold font-headline">Local</h3>
                 <p className="text-muted-foreground">{locationName || "Nome do Local"}</p>
-                <p className="text-sm text-gray-500">{address || "Endereço do evento"}</p>
+                <p className="text-sm text-gray-500">{fullAddress || "Endereço do evento"}</p>
               </div>
             </div>
             

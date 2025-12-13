@@ -49,6 +49,7 @@ export default function Home() {
     time: '16:00',
     locationName: 'Vila das Amoreiras',
     locationAddress: 'R. Funchal, 500 - Vila Olímpia, São Paulo - SP',
+    addressNumber: '500',
     mapUrl: 'https://maps.google.com/maps?q=Rua+Funchal%2C+500+-+Vila+Ol%C3%ADmpia%2C+S%C3%A3o+Paulo+-+SP&z=15&output=embed',
     wazeLink: 'https://www.waze.com/ul?q=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo',
     googleMapsLink: 'https://www.google.com/maps/search/?api=1&query=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo',
@@ -122,6 +123,7 @@ export default function Home() {
                 <EventInfo
                   locationName={config.locationName}
                   address={config.locationAddress}
+                  addressNumber={config.addressNumber}
                   time={config.time}
                   wazeLink={config.wazeLink}
                   googleMapsLink={config.googleMapsLink}
