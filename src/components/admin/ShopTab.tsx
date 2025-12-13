@@ -23,7 +23,6 @@ export default function ShopTab({ config }: ShopTabProps) {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const [isGenerating, setIsGenerating] = useState<string | null>(null);
-    const [isUploading, setIsUploading] = useState<string | null>(null); // Manter para feedback visual se necessário
 
     const [products, setProducts] = useState<Product[]>(config.products || []);
     const [pixKey, setPixKey] = useState(config.pixKey || '');
@@ -82,18 +81,19 @@ export default function ShopTab({ config }: ShopTabProps) {
         const newProducts = [...products];
         newProducts[activeProductIndex].imageUrl = imageUrl;
         setProducts(newProducts);
-        toast({ title: 'Sucesso!', description: 'A imagem foi selecionada do banco de dados.' });
+        toast({ title: 'Sucesso!', description: 'A imagem foi selecionada.' });
         setActiveProductIndex(null);
     };
 
     const addNewProduct = () => {
         const newId = `gift-${Date.now()}`;
+        const placeholderImage = PlaceHolderImages.find(p => p.id === 'gift-robo-aspirador')?.imageUrl || 'https://picsum.photos/seed/placeholder/400/250';
         const newProduct: Product = {
             id: newId,
             title: 'Novo Presente Divertido',
             price: 'R$ 50,00',
             description: 'Uma nova forma de nos ajudar a pagar os boletos.',
-            imageUrl: 'https://firebasestorage.googleapis.com/v0/b/meu-casamento-d28e1.appspot.com/o/site_images%2Fgifts%2Fgift-placeholder.png?alt=media', // Um placeholder genérico
+            imageUrl: placeholderImage,
             funnyNote: 'Obrigado por este presente aleatório e maravilhoso!',
         };
         setProducts([...products, newProduct]);
@@ -127,11 +127,11 @@ export default function ShopTab({ config }: ShopTabProps) {
 
     return (
         <div className="space-y-6 relative">
-            {/* O Modal do seletor de imagens agora faz parte da página */}
             <StorageImagePicker 
                 open={isPickerOpen}
                 onOpenChange={setIsPickerOpen}
                 onImageSelect={handleImageSelect}
+                uploadFolder="site_images/gifts"
             />
 
              <div className="space-y-6 pb-24">
@@ -197,7 +197,6 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                 {product.imageUrl && (
                                                     <Image src={product.imageUrl} alt="Preview" width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
                                                 )}
-                                                 {/* BOTÃO MODIFICADO */}
                                                 <Button variant="outline" onClick={() => openImagePicker(index)}>
                                                     <Upload />
                                                     {product.imageUrl ? 'Alterar Imagem' : 'Escolher Imagem'}
@@ -216,9 +215,9 @@ export default function ShopTab({ config }: ShopTabProps) {
                 </Card>
             </div>
              <CardFooter className="justify-end sticky bottom-0 bg-background/95 py-4 border-t z-10 -mx-8 px-8">
-                 <Button onClick={handleSave} disabled={isPending || !!isUploading} size="lg">
-                    {isPending || !!isUploading ? <Loader2 className="animate-spin" /> : <Save />}
-                    {isUploading ? 'Aguardando Upload...' : 'Salvar Loja e Chave PIX'}
+                 <Button onClick={handleSave} disabled={isPending} size="lg">
+                    {isPending ? <Loader2 className="animate-spin" /> : <Save />}
+                    Salvar Loja e Chave PIX
                 </Button>
             </CardFooter>
         </div>

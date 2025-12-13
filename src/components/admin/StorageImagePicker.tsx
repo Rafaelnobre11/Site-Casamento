@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect, ChangeEvent, useRef } from 'react';
 import { getStorage, ref, listAll, getDownloadURL, uploadBytes } from 'firebase/storage';
@@ -12,9 +11,10 @@ interface StorageImagePickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onImageSelect: (url: string) => void;
+  uploadFolder?: string; // Pasta para onde as novas imagens serão enviadas
 }
 
-export default function StorageImagePicker({ open, onOpenChange, onImageSelect }: StorageImagePickerProps) {
+export default function StorageImagePicker({ open, onOpenChange, onImageSelect, uploadFolder = 'site_images/uploads' }: StorageImagePickerProps) {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -27,20 +27,25 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect }
     try {
       const storage = getStorage();
       const folderPaths = ['site_images/Site', 'site_images/gifts', 'site_images/uploads'];
-      const allItems = [];
-
-      for (const path of folderPaths) {
-        try {
-            const folderRef = ref(storage, path);
-            const res = await listAll(folderRef);
-            allItems.push(...res.items);
-        } catch (e) {
-            // Ignora pastas que não existem, não é um erro fatal.
-            console.warn(`Pasta não encontrada ou vazia: ${path}`);
-        }
-      }
       
-      const urls = await Promise.all(allItems.map(itemRef => getDownloadURL(itemRef)));
+      const promises = folderPaths.map(async (path) => {
+        try {
+          const folderRef = ref(storage, path);
+          const res = await listAll(folderRef);
+          return Promise.all(res.items.map(itemRef => getDownloadURL(itemRef)));
+        } catch (e: any) {
+          if (e.code === 'storage/object-not-found') {
+            console.warn(`Pasta não encontrada ou vazia: ${path}`);
+            return []; // Retorna um array vazio se a pasta não existir
+          }
+          throw e; // Lança outros erros
+        }
+      });
+
+      const results = await Promise.all(promises);
+      const urls = results.flat(); // Achata o array de arrays
+      
+      // Usa um Set para garantir URLs únicos e depois converte de volta para array
       setImageUrls(prev => Array.from(new Set([...prev, ...urls])));
 
     } catch (e: any) {
@@ -73,8 +78,7 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect }
 
     setIsUploading(true);
     const storage = getStorage();
-    // Salva na pasta 'uploads' para manter a organização
-    const fileRef = ref(storage, `site_images/uploads/${Date.now()}_${file.name}`);
+    const fileRef = ref(storage, `${uploadFolder}/${Date.now()}_${file.name}`);
     
     try {
         const snapshot = await uploadBytes(fileRef, file);
@@ -82,6 +86,8 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect }
         
         // Adiciona a nova imagem no início da lista para feedback imediato
         setImageUrls(prev => [downloadURL, ...prev]);
+        // Opcional: seleciona a imagem recém-carregada automaticamente
+        handleLocalImageSelect(downloadURL);
         
     } catch (error) {
         console.error("Image upload error:", error);
@@ -104,7 +110,7 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect }
         </DialogHeader>
         <ScrollArea className="flex-grow border rounded-md relative">
           <div className="p-4">
-            {isLoading && imageUrls.length === 0 ? (
+            {isLoading ? (
               <div className="flex justify-center items-center h-full min-h-[200px]">
                 <Loader2 className="h-8 w-8 animate-spin" />
                 <p className="ml-2">A carregar imagens...</p>
@@ -113,6 +119,7 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect }
               <div className="flex justify-center items-center h-full min-h-[200px]">
                  <div className="text-center text-red-500">
                   <p>{error}</p>
+                  <Button onClick={fetchImages} variant="outline" className="mt-2">Tentar Novamente</Button>
                 </div>
               </div>
             ) : (
