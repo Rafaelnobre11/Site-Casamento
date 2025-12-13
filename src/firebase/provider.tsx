@@ -1,16 +1,15 @@
 'use client';
 
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Auth, getAuth } from 'firebase/auth';
-import { Firestore, getFirestore } from 'firebase/firestore';
-import { initializeFirebase } from './config';
+import { Auth } from 'firebase/auth';
+import { Firestore } from 'firebase/firestore';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseContextValue {
-  app: FirebaseApp | null;
-  auth: Auth | null;
-  firestore: Firestore | null;
+  app: FirebaseApp;
+  auth: Auth;
+  firestore: Firestore;
 }
 
 const FirebaseContext = createContext<FirebaseContextValue | undefined>(
@@ -19,24 +18,13 @@ const FirebaseContext = createContext<FirebaseContextValue | undefined>(
 
 interface FirebaseProviderProps {
   children: ReactNode;
+  app: FirebaseApp;
+  auth: Auth;
+  firestore: Firestore;
 }
 
-export function FirebaseProvider({ children }: FirebaseProviderProps) {
-  const [value, setValue] = useState<FirebaseContextValue>({
-    app: null,
-    auth: null,
-    firestore: null,
-  });
-
-  // A inicialização agora acontece dentro de um useEffect para garantir que só roda no cliente
-  // e de forma segura.
-  useEffect(() => {
-    const app = initializeFirebase();
-    const auth = getAuth(app);
-    const firestore = getFirestore(app);
-    setValue({ app, auth, firestore });
-  }, []);
-
+export function FirebaseProvider({ children, app, auth, firestore }: FirebaseProviderProps) {
+  const value = { app, auth, firestore };
 
   return (
     <FirebaseContext.Provider value={value}>
