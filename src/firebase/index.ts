@@ -9,4 +9,3 @@ export * from './firestore/use-doc';
 export * from './firestore/utils';
 export * from './provider';
 export * from './types';
-export * from './use-firebase-services';

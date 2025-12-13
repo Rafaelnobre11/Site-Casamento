@@ -56,7 +56,7 @@ export default function Home() {
     texts: {},
     customColors: {},
     carouselImages: [],
-    isContentLocked: false, // Default to unlocked
+    isContentLocked: true, // Default to locked
   };
 
   // Merge siteConfig with defaultConfig
@@ -94,6 +94,7 @@ export default function Home() {
                   time={config.time}
                   wazeLink={config.wazeLink}
                   mapUrl={config.mapUrl}
+                  date={config.date} // Pass the date prop
                 />
                 <GiftSection 
                     products={config.products} 
@@ -104,7 +105,7 @@ export default function Home() {
             <div className="text-center py-16 px-4 sm:px-6 lg:px-8 bg-gray-50/50 rounded-lg shadow-inner max-w-2xl mx-auto my-12">
                 <Lock className="mx-auto h-10 w-10 text-gray-400" />
                 <h3 className="mt-4 text-xl font-semibold text-gray-800">Calma lá, ansioso!</h3>
-                <p className="mt-2 text-md text-gray-600">Primeiro confirme sua presença para ver os detalhes.</p>
+                <p className="mt-2 text-md text-gray-600">Primeiro confirma que você vem...</p>
             </div>
         )}
 

@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { maskPhone } from '@/lib/masks';
@@ -12,8 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Frown, Users, Check, PartyPopper } from 'lucide-react';
-import { useFirestore } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 
@@ -26,6 +26,11 @@ const identificationSchema = z.object({
 
 const rsvpSchema = z.object({
   message: z.string().optional(),
+  confirmedGuests: z.coerce.number().min(1, "Selecione o número de convidados."),
+  additionalGuests: z.array(z.object({
+    name: z.string().min(3, 'Nome do convidado adicional é obrigatório.'),
+    age: z.coerce.number().positive("Idade deve ser um número positivo.").optional(),
+  })).optional(),
 });
 
 type FormStage = 'initial' | 'found' | 'loading' | 'success' | 'declined' | 'error';
@@ -48,7 +53,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
   const [guestInfo, setGuestInfo] = useState<GuestInfo | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isPending, startTransition] = useTransition();
-  const firestore = useFirestore();
+  const { firestore } = useFirebase();
 
   const idForm = useForm<z.infer<typeof identificationSchema>>({
     resolver: zodResolver(identificationSchema),
@@ -57,8 +62,15 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
 
   const rsvpForm = useForm<z.infer<typeof rsvpSchema>>({
     resolver: zodResolver(rsvpSchema),
-    defaultValues: { message: '' },
+    defaultValues: { message: '', confirmedGuests: 1, additionalGuests: [] },
   });
+  
+  const { fields, append, remove } = useFieldArray({
+    control: rsvpForm.control,
+    name: "additionalGuests",
+  });
+
+  const confirmedGuestsValue = rsvpForm.watch('confirmedGuests');
 
   async function handleSearchGuest({ name, phone }: z.infer<typeof identificationSchema>) {
     if (!firestore) {
@@ -90,6 +102,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
 
         if (dbFirstName === inputFirstName) {
            setGuestInfo({ id: guestDoc.id, name: guestData.name, maxGuests: guestData.maxGuests });
+           rsvpForm.reset({ confirmedGuests: guestData.maxGuests, message: '', additionalGuests: [] });
            setStage('found');
         } else {
             setErrorMessage('O nome não corresponde ao telefone na nossa lista. Verifique os dados.');
@@ -110,8 +123,9 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
       
       const rsvpData = {
         status: willAttend ? 'confirmed' : 'declined',
-        confirmedGuests: willAttend ? guestInfo.maxGuests : 0,
-        message: values.message || ''
+        confirmedGuests: willAttend ? values.confirmedGuests : 0,
+        message: values.message || '',
+        additionalGuests: values.additionalGuests || [],
       };
 
       await setDocument(firestore, `guests/${guestInfo.id}`, rsvpData, { merge: true });
@@ -141,6 +155,17 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
             <SuccessIcon />
             <h3 className="font-headline text-2xl text-[#C5A086] mt-4">Presença Confirmada!</h3>
             <p className="text-muted-foreground">Mal podemos esperar para celebrar com você. Obrigado!</p>
+            <Button 
+              onClick={() => {
+                const giftSection = document.getElementById('gifts');
+                if (giftSection) {
+                  giftSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="mt-4 bg-transparent text-[#C5A086] hover:bg-amber-50 border border-[#C5A086]"
+            >
+              Ver Lista de Presentes
+            </Button>
           </div>
         );
       case 'declined':
@@ -170,12 +195,69 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed }) => {
             <CardContent className="px-4 pb-6 md:px-6 md:pb-8">
               <Form {...rsvpForm}>
                 <form className="space-y-6">
-                  <div className="flex items-center justify-center gap-2 rounded-md border bg-muted p-3 text-center">
-                      <Users className="h-5 w-5 text-[#C5A086]" />
-                      <p className="font-bold text-muted-foreground">
-                          Confirmando para {guestInfo?.maxGuests} {guestInfo?.maxGuests === 1 ? 'convidado' : 'convidados'}
-                      </p>
-                  </div>
+                  {guestInfo && guestInfo.maxGuests > 1 && (
+                     <FormField
+                        control={rsvpForm.control}
+                        name="confirmedGuests"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quantas pessoas irão?</FormLabel>
+                            <Select onValueChange={(value) => {
+                                field.onChange(parseInt(value));
+                                const count = parseInt(value);
+                                // Adjust additional guests fields based on selection
+                                const diff = count > 1 ? count - 1 - fields.length : -fields.length;
+                                if (diff > 0) {
+                                    for (let i = 0; i < diff; i++) append({ name: '', age: undefined });
+                                } else if (diff < 0) {
+                                    for (let i = 0; i < -diff; i++) remove(fields.length - 1 - i);
+                                }
+                            }} defaultValue={String(field.value)}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                    {Array.from({ length: guestInfo.maxGuests }, (_, i) => i + 1).map(num => (
+                                        <SelectItem key={num} value={String(num)}>{num} {num === 1 ? 'pessoa' : 'pessoas'}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                  )}
+
+                  {confirmedGuestsValue > 1 && (
+                     <div className="space-y-4 rounded-md border p-4">
+                        <h4 className="font-medium">Confirme os acompanhantes:</h4>
+                        {fields.map((field, index) => (
+                             <div key={field.id} className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center">
+                                <FormField
+                                    control={rsvpForm.control}
+                                    name={`additionalGuests.${index}.name`}
+                                    render={({ field }) => (
+                                        <FormItem className="sm:col-span-3">
+                                            <FormLabel className="sr-only">Nome do Acompanhante</FormLabel>
+                                            <FormControl><Input placeholder={`Nome do acompanhante ${index + 1}`} {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={rsvpForm.control}
+                                    name={`additionalGuests.${index}.age`}
+                                    render={({ field }) => (
+                                        <FormItem className="sm:col-span-2">
+                                             <FormLabel className="sr-only">Idade</FormLabel>
+                                             <FormControl><Input type="number" placeholder="Idade (opcional)" {...field} /></FormControl>
+                                             <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        ))}
+                     </div>
+                  )}
+                  
                   <FormField
                     control={rsvpForm.control}
                     name="message"

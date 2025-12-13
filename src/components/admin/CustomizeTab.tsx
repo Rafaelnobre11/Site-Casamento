@@ -1,6 +1,6 @@
 'use client';
 import { useState, useTransition, useEffect, ChangeEvent } from 'react';
-import { useFirestore } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -28,7 +28,7 @@ const ColorInput = ({ label, value, onChange }: { label: string, value: string, 
 
 
 export default function CustomizeTab({ config }: CustomizeTabProps) {
-    const firestore = useFirestore();
+    const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const [isUploading, setIsUploading] = useState(false);

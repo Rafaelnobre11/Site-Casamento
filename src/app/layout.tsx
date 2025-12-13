@@ -1,8 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { SiteStyle } from '@/components/SiteStyle';
+import { FirebaseClientProvider } from '../firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'Elegance & Humor Wedding Hub',
@@ -20,11 +19,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
-        {/* SiteStyle needs to be within the provider to access the config */}
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          <SiteStyle />
           {children}
           <Toaster />
         </FirebaseClientProvider>

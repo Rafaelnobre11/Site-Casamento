@@ -1,0 +1,59 @@
+## Relatório de Depuração: Tela em Branco no Painel de Administração
+
+**Data:** 24 de Maio de 2024
+
+**Problema:** Após o login bem-sucedido, a página `/admin` exibe uma tela em branco. O problema persiste mesmo após várias tentativas de correção.
+
+### Histórico de Depuração
+
+1.  **Verificação da Página de Login (`src/app/admin/login/page.tsx`):**
+    *   **Hipótese:** O erro poderia estar na página de login.
+    *   **Ação:** O código foi analisado e considerado correto.
+
+2.  **Verificação do Layout da Aplicação (`src/app/layout.tsx`):**
+    *   **Hipótese:** A falta de um componente `<Toaster />` poderia estar causando a falha.
+    *   **Ação:** O componente `<Toaster />` já estava presente. A hipótese foi descartada.
+
+3.  **Verificação dos Componentes da UI (`src/components/ui/`):**
+    *   **Hipótese:** Um dos componentes da UI importados pela página de login poderia estar com defeito.
+    *   **Ação:** A lista de componentes foi revisada. Nenhuma anomalia foi encontrada.
+
+4.  **Análise da Cadeia de Provedores do Firebase:**
+    *   **Hipótese:** Um erro na inicialização do Firebase poderia estar causando uma falha silenciosa.
+    *   **Ações:**
+        *   `src/firebase/client-provider.tsx`: Analisado, revelou-se um invólucro para `provider.tsx`.
+        *   `src/firebase/provider.tsx`: Analisado, revelou-se um invólucro para `config.ts`.
+        *   `src/firebase/config.ts`: **Erro encontrado e corrigido.** O valor de `storageBucket` estava incorreto (`.firebasestorage.app` em vez de `.appspot.com`).
+    *   **Resultado:** A correção do `storageBucket` resolveu a tela em branco na página de login, mas um novo problema surgiu: a tela em branco agora aparece na página `/admin` após o login.
+
+5.  **Análise da Página de Administração (`src/app/admin/page.tsx`):**
+    *   **Hipótese:** A página `/admin` ou um de seus componentes está falhando ao ser renderizado.
+    *   **Ação:** O código da página foi analisado. A dependência do hook `useDoc` foi identificada como um ponto de falha potencial.
+
+6.  **Análise do Hook `useDoc` (`src/firebase/firestore/use-doc.tsx`):**
+    *   **Hipótese:** O hook `useDoc` não estava lidando corretamente com o caso em que um documento não existe no Firestore.
+    *   **Ação:** O hook foi modificado para retornar `null` explicitamente quando um documento não é encontrado.
+    *   **Resultado:** A correção **não resolveu** o problema. A tela em branco persiste.
+
+7.  **Análise dos Dados Padrão (`src/lib/default-gifts.ts`):**
+    *   **Hipótese:** Um erro nos dados padrão dos presentes poderia estar causando a falha.
+    *   **Ação:** O arquivo foi analisado. Nenhuma anomalia foi encontrada na estrutura dos dados.
+
+8.  **Análise do Componente `ShopTab` (`src/components/admin/ShopTab.tsx`):**
+    *   **Hipótese:** Um dos componentes de "aba" da página de administração está causando o erro.
+    *   **Ação:** O código do `ShopTab.tsx` foi analisado.
+
+9.  **Verificação da Configuração do Next.js (`next.config.mjs`):**
+    *   **Hipótese:** O Next.js poderia estar bloqueando o domínio de imagens externas (`i.imgflip.com`) usado nos dados padrão dos presentes.
+    *   **Ação:** O arquivo de configuração foi analisado.
+    *   **Resultado:** A configuração já permitia o domínio. A hipótese foi **descartada**.
+
+### Estado Atual
+
+A causa raiz da tela em branco na página `/admin` permanece desconhecida. As principais hipóteses foram investigadas e descartadas. O problema parece ser uma falha sutil e não capturada na integração entre as tecnologias do projeto.
+
+**Próximos Passos Recomendados:**
+
+*   **Revisão de Versões:** Verifique se há incompatibilidades conhecidas entre as versões do Next.js, Firebase, React e outras dependências críticas.
+*   **Depuração no Navegador:** Use as ferramentas de desenvolvedor do navegador para procurar por erros de "hidratação" do React ou outros erros de console que possam não estar visíveis no terminal.
+*   **Isolamento de Componentes:** Tente renderizar cada componente da página `/admin` isoladamente para identificar qual deles está causando o problema.

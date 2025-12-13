@@ -1,6 +1,6 @@
 'use client';
 import { useState, useTransition, useEffect } from 'react';
-import { useFirestore } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -25,7 +25,7 @@ const textFields = {
     "Capa (Hero)": {
         hero_subtitle: "A gente se enrolou e vai casar!",
         hero_title: "Jessica & Lucas",
-        hero_date: "21 de Setembro de 2024 - O dia do nosso 'sim' (e do open bar).",
+        hero_date: "21 de Setembro de 2024 - O dia do nosso \'sim\' (e do open bar).",
         hero_cta: "Vem beber de graça!",
     },
     "Confirmação (RSVP)": {
@@ -50,7 +50,7 @@ const textFields = {
 };
 
 export default function TextsTab({ config }: TextsTabProps) {
-    const firestore = useFirestore();
+    const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const [texts, setTexts] = useState(config.texts || {});

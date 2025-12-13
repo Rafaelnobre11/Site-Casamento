@@ -1,6 +1,6 @@
 'use client';
 import { useState, useTransition, useEffect } from 'react';
-import { useFirestore } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ const componentNames: { [key: string]: string } = {
 };
 
 export default function LayoutTab({ config }: LayoutTabProps) {
-    const firestore = useFirestore();
+    const { firestore } = useFirebase();
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
     const [layout, setLayout] = useState(config.layoutOrder || []);
