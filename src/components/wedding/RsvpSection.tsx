@@ -145,7 +145,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
     if (isPending || stage === 'loading') {
       return (
         <div className="flex flex-col items-center justify-center p-8 min-h-[350px]">
-          <Loader2 className="h-12 w-12 animate-spin text-[#C5A086]" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
       );
     }
@@ -155,7 +155,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
         return (
           <div className="flex flex-col items-center text-center p-6 md:p-8 space-y-4 min-h-[350px] justify-center">
             <SuccessIcon />
-            <h3 className="font-headline text-2xl text-[#C5A086] mt-4">Presença Confirmada!</h3>
+            <h3 className="font-headline text-2xl text-primary mt-4">Presença Confirmada!</h3>
             <p className="text-muted-foreground">Mal podemos esperar para celebrar com você. Obrigado!</p>
             <Button 
               onClick={() => {
@@ -164,7 +164,8 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
                   giftSection.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
-              className="mt-4 bg-transparent text-[#C5A086] hover:bg-amber-50 border border-[#C5A086]"
+              variant="outline"
+              className="mt-4"
             >
               Ver Lista de Presentes
             </Button>
@@ -174,7 +175,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
         return (
           <div className="flex flex-col items-center text-center p-6 md:p-8 space-y-4 min-h-[350px] justify-center">
             <Frown className="w-16 h-16 text-amber-500" />
-            <h3 className="font-headline text-2xl text-[#C5A086] mt-4">Que pena!</h3>
+            <h3 className="font-headline text-2xl text-primary mt-4">Que pena!</h3>
             <p className="text-muted-foreground">Sentiremos sua falta, mas agradecemos por nos avisar.</p>
           </div>
         );
@@ -184,14 +185,14 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
                 <Frown className="w-16 h-16 text-destructive" />
                 <h3 className="font-headline text-2xl text-destructive mt-4">Ops! Algo deu errado.</h3>
                 <p className="text-muted-foreground">{errorMessage}</p>
-                <Button onClick={() => { setStage('initial'); idForm.reset(); }} className="mt-4 bg-[#C5A086] hover:bg-[#b89176] text-white">Tentar Novamente</Button>
+                <Button onClick={() => { setStage('initial'); idForm.reset(); }} className="mt-4">Tentar Novamente</Button>
             </div>
         );
       case 'found':
         return (
           <>
             <CardHeader className="text-center px-4 pt-6 md:px-6 md:pt-8">
-              <CardTitle className="font-headline text-2xl md:text-3xl text-[#C5A086]">Olá, {guestInfo?.name.split(' ')[0]}!</CardTitle>
+              <CardTitle className="font-headline text-2xl md:text-3xl text-primary">Olá, {guestInfo?.name.split(' ')[0]}!</CardTitle>
               <CardDescription>Seu convite é válido para até {guestInfo?.maxGuests} {guestInfo?.maxGuests === 1 ? 'pessoa' : 'pessoas'}.</CardDescription>
             </CardHeader>
             <CardContent className="px-4 pb-6 md:px-6 md:pb-8">
@@ -207,7 +208,6 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
                             <Select onValueChange={(value) => {
                                 field.onChange(parseInt(value));
                                 const count = parseInt(value);
-                                // Adjust additional guests fields based on selection
                                 const diff = count > 1 ? count - 1 - fields.length : -fields.length;
                                 if (diff > 0) {
                                     for (let i = 0; i < diff; i++) append({ name: '', age: undefined });
@@ -276,7 +276,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
                     <Button type="button" variant="outline" onClick={rsvpForm.handleSubmit(v => handleRsvpSubmit(v, false))} disabled={isPending}>
                        {texts.rsvp_decline_button || 'Não poderei comparecer'}
                     </Button>
-                    <Button type="button" className="w-full bg-[#C5A086] hover:bg-[#b89176] text-white" onClick={rsvpForm.handleSubmit(v => handleRsvpSubmit(v, true))} disabled={isPending}>
+                    <Button type="button" className="w-full" onClick={rsvpForm.handleSubmit(v => handleRsvpSubmit(v, true))} disabled={isPending}>
                       <PartyPopper className="mr-2"/>{texts.rsvp_confirm_button || 'Sim, eu vou!'}
                     </Button>
                   </div>
@@ -290,7 +290,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
         return (
           <>
             <CardHeader className="text-center px-4 pt-6 md:px-6 md:pt-8">
-              <CardTitle className="font-headline text-3xl md:text-4xl text-[#C5A086]">{texts.rsvp_title || 'Confirme sua Presença'}</CardTitle>
+              <CardTitle className="font-headline text-3xl md:text-4xl text-primary">{texts.rsvp_title || 'Confirme sua Presença'}</CardTitle>
               <CardDescription>{texts.rsvp_subtitle || 'Por favor, preencha seus dados para encontrarmos seu convite.'}</CardDescription>
             </CardHeader>
             <CardContent className="px-4 pb-6 md:px-6 md:pb-8">
@@ -327,7 +327,7 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full bg-[#C5A086] hover:bg-[#b89176] text-white" disabled={isPending}>
+                  <Button type="submit" className="w-full" disabled={isPending}>
                     <Check className="mr-2"/>
                     {texts.rsvp_find_button || 'Buscar meu Convite'}
                   </Button>
@@ -340,9 +340,9 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
   };
 
   return (
-    <section id="rsvp" className="w-full py-16 md:py-24 bg-white">
+    <section id="rsvp" className="w-full py-16 md:py-24 bg-muted/30">
       <div className="container mx-auto max-w-lg px-4">
-        <Card className="shadow-2xl border-[#EAE2DA] bg-[#FBF9F6]">
+        <Card className="shadow-xl bg-background rounded-2xl border-border/50">
             {renderContent()}
         </Card>
       </div>
@@ -351,3 +351,5 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onRsvpConfirmed, texts = {} }
 };
 
 export default RsvpSection;
+
+    
