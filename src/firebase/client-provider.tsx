@@ -1,13 +1,14 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { FirebaseProvider } from './provider'; // Importe o provedor consolidado
+import { FirebaseProvider } from './provider';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
-// A única responsabilidade deste componente é aplicar o FirebaseProvider.
+// Este componente agora apenas passa os filhos para o FirebaseProvider,
+// que lida com toda a lógica de inicialização.
 export function FirebaseClientProvider({
   children,
 }: FirebaseClientProviderProps) {

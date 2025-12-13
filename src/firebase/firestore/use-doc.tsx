@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { doc, onSnapshot, getDoc, type DocumentSnapshot } from 'firebase/firestore';
-
-import { useFirebase } from '../provider';
+import { useFirestore } from '../provider'; // Alterado para usar o hook dedicado
 import { DocumentData } from '../types';
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
@@ -17,7 +16,7 @@ export function useDoc<T = DocumentData>(
   path: string,
   options?: DocOptions
 ) {
-  const { firestore } = useFirebase();
+  const firestore = useFirestore(); // Usa o hook para obter o firestore
   const [data, setData] = useState<T | null>(options?.initialData ?? null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -35,6 +34,8 @@ export function useDoc<T = DocumentData>(
         const docData = { ...snapshot.data(), id: snapshot.id } as T;
         setData(docData);
       } else {
+        // Se o documento não existe, define data como null e para de carregar.
+        // Isto é crucial para que a página admin renderize com os dados padrão.
         setData(null);
       }
       setLoading(false);
@@ -43,7 +44,8 @@ export function useDoc<T = DocumentData>(
     const handleError = (err: Error & { code?: string }) => {
       console.error(err);
       if (err.code === 'permission-denied') {
-        errorEmitter.emit('error', new FirestorePermissionError());
+         // O tipo de erro estava incorreto, corrigido para 'permission-error'
+        errorEmitter.emit('permission-error', new FirestorePermissionError({path: ref.path, operation: 'get'}));
       }
       setError(err);
       setLoading(false);
@@ -57,6 +59,7 @@ export function useDoc<T = DocumentData>(
     const unsubscribe = onSnapshot(ref, handleSnapshot, handleError);
 
     return () => unsubscribe();
+  // A dependência de firestore é importante para re-executar o efeito quando ele estiver disponível.
   }, [firestore, path, options?.listen]);
 
   return { data, loading, error };
