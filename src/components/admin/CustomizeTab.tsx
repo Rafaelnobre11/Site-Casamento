@@ -2,7 +2,6 @@
 'use client';
 import { useState, useTransition, useEffect, ChangeEvent } from 'react';
 import { useFirebase } from '@/firebase';
-import { setDocument } from '@/firebase/firestore/utils';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,7 @@ type CustomColors = NonNullable<SiteConfig['customColors']>;
 
 interface CustomizeTabProps {
     config: SiteConfig;
+    onConfigChange: (newConfig: Partial<SiteConfig>) => void;
 }
 
 const ColorSwatch = ({ color }: { color: string }) => {
@@ -66,48 +66,68 @@ const ColorInput = ({ label, value, onChange, placeholder }: { label: string, va
 };
 
 
-export default function CustomizeTab({ config }: CustomizeTabProps) {
-    const { firestore } = useFirebase();
+export default function CustomizeTab({ config, onConfigChange }: CustomizeTabProps) {
+    const { storage } = useFirebase();
     const { toast } = useToast();
-    const [isPending, startTransition] = useTransition();
     const [isUploading, setIsUploading] = useState(false);
     const [openColorPopover, setOpenColorPopover] = useState(false);
     
-    const [formState, setFormState] = useState<SiteConfig>(() => ({
-        ...config,
-        isContentLocked: config.isContentLocked !== undefined ? config.isContentLocked : true,
-        customColors: {
-            ...config.customColors,
-        },
-    }));
-
-    useEffect(() => {
-        setFormState({
-            ...config,
-            isContentLocked: config.isContentLocked !== undefined ? config.isContentLocked : true,
-            customColors: {
-                ...(config.customColors || {}),
-            },
-        });
-    }, [config]);
+    const formState = config;
 
     const handleFieldChange = (field: keyof SiteConfig, value: any) => {
-        setFormState(prev => ({ ...prev, [field]: value }));
+        let updatedState: Partial<SiteConfig> = { [field]: value };
+        if (field === 'addressCep') {
+            const cep = value.replace(/\D/g, '');
+            if (cep && cep.length === 8) {
+                fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.erro) {
+                            const street = data.logradouro || '';
+                            const neighborhood = data.bairro || '';
+                            const city = data.localidade || '';
+                            const state = data.uf || '';
+                            const fullAddressForDisplay = `${street}, ${neighborhood}, ${city} - ${state}`;
+                            onConfigChange({ ...updatedState, locationAddress: fullAddressForDisplay });
+                        }
+                    }).catch(err => console.error("Falha ao buscar CEP:", err));
+            } else {
+                 onConfigChange(updatedState);
+            }
+        } else if (field === 'locationAddress' || field === 'addressNumber') {
+            const addressForMap = field === 'locationAddress' ? value : formState.locationAddress;
+            const numberForMap = field === 'addressNumber' ? value : formState.addressNumber;
+            if (addressForMap && numberForMap) {
+                const fullAddressForMap = `${addressForMap}, ${numberForMap}`;
+                const encodedAddress = encodeURIComponent(fullAddressForMap);
+                updatedState.mapUrl = `https://maps.google.com/maps?q=${encodedAddress}&z=15&output=embed`;
+                updatedState.wazeLink = `https://www.waze.com/ul?q=${encodedAddress}`;
+                updatedState.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+            }
+             onConfigChange({ ...formState, ...updatedState });
+        }
+        else {
+             onConfigChange(updatedState);
+        }
     };
-
+    
     const handleColorChange = (field: keyof CustomColors, value: string) => {
-        setFormState(prev => ({
-            ...prev,
-            customColors: { ...prev.customColors, [field]: value }
-        }));
+        onConfigChange({ 
+            customColors: { ...formState.customColors, [field]: value }
+        });
     };
     
     const resetDetailedColors = () => {
-        handleColorChange('headingText', '');
-        handleColorChange('heroHeadingText', '');
-        handleColorChange('bodyText', '');
-        handleColorChange('buttonBg', '');
-        handleColorChange('buttonText', '');
+        onConfigChange({
+             customColors: {
+                ...formState.customColors,
+                headingText: '',
+                heroHeadingText: '',
+                bodyText: '',
+                buttonBg: '',
+                buttonText: '',
+            }
+        });
     }
 
     const handleCarouselChange = (index: number, value: string) => {
@@ -128,10 +148,9 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     
     const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'heroImage' | 'carousel', index?: number) => {
         const file = e.target.files?.[0];
-        if (!file) return;
+        if (!file || !storage) return;
 
         setIsUploading(true);
-        const storage = getStorage();
         const fileRef = ref(storage, `site_images/${field}_${Date.now()}_${file.name}`);
         
         try {
@@ -143,10 +162,10 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 newImages[index] = downloadURL;
                 handleFieldChange('carouselImages', newImages);
             } else {
-                handleFieldChange(field as keyof SiteConfig, downloadURL);
+                handleFieldChange(field as 'logoUrl' | 'heroImage', downloadURL);
             }
             
-            toast({ title: 'Sucesso!', description: 'Sua imagem foi carregada e o URL foi atualizado.' });
+            toast({ title: 'Sucesso!', description: 'Sua imagem foi carregada. Clique em Salvar para publicar.' });
         } catch (error) {
             console.error("Image upload error:", error);
             toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
@@ -155,59 +174,6 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         }
     };
 
-
-    const handleSave = () => {
-        startTransition(async () => {
-            if (!firestore) {
-                toast({ variant: 'destructive', title: "Erro de Conexão", description: "Não foi possível conectar ao banco de dados." });
-                return;
-            };
-
-            let updatedState = { ...formState };
-            
-            const addressForMap = updatedState.locationAddress;
-            const numberForMap = updatedState.addressNumber;
-
-            if (addressForMap && numberForMap) {
-                const fullAddressForMap = `${addressForMap}, ${numberForMap}`;
-                const encodedAddress = encodeURIComponent(fullAddressForMap);
-                
-                updatedState.mapUrl = `https://maps.google.com/maps?q=${encodedAddress}&z=15&output=embed`;
-                updatedState.wazeLink = `https://www.waze.com/ul?q=${encodedAddress}`;
-                updatedState.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-            }
-            
-            try {
-                await setDocument(firestore, 'config/site', updatedState);
-                toast({ title: "Salvo!", description: `Suas personalizações foram salvas com sucesso.` });
-            } catch (error) {
-                console.error("Error saving config:", error);
-                toast({ variant: 'destructive', title: "Erro ao Salvar", description: "Não foi possível salvar as configurações." });
-            }
-        });
-    };
-    
-    useEffect(() => {
-        const cep = formState.addressCep?.replace(/\D/g, '');
-        if (cep && cep.length === 8) {
-            fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.erro) {
-                        const street = data.logradouro || '';
-                        const neighborhood = data.bairro || '';
-                        const city = data.localidade || '';
-                        const state = data.uf || '';
-                        const fullAddressForDisplay = `${street}, ${neighborhood}, ${city} - ${state}`;
-                        
-                        setFormState(prev => ({
-                            ...prev,
-                            locationAddress: fullAddressForDisplay,
-                        }));
-                    }
-                }).catch(err => console.error("Falha ao buscar CEP:", err));
-        }
-    }, [formState.addressCep]);
 
     // Lógica para obter as cores da paleta gerada
     const mainColor = formState.customColor || '#e85d3f'; // Fallback
@@ -234,7 +200,7 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
 
     return (
         <div className="grid gap-6 relative">
-            <div className="space-y-6 pb-24">
+            <div className="space-y-6 pb-16">
                 <Card>
                     <CardHeader>
                         <CardTitle>Identidade do Casal</CardTitle>
@@ -456,13 +422,6 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                     </CardContent>
                 </Card>
             </div>
-            
-            <CardFooter className="justify-end sticky bottom-0 bg-background/95 py-4 border-t z-10 -mx-8 px-8">
-                 <Button onClick={handleSave} disabled={isPending || isUploading} size="lg">
-                    {isPending || isUploading ? <Loader2 className="animate-spin" /> : <Save />}
-                    {isUploading ? 'Aguardando Upload...' : 'Salvar Todas as Alterações'}
-                </Button>
-            </CardFooter>
         </div>
     );
 }

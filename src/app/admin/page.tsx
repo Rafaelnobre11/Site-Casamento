@@ -1,9 +1,13 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useDoc } from '@/firebase/firestore/use-doc';
+import { useFirebase } from '@/firebase';
+import { setDocument } from '@/firebase/firestore/utils';
+import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Users, Palette, Type, Gift, Layers } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, Users, Palette, Type, Gift, Layers, Save } from 'lucide-react';
 import GuestsTab from '@/components/admin/GuestsTab';
 import CustomizeTab from '@/components/admin/CustomizeTab';
 import TextsTab from '@/components/admin/TextsTab';
@@ -13,10 +17,55 @@ import type { SiteConfig } from '@/types/siteConfig';
 import { defaultGifts } from '@/lib/default-gifts';
 
 export default function AdminPage() {
-    const { data: siteConfig, loading: loadingConfig } = useDoc<SiteConfig>('config/site');
+    const { data: initialSiteConfig, loading: loadingConfig } = useDoc<SiteConfig>('config/site');
+    const [config, setConfig] = useState<SiteConfig | null>(null);
     const [activeTab, setActiveTab] = useState('guests');
+    const [isSaving, startSaving] = useTransition();
+    const { firestore } = useFirebase();
+    const { toast } = useToast();
 
-    if (loadingConfig) {
+    useState(() => {
+        if (initialSiteConfig) {
+            const products = (!initialSiteConfig.products || initialSiteConfig.products.length === 0) 
+              ? defaultGifts 
+              : initialSiteConfig.products;
+
+            setConfig({
+                names: 'Cláudia & Rafael',
+                date: '2025-09-21T16:00:00',
+                time: '16:00',
+                texts: {},
+                customColors: {},
+                carouselImages: [],
+                layoutOrder: ['hero', 'countdown', 'carousel', 'rsvp', 'event', 'gifts'],
+                ...initialSiteConfig,
+                products,
+            });
+        }
+    });
+
+    const handleConfigChange = (newConfig: Partial<SiteConfig>) => {
+        setConfig(prev => prev ? { ...prev, ...newConfig } : null);
+    };
+
+    const handleSave = () => {
+        if (!config || !firestore) {
+            toast({ variant: 'destructive', title: "Erro", description: "Configuração não carregada ou sem conexão." });
+            return;
+        }
+
+        startSaving(async () => {
+            try {
+                await setDocument(firestore, 'config/site', config);
+                toast({ title: "Salvo!", description: "Suas configurações foram salvas com sucesso." });
+            } catch (error) {
+                console.error("Error saving config:", error);
+                toast({ variant: 'destructive', title: "Erro ao Salvar", description: "Não foi possível salvar as configurações." });
+            }
+        });
+    };
+
+    if (loadingConfig || !config) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-muted/40">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -24,31 +73,16 @@ export default function AdminPage() {
             </div>
         );
     }
-    
-    // Ensure other fields have default values if they are missing
-    const config: SiteConfig = {
-        names: 'Cláudia & Rafael',
-        date: '2025-09-21T16:00:00',
-        time: '16:00',
-        texts: {},
-        customColors: {},
-        carouselImages: [],
-        products: [], // Initialize as an empty array to satisfy TypeScript
-        layoutOrder: ['hero', 'countdown', 'carousel', 'rsvp', 'event', 'gifts'],
-        ...(siteConfig || {}), // Spread the loaded config over the defaults
-    };
-
-    // If products are explicitly null/undefined or an empty array in Firestore, populate with defaults.
-    // This ensures that if the user deletes all gifts, the default list reappears.
-    if (!config.products || config.products.length === 0) {
-        config.products = defaultGifts;
-    }
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/50">
             <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-                <div className="flex items-center">
+                <div className="flex items-center justify-between">
                     <h1 className="font-headline text-3xl">Painel dos Noivos</h1>
+                    <Button onClick={handleSave} disabled={isSaving} size="lg">
+                        {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
+                        Salvar Alterações
+                    </Button>
                 </div>
                 
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -64,16 +98,16 @@ export default function AdminPage() {
                         <GuestsTab />
                     </TabsContent>
                     <TabsContent value="customize">
-                        <CustomizeTab config={config} />
+                        <CustomizeTab config={config} onConfigChange={handleConfigChange} />
                     </TabsContent>
                     <TabsContent value="texts">
-                        <TextsTab config={config} />
+                        <TextsTab config={config} onConfigChange={handleConfigChange} />
                     </TabsContent>
                     <TabsContent value="shop">
-                        <ShopTab config={config} />
+                        <ShopTab config={config} onConfigChange={handleConfigChange} />
                     </TabsContent>
                     <TabsContent value="layout">
-                        <LayoutTab config={config} />
+                        <LayoutTab config={config} onConfigChange={handleConfigChange} />
                     </TabsContent>
                 </Tabs>
             </main>

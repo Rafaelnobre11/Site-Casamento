@@ -1,18 +1,14 @@
 
 'use client';
-import { useState, useTransition, useEffect } from 'react';
-import { useFirebase } from '@/firebase';
-import { setDocument } from '@/firebase/firestore/utils';
+import { useTransition, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save } from 'lucide-react';
 import type { SiteConfig } from '@/types/siteConfig';
 
 interface TextsTabProps {
     config: SiteConfig;
+    onConfigChange: (newConfig: Partial<SiteConfig>) => void;
 }
 
 // Structure to define the fields for the text editor with witty defaults
@@ -52,26 +48,13 @@ const textFields = {
     },
 };
 
-export default function TextsTab({ config }: TextsTabProps) {
-    const { firestore } = useFirebase();
-    const { toast } = useToast();
-    const [isPending, startTransition] = useTransition();
-    const [texts, setTexts] = useState(config.texts || {});
-
-    useEffect(() => {
-        setTexts(config.texts || {});
-    }, [config]);
+export default function TextsTab({ config, onConfigChange }: TextsTabProps) {
+    
+    const texts = config.texts || {};
 
     const handleTextChange = (key: string, value: string) => {
-        setTexts(prev => ({ ...prev, [key]: value }));
-    };
-
-    const handleSave = () => {
-        startTransition(async () => {
-            if (!firestore) return;
-            await setDocument(firestore, 'config/site', { texts: texts }, { merge: true });
-            toast({ title: "Textos Salvos!", description: "Todos os textos do site foram atualizados." });
-        });
+        const newTexts = { ...texts, [key]: value };
+        onConfigChange({ texts: newTexts });
     };
 
     return (
@@ -102,12 +85,6 @@ export default function TextsTab({ config }: TextsTabProps) {
                         </AccordionItem>
                     ))}
                 </Accordion>
-                <div className="flex justify-end">
-                    <Button onClick={handleSave} disabled={isPending}>
-                        {isPending ? <Loader2 className="animate-spin" /> : <Save />}
-                        Salvar Todos os Textos
-                    </Button>
-                </div>
             </CardContent>
         </Card>
     );

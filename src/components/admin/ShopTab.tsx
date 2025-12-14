@@ -1,14 +1,14 @@
+
 'use client';
-import { useState, useTransition, useEffect, ChangeEvent } from 'react';
+import { useState, useTransition } from 'react';
 import { useFirebase } from '@/firebase';
-import { setDocument } from '@/firebase/firestore/utils';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, PlusCircle, Sparkles, Save, Upload } from 'lucide-react';
+import { Loader2, Trash2, PlusCircle, Sparkles, Upload } from 'lucide-react';
 import type { SiteConfig, Product } from '@/types/siteConfig';
 import { generateGiftText } from '@/app/actions';
 import Image from 'next/image';
@@ -17,6 +17,7 @@ import { Progress } from '@/components/ui/progress';
 
 interface ShopTabProps {
     config: SiteConfig;
+    onConfigChange: (newConfig: Partial<SiteConfig>) => void;
 }
 
 interface UploadState {
@@ -24,25 +25,23 @@ interface UploadState {
     progress: number;
 }
 
-export default function ShopTab({ config }: ShopTabProps) {
-    const { firestore, storage } = useFirebase();
+export default function ShopTab({ config, onConfigChange }: ShopTabProps) {
+    const { storage } = useFirebase();
     const { toast } = useToast();
-    const [isSaving, startSavingTransition] = useTransition();
     const [isGenerating, setIsGenerating] = useState<string | null>(null);
-    
-    const [products, setProducts] = useState<Product[]>(config.products || []);
-    const [pixKey, setPixKey] = useState(config.pixKey || '');
     const [uploadStates, setUploadStates] = useState<Record<string, UploadState>>({});
 
-    useEffect(() => {
-        setProducts(config.products || []);
-        setPixKey(config.pixKey || '');
-    }, [config]);
+    const products = config.products || [];
+    const pixKey = config.pixKey || '';
 
-    const handleProductChange = (index: number, field: keyof Product, value: string) => {
+    const handleProductChange = (index: number, field: keyof Product, value: string | number) => {
         const newProducts = [...products];
         (newProducts[index] as any)[field] = value;
-        setProducts(newProducts);
+        onConfigChange({ products: newProducts });
+    };
+
+    const handlePixKeyChange = (value: string) => {
+        onConfigChange({ pixKey: value });
     };
 
     const handleImageUpload = (file: File, productId: string) => {
@@ -64,14 +63,14 @@ export default function ShopTab({ config }: ShopTabProps) {
         uploadTask.on('state_changed',
             (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                setUploadStates(prev => ({ ...prev, [productId]: { isLoading: true, progress } }));
+                setUploadStates(prev => ({ ...prev, [productId]: { ...prev[productId], progress } }));
             },
             (error) => {
                 console.error("Upload error:", error);
                 toast({
                     variant: 'destructive',
                     title: 'Erro de Upload',
-                    description: `Não foi possível carregar a imagem. Verifique as configurações e regras do Storage.`
+                    description: `Não foi possível carregar a imagem: ${error.message}`
                 });
                 setUploadStates(prev => {
                     const newStates = { ...prev };
@@ -81,14 +80,12 @@ export default function ShopTab({ config }: ShopTabProps) {
             },
             () => {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    const newProducts = [...products];
-                    const productIndex = newProducts.findIndex(p => p.id === productId);
+                    const productIndex = products.findIndex(p => p.id === productId);
                     if (productIndex !== -1) {
-                        newProducts[productIndex].imageUrl = downloadURL;
-                        setProducts(newProducts);
+                        handleProductChange(productIndex, 'imageUrl', downloadURL);
                     }
                     
-                    toast({ title: "Sucesso!", description: "A imagem foi carregada e atualizada." });
+                    toast({ title: "Sucesso!", description: "A imagem foi carregada. Clique em 'Salvar Alterações' para publicá-la." });
                     
                     setUploadStates(prev => {
                         const newStates = { ...prev };
@@ -120,7 +117,7 @@ export default function ShopTab({ config }: ShopTabProps) {
             const newProducts = [...products];
             newProducts[index].description = result.description;
             newProducts[index].funnyNote = result.thankYouNote;
-            setProducts(newProducts);
+            onConfigChange({ products: newProducts });
             toast({ title: 'Textos gerados com IA!', description: 'Descrição e agradecimento criados com sucesso.' });
         } else {
             toast({ variant: 'destructive', title: 'Erro da IA', description: result.error || 'Não foi possível gerar os textos.' });
@@ -139,23 +136,14 @@ export default function ShopTab({ config }: ShopTabProps) {
             imageUrl: placeholderImage,
             funnyNote: 'Obrigado por este presente aleatório e maravilhoso!',
         };
-        setProducts([...products, newProduct]);
+        onConfigChange({ products: [...products, newProduct] });
     };
 
     const removeProduct = (index: number) => {
         if (confirm(`Tem certeza que quer remover "${products[index].title}"?`)) {
             const newProducts = products.filter((_, i) => i !== index);
-            setProducts(newProducts);
+            onConfigChange({ products: newProducts });
         }
-    };
-
-    const handleSave = () => {
-        startSavingTransition(async () => {
-            if (!firestore) return;
-            const validProducts = products.filter(p => p.title && p.title.trim() !== '');
-            await setDocument(firestore, 'config/site', { products: validProducts, pixKey: pixKey }, { merge: true });
-            toast({ title: "Loja Salva!", description: "Sua lista de presentes e chave PIX foram atualizadas." });
-        });
     };
     
     const findImageDimensions = (url: string) => {
@@ -168,7 +156,7 @@ export default function ShopTab({ config }: ShopTabProps) {
 
     return (
         <div className="space-y-6 relative">
-             <div className="space-y-6 pb-24">
+             <div className="space-y-6 pb-16">
                 <Card>
                     <CardHeader>
                         <CardTitle>Chave PIX</CardTitle>
@@ -177,7 +165,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                     <CardContent>
                         <Input 
                             value={pixKey}
-                            onChange={(e) => setPixKey(e.target.value)}
+                            onChange={(e) => handlePixKeyChange(e.target.value)}
                             placeholder="Sua chave PIX (celular, e-mail, CPF/CNPJ ou chave aleatória)"
                         />
                     </CardContent>
@@ -192,6 +180,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                             {products.map((product, index) => {
                                 const { width, height } = findImageDimensions(product.imageUrl);
                                 const uploadState = uploadStates[product.id] || { isLoading: false, progress: 0 };
+                                const isPlaceholder = !!PlaceHolderImages.find(p => p.imageUrl === product.imageUrl);
                                 
                                 return (
                                     <div key={product.id} className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-lg relative">
@@ -231,7 +220,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                                             <label className="font-medium text-sm">Imagem do Produto</label>
                                             <div className="flex items-start gap-4">
                                                 {product.imageUrl && (
-                                                    <Image src={product.imageUrl} alt={product.title} width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
+                                                    <Image unoptimized={!isPlaceholder} src={product.imageUrl} alt={product.title} width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
                                                 )}
                                                 <div className="flex-grow space-y-2">
                                                     <Button asChild variant="outline" className="w-full" disabled={uploadState.isLoading}>
@@ -266,12 +255,6 @@ export default function ShopTab({ config }: ShopTabProps) {
                     </CardContent>
                 </Card>
             </div>
-             <CardFooter className="justify-end sticky bottom-0 bg-background/95 py-4 border-t z-10 -mx-8 px-8">
-                 <Button onClick={handleSave} disabled={isSaving} size="lg">
-                    {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
-                    Salvar Loja e Chave PIX
-                </Button>
-            </CardFooter>
         </div>
     );
 }

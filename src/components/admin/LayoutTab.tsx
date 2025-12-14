@@ -1,16 +1,15 @@
+
 'use client';
-import { useState, useTransition, useEffect } from 'react';
-import { useFirebase } from '@/firebase';
-import { setDocument } from '@/firebase/firestore/utils';
+import { useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
+import { ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 import type { SiteConfig } from '@/types/siteConfig';
 import { cn } from '@/lib/utils';
 
 interface LayoutTabProps {
     config: SiteConfig;
+    onConfigChange: (newConfig: Partial<SiteConfig>) => void;
 }
 
 const componentNames: { [key: string]: string } = {
@@ -25,30 +24,17 @@ const componentNames: { [key: string]: string } = {
 // Define quais componentes não podem ser movidos
 const fixedComponents = ['hero', 'rsvp'];
 
-export default function LayoutTab({ config }: LayoutTabProps) {
-    const { firestore } = useFirebase();
-    const { toast } = useToast();
-    const [isPending, startTransition] = useTransition();
-    const [layout, setLayout] = useState(config.layoutOrder || []);
+export default function LayoutTab({ config, onConfigChange }: LayoutTabProps) {
+    const layout = config.layoutOrder || [];
 
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const newLayout = [...layout];
         const targetIndex = direction === 'up' ? index - 1 : index + 1;
 
-        // Verifica se o movimento é válido
         if (targetIndex >= 0 && targetIndex < newLayout.length) {
-            // Troca os elementos de posição
             [newLayout[index], newLayout[targetIndex]] = [newLayout[targetIndex], newLayout[index]];
-            setLayout(newLayout);
+            onConfigChange({ layoutOrder: newLayout });
         }
-    };
-    
-    const handleSaveLayout = () => {
-        startTransition(async () => {
-            if (!firestore) return;
-            await setDocument(firestore, 'config/site', { layoutOrder: layout }, { merge: true });
-            toast({ title: "Layout Salvo!", description: "A ordem das seções foi atualizada." });
-        });
     };
 
     return (
@@ -92,9 +78,6 @@ export default function LayoutTab({ config }: LayoutTabProps) {
                         );
                     })}
                 </ul>
-                <Button onClick={handleSaveLayout} disabled={isPending}>
-                    {isPending ? <Loader2 className="animate-spin" /> : 'Salvar Ordem'}
-                </Button>
             </CardContent>
         </Card>
     );
