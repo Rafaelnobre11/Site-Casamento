@@ -1,8 +1,8 @@
 'use client';
-import { useState, useTransition, useEffect, useRef } from 'react';
+import { useState, useTransition, useEffect, ChangeEvent } from 'react';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +25,7 @@ interface UploadState {
 }
 
 export default function ShopTab({ config }: ShopTabProps) {
-    const { firestore } = useFirebase();
+    const { firestore, storage } = useFirebase();
     const { toast } = useToast();
     const [isSaving, startSavingTransition] = useTransition();
     const [isGenerating, setIsGenerating] = useState<string | null>(null);
@@ -46,9 +46,15 @@ export default function ShopTab({ config }: ShopTabProps) {
     };
 
     const handleImageUpload = (file: File, productId: string) => {
-        if (!file) return;
+        if (!file || !storage) {
+            toast({
+                variant: 'destructive',
+                title: 'Erro de Configuração',
+                description: 'O serviço de armazenamento não está disponível.',
+            });
+            return;
+        }
 
-        const storage = getStorage();
         const uploadFolder = 'site_images/gifts/';
         const storageRef = ref(storage, `${uploadFolder}${Date.now()}_${file.name}`);
         const uploadTask = uploadBytesResumable(storageRef, file);

@@ -4,12 +4,14 @@ import { createContext, useContext, ReactNode } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
+import { FirebaseStorage } from 'firebase/storage';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseContextValue {
   app: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
+  storage: FirebaseStorage;
 }
 
 const FirebaseContext = createContext<FirebaseContextValue | undefined>(
@@ -21,10 +23,11 @@ interface FirebaseProviderProps {
   app: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
+  storage: FirebaseStorage;
 }
 
-export function FirebaseProvider({ children, app, auth, firestore }: FirebaseProviderProps) {
-  const value = { app, auth, firestore };
+export function FirebaseProvider({ children, app, auth, firestore, storage }: FirebaseProviderProps) {
+  const value = { app, auth, firestore, storage };
 
   return (
     <FirebaseContext.Provider value={value}>

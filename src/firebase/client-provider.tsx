@@ -5,9 +5,11 @@ import { FirebaseProvider } from './provider';
 import { initializeFirebase } from './config';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
+import type { FirebaseStorage } from 'firebase/storage';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
@@ -17,6 +19,7 @@ interface FirebaseInstances {
   app: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
+  storage: FirebaseStorage;
 }
 
 // Este componente garante que a inicialização do Firebase só aconteça no lado do cliente.
@@ -31,7 +34,8 @@ export function FirebaseClientProvider({
     const app = initializeFirebase();
     const auth = getAuth(app);
     const firestore = getFirestore(app);
-    setFirebase({ app, auth, firestore });
+    const storage = getStorage(app);
+    setFirebase({ app, auth, firestore, storage });
   }, []);
 
   // Enquanto o Firebase não for inicializado, não renderizamos nada
@@ -41,7 +45,7 @@ export function FirebaseClientProvider({
   }
 
   return (
-    <FirebaseProvider app={firebase.app} auth={firebase.auth} firestore={firebase.firestore}>
+    <FirebaseProvider app={firebase.app} auth={firebase.auth} firestore={firebase.firestore} storage={firebase.storage}>
       {children}
     </FirebaseProvider>
   );
