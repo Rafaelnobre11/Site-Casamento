@@ -32,7 +32,8 @@ export default function ShopTab({ config }: ShopTabProps) {
     
     const [products, setProducts] = useState<Product[]>(config.products || []);
     const [pixKey, setPixKey] = useState(config.pixKey || '');
-    const [uploadStates, setUploadStates] = useState<Record<number, UploadState>>({});
+    const [uploadStates, setUploadStates] = useState<Record<string, UploadState>>({});
+
 
     useEffect(() => {
         setProducts(config.products || []);
@@ -45,17 +46,14 @@ export default function ShopTab({ config }: ShopTabProps) {
         setProducts(newProducts);
     };
 
-    const handleFileSelectAndUpload = (event: ChangeEvent<HTMLInputElement>, index: number) => {
+    const handleFileSelectAndUpload = (event: ChangeEvent<HTMLInputElement>, productId: string, productIndex: number) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        const product = products[index];
-        if (!product) return;
-
-        setUploadStates(prev => ({...prev, [index]: { isUploading: true, progress: 0 }}));
+        setUploadStates(prev => ({...prev, [productId]: { isUploading: true, progress: 0 }}));
 
         const storage = getStorage();
-        const uploadPath = `site_images/gifts/${product.id}_${Date.now()}_${file.name}`;
+        const uploadPath = `site_images/gifts/${productId}_${Date.now()}_${file.name}`;
         const fileRef = ref(storage, uploadPath);
         const uploadTask = uploadBytesResumable(fileRef, file);
 
@@ -64,24 +62,24 @@ export default function ShopTab({ config }: ShopTabProps) {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                 setUploadStates(prev => ({
                     ...prev, 
-                    [index]: { isUploading: true, progress: progress }
+                    [productId]: { isUploading: true, progress: progress }
                 }));
             },
             (error) => {
                 console.error("Image upload error:", error);
-                toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
-                setUploadStates(prev => ({...prev, [index]: { isUploading: false, progress: 0 }}));
+                toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem. Verifique a consola para mais detalhes.' });
+                setUploadStates(prev => ({...prev, [productId]: { isUploading: false, progress: 0 }}));
             },
             () => {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
                     const newProducts = [...products];
-                    newProducts[index].imageUrl = downloadURL;
+                    newProducts[productIndex].imageUrl = downloadURL;
                     setProducts(newProducts);
                     toast({ title: 'Sucesso!', description: 'A imagem foi carregada e atualizada.' });
                 }).catch((error) => {
                      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível obter o URL da imagem.' });
                 }).finally(() => {
-                     setUploadStates(prev => ({...prev, [index]: { isUploading: false, progress: 0 }}));
+                     setUploadStates(prev => ({...prev, [productId]: { isUploading: false, progress: 0 }}));
                 });
             }
         );
@@ -177,7 +175,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                         <div className="space-y-4">
                             {products.map((product, index) => {
                                 const { width, height } = findImageDimensions(product.imageUrl);
-                                const uploadState = uploadStates[index] || { isUploading: false, progress: 0 };
+                                const uploadState = uploadStates[product.id] || { isUploading: false, progress: 0 };
                                 const inputId = `upload-input-${product.id}`;
 
                                 return (
@@ -225,16 +223,16 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                          <label htmlFor={inputId} className="cursor-pointer flex items-center justify-center">
                                                             {uploadState.isUploading ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2"/>}
                                                             {uploadState.isUploading ? `A carregar... ${uploadState.progress.toFixed(0)}%` : 'Carregar Nova Imagem'}
+                                                            <input
+                                                                id={inputId}
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="sr-only"
+                                                                onChange={(e) => handleFileSelectAndUpload(e, product.id, index)}
+                                                                disabled={uploadState.isUploading}
+                                                            />
                                                           </label>
                                                      </Button>
-                                                     <input
-                                                        id={inputId}
-                                                        type="file"
-                                                        accept="image/*"
-                                                        className="sr-only"
-                                                        onChange={(e) => handleFileSelectAndUpload(e, index)}
-                                                        disabled={uploadState.isUploading}
-                                                    />
                                                     {uploadState.isUploading && <Progress value={uploadState.progress} className="w-full h-2" />}
                                                 </div>
                                             </div>
