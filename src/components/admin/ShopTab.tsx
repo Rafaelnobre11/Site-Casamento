@@ -1,8 +1,9 @@
 
 'use client';
-import { useState, useTransition, useEffect, ChangeEvent, useRef } from 'react';
+import { useState, useTransition, useEffect, useRef } from 'react';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,6 @@ import type { SiteConfig, Product } from '@/types/siteConfig';
 import { generateGiftText } from '@/app/actions';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 
 interface ShopTabProps {
@@ -46,7 +46,7 @@ export default function ShopTab({ config }: ShopTabProps) {
         setProducts(newProducts);
     };
 
-    const handleImageUpload = (file: File, productId: string, productIndex: number) => {
+    const handleImageUpload = (file: File, productId: string) => {
         if (!file) return;
 
         const storage = getStorage();
@@ -66,7 +66,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                 toast({
                     variant: 'destructive',
                     title: 'Erro de Upload',
-                    description: `Não foi possível carregar a imagem. Erro: ${error.message}`
+                    description: `Não foi possível carregar a imagem. Verifique as configurações e regras do Storage.`
                 });
                 setUploadStates(prev => {
                     const newStates = { ...prev };
@@ -77,9 +77,14 @@ export default function ShopTab({ config }: ShopTabProps) {
             () => {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
                     const newProducts = [...products];
-                    newProducts[productIndex].imageUrl = downloadURL;
-                    setProducts(newProducts);
+                    const productIndex = newProducts.findIndex(p => p.id === productId);
+                    if (productIndex !== -1) {
+                        newProducts[productIndex].imageUrl = downloadURL;
+                        setProducts(newProducts);
+                    }
+                    
                     toast({ title: "Sucesso!", description: "A imagem foi carregada e atualizada." });
+                    
                     setUploadStates(prev => {
                         const newStates = { ...prev };
                         delete newStates[productId];
@@ -224,7 +229,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                     <Image src={product.imageUrl} alt={product.title} width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
                                                 )}
                                                 <div className="flex-grow space-y-2">
-                                                    <Button asChild variant="outline" className="w-full" disabled={uploadState.isLoading}>
+                                                     <Button asChild variant="outline" className="w-full" disabled={uploadState.isLoading}>
                                                         <label htmlFor={`upload-${product.id}`} className="cursor-pointer">
                                                              {uploadState.isLoading ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2"/>}
                                                              {uploadState.isLoading ? `A carregar... ${uploadState.progress.toFixed(0)}%` : 'Carregar Nova Imagem'}
@@ -235,7 +240,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                                 accept="image/*"
                                                                 onChange={(e) => {
                                                                     if (e.target.files && e.target.files[0]) {
-                                                                        handleImageUpload(e.target.files[0], product.id, index);
+                                                                        handleImageUpload(e.target.files[0], product.id);
                                                                     }
                                                                 }}
                                                                 disabled={uploadState.isLoading}
