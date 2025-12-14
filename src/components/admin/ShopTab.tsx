@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useFirebase } from '@/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -82,7 +82,9 @@ export default function ShopTab({ config, onConfigChange }: ShopTabProps) {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
                     const productIndex = products.findIndex(p => p.id === productId);
                     if (productIndex !== -1) {
-                        handleProductChange(productIndex, 'imageUrl', downloadURL);
+                        const newProducts = [...products];
+                        newProducts[productIndex].imageUrl = downloadURL;
+                        onConfigChange({ products: newProducts });
                     }
                     
                     toast({ title: "Sucesso!", description: "A imagem foi carregada. Clique em 'Salvar Alterações' para publicá-la." });

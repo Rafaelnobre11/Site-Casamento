@@ -2047,3 +2047,57 @@
 [error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
 [debug] [2025-12-14T19:22:19.273Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
 [debug] [2025-12-14T19:22:19.273Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T20:24:05.526Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T20:24:05.527Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[debug] [2025-12-14T20:24:05.556Z] Checked if tokens are valid: false, expires at: 1765743667195
+[debug] [2025-12-14T20:24:05.557Z] Checked if tokens are valid: false, expires at: 1765743667195
+[debug] [2025-12-14T20:24:05.561Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T20:24:05.564Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T20:24:05.564Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T20:24:05.567Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T20:24:05.568Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[debug] [2025-12-14T20:24:05.572Z] Checked if tokens are valid: false, expires at: 1765743667195
+[debug] [2025-12-14T20:24:05.572Z] Checked if tokens are valid: false, expires at: 1765743667195
+[debug] [2025-12-14T20:24:05.572Z] > refreshing access token with scopes: []
+[debug] [2025-12-14T20:24:05.573Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-14T20:24:05.573Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T20:24:05.780Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T20:24:05.781Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T20:24:05.819Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/meu-casamento-d28e1/services/firebaseio.com [none]
+[debug] [2025-12-14T20:24:05.819Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/meu-casamento-d28e1/services/firebaseio.com x-goog-quota-user=projects/meu-casamento-d28e1
+[debug] [2025-12-14T20:24:05.822Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-14T20:24:05.822Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-14T20:24:05.835Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/meu-casamento-d28e1/services/firebaseio.com [none]
+[debug] [2025-12-14T20:24:05.835Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/meu-casamento-d28e1/services/firebaseio.com x-goog-quota-user=projects/meu-casamento-d28e1
+[debug] [2025-12-14T20:24:05.901Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/meu-casamento-d28e1/services/firebaseio.com 403
+[debug] [2025-12-14T20:24:05.902Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/meu-casamento-d28e1/services/firebaseio.com [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T20:24:05.918Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T20:24:05.918Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T20:24:05.922Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T20:24:05.922Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[debug] [2025-12-14T20:24:05.938Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/meu-casamento-d28e1/services/firebaseio.com 403
+[debug] [2025-12-14T20:24:05.938Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/meu-casamento-d28e1/services/firebaseio.com [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T20:24:05.969Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T20:24:05.969Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T20:24:05.973Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T20:24:05.973Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T20:24:05.998Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T20:24:05.998Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-12-14T20:24:06.002Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-14T20:24:06.002Z] > authorizing via signed-in user (ricardonardirocha@gmail.com)
