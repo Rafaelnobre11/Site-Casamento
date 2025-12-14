@@ -2,7 +2,7 @@
 import { useState, useTransition, useEffect, ChangeEvent } from 'react';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, type UploadTask } from 'firebase/storage';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,16 +48,16 @@ export default function ShopTab({ config }: ShopTabProps) {
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>, index: number) => {
         const file = e.target.files?.[0];
         const productId = products[index].id;
-        if (!file) return;
-
+        if (!file || !productId) return;
+    
+        setIsUploading(prev => ({...prev, [productId]: true}));
+        setUploadProgress(prev => ({ ...prev, [productId]: 0 }));
+    
         const storage = getStorage();
         const fileRef = ref(storage, `site_images/gifts/${Date.now()}_${file.name}`);
         
         const uploadTask = uploadBytesResumable(fileRef, file);
-
-        setIsUploading(prev => ({...prev, [productId]: true}));
-        setUploadProgress(prev => ({ ...prev, [productId]: 0 }));
-
+    
         uploadTask.on('state_changed',
             (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
@@ -67,7 +67,6 @@ export default function ShopTab({ config }: ShopTabProps) {
                 console.error("Image upload error:", error);
                 toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
                 setIsUploading(prev => ({...prev, [productId]: false}));
-                setUploadProgress(prev => ({ ...prev, [productId]: 0 }));
             },
             () => {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
@@ -220,19 +219,19 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                 )}
                                                 <div className="flex-grow space-y-2">
                                                     <Button asChild variant="outline" disabled={isCurrentlyUploading}>
-                                                        <label htmlFor={`file-upload-${product.id}`} className="cursor-pointer flex items-center">
+                                                        <label className="cursor-pointer flex items-center">
                                                             {isCurrentlyUploading ? <Loader2 className="animate-spin" /> : <Upload />}
                                                             {isCurrentlyUploading ? `A carregar... ${currentProgress.toFixed(0)}%` : 'Carregar Nova Imagem'}
+                                                            <input 
+                                                                id={`file-upload-${product.id}`}
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="sr-only"
+                                                                onChange={(e) => handleImageUpload(e, index)}
+                                                                disabled={isCurrentlyUploading}
+                                                            />
                                                         </label>
                                                     </Button>
-                                                    <input 
-                                                        id={`file-upload-${product.id}`}
-                                                        type="file"
-                                                        accept="image/*"
-                                                        className="sr-only"
-                                                        onChange={(e) => handleImageUpload(e, index)}
-                                                        disabled={isCurrentlyUploading}
-                                                    />
                                                     {isCurrentlyUploading && <Progress value={currentProgress} className="w-full h-2" />}
                                                 </div>
                                             </div>
