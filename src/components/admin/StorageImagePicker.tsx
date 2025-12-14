@@ -22,7 +22,10 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect, 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchImages = async () => {
-    if (!folderPath) return;
+    if (!folderPath) {
+        setIsLoading(false);
+        return;
+    };
 
     setIsLoading(true);
     setError(null);
@@ -33,7 +36,6 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect, 
       const res = await listAll(folderRef);
       const urls = await Promise.all(res.items.map(itemRef => getDownloadURL(itemRef)));
       
-      // Ordena as imagens pela mais recente (funciona se o nome do ficheiro incluir um timestamp)
       const sortedUrls = urls.sort((a, b) => b.localeCompare(a));
       
       setImageUrls(sortedUrls);
@@ -41,13 +43,12 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect, 
     } catch (e: any) {
       console.error(`Erro ao buscar imagens da pasta "${folderPath}":`, e);
       if (e.code === 'storage/object-not-found') {
-        // Se a pasta não existe, não é um erro fatal, apenas não há imagens.
         setImageUrls([]);
       } else {
         setError("Falha ao carregar imagens do banco de dados.");
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // CORREÇÃO: Garante que o loading para
     }
   };
 
@@ -73,17 +74,14 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect, 
     setIsUploading(true);
     setError(null);
     const storage = getStorage();
-    // Usa um timestamp no nome para facilitar a ordenação
     const fileRef = ref(storage, `${folderPath}/${Date.now()}_${file.name}`);
     
     try {
         const snapshot = await uploadBytes(fileRef, file);
         const downloadURL = await getDownloadURL(snapshot.ref);
         
-        // Adiciona a nova imagem no início da lista para feedback imediato
         setImageUrls(prev => [downloadURL, ...prev]);
         
-        // Opcional: seleciona a imagem recém-carregada automaticamente
         handleLocalImageSelect(downloadURL);
         
     } catch (error) {
@@ -91,7 +89,6 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect, 
         setError('Não foi possível carregar a imagem.');
     } finally {
         setIsUploading(false);
-        // Limpa o input para permitir o upload do mesmo ficheiro novamente
         if(fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -148,7 +145,7 @@ export default function StorageImagePicker({ open, onOpenChange, onImageSelect, 
                 onChange={handleImageUpload}
                 className="hidden"
                 accept="image/png, image/jpeg, image/gif, image/webp"
-                disabled={isUploading || isLoading}
+                disabled={isUploading}
             />
           <Button variant="default" onClick={handleUploadClick} disabled={isUploading || isLoading}>
             {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
