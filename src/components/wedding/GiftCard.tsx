@@ -32,10 +32,15 @@ const GiftCard = ({ gift, pixKey }: GiftCardProps) => {
         if (placeholder) {
             return { width: placeholder.width, height: placeholder.height };
         }
-        return { width: 400, height: 250 };
+        // Fallback dimensions for user-uploaded images
+        return { width: 400, height: 300 };
     }
     
     const { width, height } = findImageDimensions(gift.imageUrl);
+    // For user-uploaded images, we don't know the exact dimensions, 
+    // so we use the unoptimized prop to tell Next.js to serve the image as-is.
+    const isPlaceholder = !!PlaceHolderImages.find(p => p.imageUrl === gift.imageUrl);
+
 
     return (
         <>
@@ -53,6 +58,7 @@ const GiftCard = ({ gift, pixKey }: GiftCardProps) => {
                             className="object-cover h-full w-full transition-transform duration-500 group-hover:scale-105"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             loading="lazy"
+                            unoptimized={!isPlaceholder} // Use original image for non-placeholders
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">
