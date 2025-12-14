@@ -1,5 +1,6 @@
 'use client';
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, useRef, ChangeEvent } from 'react';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -12,10 +13,15 @@ import type { SiteConfig, Product } from '@/types/siteConfig';
 import { generateGiftText } from '@/app/actions';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import ImageUploader from './ImageUploader';
+import { Progress } from '@/components/ui/progress';
 
 interface ShopTabProps {
     config: SiteConfig;
+}
+
+interface UploadState {
+    isUploading: boolean;
+    progress: number;
 }
 
 export default function ShopTab({ config }: ShopTabProps) {
@@ -26,25 +32,58 @@ export default function ShopTab({ config }: ShopTabProps) {
     
     const [products, setProducts] = useState<Product[]>(config.products || []);
     const [pixKey, setPixKey] = useState(config.pixKey || '');
+    const [uploadStates, setUploadStates] = useState<Record<string, UploadState>>({});
+
+    const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
     useEffect(() => {
         setProducts(config.products || []);
         setPixKey(config.pixKey || '');
     }, [config]);
 
-
     const handleProductChange = (index: number, field: keyof Product, value: string) => {
         const newProducts = [...products];
         (newProducts[index] as any)[field] = value;
         setProducts(newProducts);
     };
-
-    const handleImageChange = (index: number, newImageUrl: string) => {
-        const newProducts = [...products];
-        newProducts[index].imageUrl = newImageUrl;
-        setProducts(newProducts);
-    }
     
+    const handleImageUpload = (e: ChangeEvent<HTMLInputElement>, productId: string, index: number) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const storage = getStorage();
+        const uploadPath = 'site_images/gifts';
+        const fileRef = ref(storage, `${uploadPath}/${productId}_${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(fileRef, file);
+
+        setUploadStates(prev => ({...prev, [productId]: { isUploading: true, progress: 0 }}));
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setUploadStates(prev => ({...prev, [productId]: { isUploading: true, progress: progress }}));
+            },
+            (error) => {
+                console.error("Image upload error:", error);
+                toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
+                setUploadStates(prev => ({...prev, [productId]: { isUploading: false, progress: 0 }}));
+            },
+            () => {
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    const newProducts = [...products];
+                    newProducts[index].imageUrl = downloadURL;
+                    setProducts(newProducts);
+                    toast({ title: 'Sucesso!', description: 'A imagem foi carregada e atualizada.' });
+                }).catch((error) => {
+                     toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível obter o URL da imagem.' });
+                }).finally(() => {
+                    setUploadStates(prev => ({...prev, [productId]: { isUploading: false, progress: 0 }}));
+                });
+            }
+        );
+        // Clear the input value to allow re-uploading the same file
+        if(e.target) e.target.value = '';
+    };
 
     const handleGenerateText = async (index: number) => {
         const productTitle = products[index].title;
@@ -94,8 +133,6 @@ export default function ShopTab({ config }: ShopTabProps) {
         }
     };
 
-
-
     const handleSave = () => {
         startSavingTransition(async () => {
             if (!firestore) return;
@@ -112,7 +149,6 @@ export default function ShopTab({ config }: ShopTabProps) {
         }
         return { width: 400, height: 250 };
     }
-
 
     return (
         <div className="space-y-6 relative">
@@ -139,6 +175,8 @@ export default function ShopTab({ config }: ShopTabProps) {
                         <div className="space-y-4">
                             {products.map((product, index) => {
                                 const { width, height } = findImageDimensions(product.imageUrl);
+                                const uploadState = uploadStates[product.id] || { isUploading: false, progress: 0 };
+
                                 return (
                                     <div key={product.id} className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-lg relative">
                                         <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeProduct(index)}>
@@ -180,11 +218,21 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                     <Image src={product.imageUrl} alt="Preview" width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
                                                 )}
                                                 <div className="flex-grow space-y-2">
-                                                    <ImageUploader 
-                                                        productId={product.id}
-                                                        uploadPath="site_images/gifts"
-                                                        onUploadComplete={(newUrl) => handleImageChange(index, newUrl)}
-                                                    />
+                                                     <Button asChild variant="outline" className="w-full" disabled={uploadState.isUploading}>
+                                                         <label htmlFor={`image-upload-${product.id}`} className="cursor-pointer">
+                                                            {uploadState.isUploading ? <Loader2 className="animate-spin" /> : <Upload />}
+                                                            {uploadState.isUploading ? `A carregar... ${uploadState.progress.toFixed(0)}%` : 'Carregar Nova Imagem'}
+                                                            <input
+                                                                id={`image-upload-${product.id}`}
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="sr-only"
+                                                                onChange={(e) => handleImageUpload(e, product.id, index)}
+                                                                disabled={uploadState.isUploading}
+                                                            />
+                                                         </label>
+                                                     </Button>
+                                                    {uploadState.isUploading && <Progress value={uploadState.progress} className="w-full h-2" />}
                                                 </div>
                                             </div>
                                         </div>
