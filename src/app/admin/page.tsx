@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
@@ -24,7 +24,7 @@ export default function AdminPage() {
     const { firestore } = useFirebase();
     const { toast } = useToast();
 
-    useState(() => {
+    useEffect(() => {
         if (initialSiteConfig) {
             const products = (!initialSiteConfig.products || initialSiteConfig.products.length === 0) 
               ? defaultGifts 
@@ -42,7 +42,7 @@ export default function AdminPage() {
                 products,
             });
         }
-    });
+    }, [initialSiteConfig]);
 
     const handleConfigChange = (newConfig: Partial<SiteConfig>) => {
         setConfig(prev => prev ? { ...prev, ...newConfig } : null);
