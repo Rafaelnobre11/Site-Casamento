@@ -25,7 +25,6 @@ export default function ShopTab({ config }: ShopTabProps) {
     const [isSaving, startSavingTransition] = useTransition();
     const [isGenerating, setIsGenerating] = useState<string | null>(null);
     
-    // State to track upload progress for each product
     const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
     const [isUploading, setIsUploading] = useState<{ [key: string]: boolean }>({});
 
@@ -49,15 +48,16 @@ export default function ShopTab({ config }: ShopTabProps) {
         const file = e.target.files?.[0];
         const productId = products[index].id;
         if (!file || !productId) return;
-    
-        setIsUploading(prev => ({...prev, [productId]: true}));
+
+        setIsUploading(prev => ({ ...prev, [productId]: true }));
         setUploadProgress(prev => ({ ...prev, [productId]: 0 }));
-    
+
         const storage = getStorage();
-        const fileRef = ref(storage, `site_images/gifts/${Date.now()}_${file.name}`);
+        // O caminho do upload é definido para a pasta de presentes
+        const fileRef = ref(storage, `site_images/gifts/${productId}_${Date.now()}_${file.name}`);
         
         const uploadTask = uploadBytesResumable(fileRef, file);
-    
+
         uploadTask.on('state_changed',
             (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
@@ -66,7 +66,7 @@ export default function ShopTab({ config }: ShopTabProps) {
             (error) => {
                 console.error("Image upload error:", error);
                 toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
-                setIsUploading(prev => ({...prev, [productId]: false}));
+                setIsUploading(prev => ({ ...prev, [productId]: false }));
             },
             () => {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
@@ -75,7 +75,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                     setProducts(newProducts);
                     toast({ title: 'Sucesso!', description: 'A imagem foi carregada.' });
                 }).finally(() => {
-                    setIsUploading(prev => ({...prev, [productId]: false}));
+                    setIsUploading(prev => ({ ...prev, [productId]: false }));
                 });
             }
         );
@@ -218,10 +218,19 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                     <Image src={product.imageUrl} alt="Preview" width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
                                                 )}
                                                 <div className="flex-grow space-y-2">
-                                                    <Button asChild variant="outline" disabled={isCurrentlyUploading}>
-                                                        <label className="cursor-pointer flex items-center">
-                                                            {isCurrentlyUploading ? <Loader2 className="animate-spin" /> : <Upload />}
-                                                            {isCurrentlyUploading ? `A carregar... ${currentProgress.toFixed(0)}%` : 'Carregar Nova Imagem'}
+                                                     <Button asChild variant="outline" disabled={isCurrentlyUploading}>
+                                                        <label htmlFor={`file-upload-${product.id}`} className="cursor-pointer flex items-center justify-center">
+                                                            {isCurrentlyUploading ? (
+                                                                <>
+                                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                    <span>A carregar... {currentProgress.toFixed(0)}%</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Upload className="mr-2 h-4 w-4" />
+                                                                    Carregar Nova Imagem
+                                                                </>
+                                                            )}
                                                             <input 
                                                                 id={`file-upload-${product.id}`}
                                                                 type="file"
