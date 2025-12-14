@@ -3,7 +3,6 @@
 import { initializeApp, getApps, getApp, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getAuth, Auth } from 'firebase-admin/auth';
-import { firebaseConfig } from './config';
 
 interface FirebaseAdmin {
   app: App;
@@ -20,9 +19,9 @@ function getFirebaseAdmin(): FirebaseAdmin {
 
   const app = !getApps().length
     ? initializeApp({
-        // When deployed to App Hosting, these are automatically set.
-        // For local development, you need to set these environment variables.
-        // See: https://firebase.google.com/docs/admin/setup#initialize-sdk
+        projectId: 'meu-casamento-d28e1',
+        storageBucket: 'meu-casamento-d28e1.appspot.com',
+        serviceAccountId: 'firebase-adminsdk-fbsvc@meu-casamento-d28e1.iam.gserviceaccount.com'
       })
     : getApp();
 
