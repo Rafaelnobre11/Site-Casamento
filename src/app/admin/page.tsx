@@ -30,16 +30,22 @@ export default function AdminPage() {
               ? defaultGifts 
               : initialSiteConfig.products;
 
-            setConfig({
+            // Define defaults first, then spread the loaded config over them
+            // to prevent property duplication errors.
+            const defaultConfig: Partial<SiteConfig> = {
                 names: 'Cláudia & Rafael',
                 date: '2025-09-21T16:00:00',
                 time: '16:00',
                 customColors: {},
                 carouselImages: [],
                 layoutOrder: ['hero', 'countdown', 'carousel', 'rsvp', 'event', 'gifts'],
+                texts: {},
+            };
+
+            setConfig({
+                ...defaultConfig,
                 ...initialSiteConfig,
-                texts: initialSiteConfig.texts || {},
-                products,
+                products, // Always ensure products are correctly set
             });
         }
     }, [initialSiteConfig]);
