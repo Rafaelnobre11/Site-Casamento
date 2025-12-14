@@ -36,3 +36,5 @@ function initializeFirebase() {
 }
 
 export { initializeFirebase, firebaseConfig };
+
+    

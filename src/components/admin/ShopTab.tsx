@@ -1,5 +1,6 @@
+
 'use client';
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, ChangeEvent, useRef } from 'react';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -7,15 +8,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Trash2, PlusCircle, Sparkles, Save } from 'lucide-react';
+import { Loader2, Trash2, PlusCircle, Sparkles, Save, Upload } from 'lucide-react';
 import type { SiteConfig, Product } from '@/types/siteConfig';
 import { generateGiftText } from '@/app/actions';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ImageUploader } from './ImageUploader';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { Progress } from '@/components/ui/progress';
 
 interface ShopTabProps {
     config: SiteConfig;
+}
+
+interface UploadState {
+    isLoading: boolean;
+    progress: number;
 }
 
 export default function ShopTab({ config }: ShopTabProps) {
@@ -26,6 +33,7 @@ export default function ShopTab({ config }: ShopTabProps) {
     
     const [products, setProducts] = useState<Product[]>(config.products || []);
     const [pixKey, setPixKey] = useState(config.pixKey || '');
+    const [uploadStates, setUploadStates] = useState<Record<string, UploadState>>({});
 
     useEffect(() => {
         setProducts(config.products || []);
@@ -38,12 +46,42 @@ export default function ShopTab({ config }: ShopTabProps) {
         setProducts(newProducts);
     };
 
-    const handleImageUpdate = (index: number, imageUrl: string) => {
-        const newProducts = [...products];
-        newProducts[index].imageUrl = imageUrl;
-        setProducts(newProducts);
-        toast({ title: "Sucesso!", description: "A imagem foi carregada e atualizada." });
+    const handleImageUpload = (file: File, productId: string, productIndex: number) => {
+        if (!file) return;
+
+        const storage = getStorage();
+        const uploadFolder = 'site_images/gifts/';
+        const storageRef = ref(storage, `${uploadFolder}${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        setUploadStates(prev => ({ ...prev, [productId]: { isLoading: true, progress: 0 } }));
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setUploadStates(prev => ({ ...prev, [productId]: { isLoading: true, progress } }));
+            },
+            (error) => {
+                console.error("Upload error:", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Erro de Upload',
+                    description: `Não foi possível carregar a imagem. Erro: ${error.message}`
+                });
+                setUploadStates(prev => ({ ...prev, [productId]: { isLoading: false, progress: 0 } }));
+            },
+            () => {
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    const newProducts = [...products];
+                    newProducts[productIndex].imageUrl = downloadURL;
+                    setProducts(newProducts);
+                    toast({ title: "Sucesso!", description: "A imagem foi carregada e atualizada." });
+                    setUploadStates(prev => ({ ...prev, [productId]: { isLoading: false, progress: 100 } }));
+                });
+            }
+        );
     };
+
 
     const handleGenerateText = async (index: number) => {
         const productTitle = products[index].title;
@@ -135,6 +173,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                         <div className="space-y-4">
                             {products.map((product, index) => {
                                 const { width, height } = findImageDimensions(product.imageUrl);
+                                const uploadState = uploadStates[product.id] || { isLoading: false, progress: 0 };
                                 
                                 return (
                                     <div key={product.id} className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-lg relative">
@@ -172,15 +211,30 @@ export default function ShopTab({ config }: ShopTabProps) {
                                         
                                         <div className="space-y-2 md:col-span-2">
                                             <label className="font-medium text-sm">Imagem do Produto</label>
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex items-start gap-4">
                                                 {product.imageUrl && (
                                                     <Image src={product.imageUrl} alt={product.title} width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
                                                 )}
                                                 <div className="flex-grow space-y-2">
-                                                     <ImageUploader 
-                                                        uploadFolder='site_images/gifts/'
-                                                        onUploadComplete={(url) => handleImageUpdate(index, url)}
-                                                     />
+                                                    <Button asChild variant="outline" className="w-full" disabled={uploadState.isLoading}>
+                                                        <label htmlFor={`upload-${product.id}`} className="cursor-pointer">
+                                                             {uploadState.isLoading ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2"/>}
+                                                             {uploadState.isLoading ? `A carregar... ${uploadState.progress.toFixed(0)}%` : 'Carregar Nova Imagem'}
+                                                            <input
+                                                                type="file"
+                                                                id={`upload-${product.id}`}
+                                                                className="sr-only"
+                                                                accept="image/*"
+                                                                onChange={(e) => {
+                                                                    if (e.target.files && e.target.files[0]) {
+                                                                        handleImageUpload(e.target.files[0], product.id, index);
+                                                                    }
+                                                                }}
+                                                                disabled={uploadState.isLoading}
+                                                            />
+                                                        </label>
+                                                    </Button>
+                                                     {uploadState.isLoading && <Progress value={uploadState.progress} className="w-full h-2" />}
                                                 </div>
                                             </div>
                                         </div>
@@ -204,3 +258,5 @@ export default function ShopTab({ config }: ShopTabProps) {
         </div>
     );
 }
+
+    
