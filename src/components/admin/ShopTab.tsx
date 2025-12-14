@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition, useEffect, useRef, ChangeEvent } from 'react';
+import { useState, useTransition, useEffect, ChangeEvent } from 'react';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
@@ -32,7 +32,7 @@ export default function ShopTab({ config }: ShopTabProps) {
     
     const [products, setProducts] = useState<Product[]>(config.products || []);
     const [pixKey, setPixKey] = useState(config.pixKey || '');
-    const [uploadStates, setUploadStates] = useState<Record<string, UploadState>>({});
+    const [uploadStates, setUploadStates] = useState<Record<number, UploadState>>({});
 
     useEffect(() => {
         setProducts(config.products || []);
@@ -44,26 +44,33 @@ export default function ShopTab({ config }: ShopTabProps) {
         (newProducts[index] as any)[field] = value;
         setProducts(newProducts);
     };
-    
-    const handleImageUpload = (file: File | null, productId: string, index: number) => {
+
+    const handleFileSelectAndUpload = (event: ChangeEvent<HTMLInputElement>, index: number) => {
+        const file = event.target.files?.[0];
         if (!file) return;
 
-        const storage = getStorage();
-        const uploadPath = 'site_images/gifts';
-        const fileRef = ref(storage, `${uploadPath}/${productId}_${Date.now()}_${file.name}`);
-        const uploadTask = uploadBytesResumable(fileRef, file);
+        const product = products[index];
+        if (!product) return;
 
-        setUploadStates(prev => ({...prev, [productId]: { isUploading: true, progress: 0 }}));
+        setUploadStates(prev => ({...prev, [index]: { isUploading: true, progress: 0 }}));
+
+        const storage = getStorage();
+        const uploadPath = `site_images/gifts/${product.id}_${Date.now()}_${file.name}`;
+        const fileRef = ref(storage, uploadPath);
+        const uploadTask = uploadBytesResumable(fileRef, file);
 
         uploadTask.on('state_changed',
             (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                setUploadStates(prev => ({...prev, [productId]: { isUploading: true, progress: progress }}));
+                setUploadStates(prev => ({
+                    ...prev, 
+                    [index]: { isUploading: true, progress: progress }
+                }));
             },
             (error) => {
                 console.error("Image upload error:", error);
                 toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
-                setUploadStates(prev => ({...prev, [productId]: { isUploading: false, progress: 0 }}));
+                setUploadStates(prev => ({...prev, [index]: { isUploading: false, progress: 0 }}));
             },
             () => {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
@@ -74,7 +81,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                 }).catch((error) => {
                      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível obter o URL da imagem.' });
                 }).finally(() => {
-                    setUploadStates(prev => ({...prev, [productId]: { isUploading: false, progress: 0 }}));
+                     setUploadStates(prev => ({...prev, [index]: { isUploading: false, progress: 0 }}));
                 });
             }
         );
@@ -170,7 +177,8 @@ export default function ShopTab({ config }: ShopTabProps) {
                         <div className="space-y-4">
                             {products.map((product, index) => {
                                 const { width, height } = findImageDimensions(product.imageUrl);
-                                const uploadState = uploadStates[product.id] || { isUploading: false, progress: 0 };
+                                const uploadState = uploadStates[index] || { isUploading: false, progress: 0 };
+                                const inputId = `upload-input-${product.id}`;
 
                                 return (
                                     <div key={product.id} className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-lg relative">
@@ -210,22 +218,23 @@ export default function ShopTab({ config }: ShopTabProps) {
                                             <label className="font-medium text-sm">Imagem do Produto</label>
                                             <div className="flex items-center gap-4">
                                                 {product.imageUrl && (
-                                                    <Image src={product.imageUrl} alt="Preview" width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
+                                                    <Image src={product.imageUrl} alt={product.title} width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
                                                 )}
                                                 <div className="flex-grow space-y-2">
                                                      <Button asChild variant="outline" className="w-full" disabled={uploadState.isUploading}>
-                                                         <label className="cursor-pointer flex items-center justify-center">
+                                                         <label htmlFor={inputId} className="cursor-pointer flex items-center justify-center">
                                                             {uploadState.isUploading ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2"/>}
                                                             {uploadState.isUploading ? `A carregar... ${uploadState.progress.toFixed(0)}%` : 'Carregar Nova Imagem'}
-                                                            <input
-                                                                type="file"
-                                                                accept="image/*"
-                                                                className="sr-only"
-                                                                onChange={(e) => handleImageUpload(e.target.files ? e.target.files[0] : null, product.id, index)}
-                                                                disabled={uploadState.isUploading}
-                                                            />
-                                                         </label>
+                                                          </label>
                                                      </Button>
+                                                     <input
+                                                        id={inputId}
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="sr-only"
+                                                        onChange={(e) => handleFileSelectAndUpload(e, index)}
+                                                        disabled={uploadState.isUploading}
+                                                    />
                                                     {uploadState.isUploading && <Progress value={uploadState.progress} className="w-full h-2" />}
                                                 </div>
                                             </div>
