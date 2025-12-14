@@ -34,11 +34,11 @@ export default function AdminPage() {
                 names: 'Cláudia & Rafael',
                 date: '2025-09-21T16:00:00',
                 time: '16:00',
-                texts: {},
                 customColors: {},
                 carouselImages: [],
                 layoutOrder: ['hero', 'countdown', 'carousel', 'rsvp', 'event', 'gifts'],
                 ...initialSiteConfig,
+                texts: initialSiteConfig.texts || {},
                 products,
             });
         }
