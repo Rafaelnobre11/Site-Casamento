@@ -68,7 +68,11 @@ export default function ShopTab({ config }: ShopTabProps) {
                     title: 'Erro de Upload',
                     description: `Não foi possível carregar a imagem. Erro: ${error.message}`
                 });
-                setUploadStates(prev => ({ ...prev, [productId]: { isLoading: false, progress: 0 } }));
+                setUploadStates(prev => {
+                    const newStates = { ...prev };
+                    delete newStates[productId];
+                    return newStates;
+                });
             },
             () => {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
@@ -76,7 +80,11 @@ export default function ShopTab({ config }: ShopTabProps) {
                     newProducts[productIndex].imageUrl = downloadURL;
                     setProducts(newProducts);
                     toast({ title: "Sucesso!", description: "A imagem foi carregada e atualizada." });
-                    setUploadStates(prev => ({ ...prev, [productId]: { isLoading: false, progress: 100 } }));
+                    setUploadStates(prev => {
+                        const newStates = { ...prev };
+                        delete newStates[productId];
+                        return newStates;
+                    });
                 });
             }
         );
@@ -258,5 +266,3 @@ export default function ShopTab({ config }: ShopTabProps) {
         </div>
     );
 }
-
-    
