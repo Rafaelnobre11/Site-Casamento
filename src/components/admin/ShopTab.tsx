@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useTransition, useEffect, useRef } from 'react';
 import { useFirebase } from '@/firebase';
@@ -229,13 +228,12 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                     <Image src={product.imageUrl} alt={product.title} width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
                                                 )}
                                                 <div className="flex-grow space-y-2">
-                                                     <Button asChild variant="outline" className="w-full" disabled={uploadState.isLoading}>
-                                                        <label htmlFor={`upload-${product.id}`} className="cursor-pointer">
-                                                             {uploadState.isLoading ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2"/>}
-                                                             {uploadState.isLoading ? `A carregar... ${uploadState.progress.toFixed(0)}%` : 'Carregar Nova Imagem'}
+                                                    <Button asChild variant="outline" className="w-full" disabled={uploadState.isLoading}>
+                                                        <label className="cursor-pointer">
+                                                            {uploadState.isLoading ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2"/>}
+                                                            {uploadState.isLoading ? `A carregar... ${uploadState.progress.toFixed(0)}%` : 'Carregar Nova Imagem'}
                                                             <input
                                                                 type="file"
-                                                                id={`upload-${product.id}`}
                                                                 className="sr-only"
                                                                 accept="image/*"
                                                                 onChange={(e) => {
@@ -247,7 +245,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                             />
                                                         </label>
                                                     </Button>
-                                                     {uploadState.isLoading && <Progress value={uploadState.progress} className="w-full h-2" />}
+                                                    {uploadState.isLoading && <Progress value={uploadState.progress} className="w-full h-2" />}
                                                 </div>
                                             </div>
                                         </div>
