@@ -34,8 +34,6 @@ export default function ShopTab({ config }: ShopTabProps) {
     const [pixKey, setPixKey] = useState(config.pixKey || '');
     const [uploadStates, setUploadStates] = useState<Record<string, UploadState>>({});
 
-    const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-
     useEffect(() => {
         setProducts(config.products || []);
         setPixKey(config.pixKey || '');
@@ -47,8 +45,7 @@ export default function ShopTab({ config }: ShopTabProps) {
         setProducts(newProducts);
     };
     
-    const handleImageUpload = (e: ChangeEvent<HTMLInputElement>, productId: string, index: number) => {
-        const file = e.target.files?.[0];
+    const handleImageUpload = (file: File | null, productId: string, index: number) => {
         if (!file) return;
 
         const storage = getStorage();
@@ -81,8 +78,6 @@ export default function ShopTab({ config }: ShopTabProps) {
                 });
             }
         );
-        // Clear the input value to allow re-uploading the same file
-        if(e.target) e.target.value = '';
     };
 
     const handleGenerateText = async (index: number) => {
@@ -219,15 +214,14 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                 )}
                                                 <div className="flex-grow space-y-2">
                                                      <Button asChild variant="outline" className="w-full" disabled={uploadState.isUploading}>
-                                                         <label htmlFor={`image-upload-${product.id}`} className="cursor-pointer">
-                                                            {uploadState.isUploading ? <Loader2 className="animate-spin" /> : <Upload />}
+                                                         <label className="cursor-pointer flex items-center justify-center">
+                                                            {uploadState.isUploading ? <Loader2 className="animate-spin mr-2" /> : <Upload className="mr-2"/>}
                                                             {uploadState.isUploading ? `A carregar... ${uploadState.progress.toFixed(0)}%` : 'Carregar Nova Imagem'}
                                                             <input
-                                                                id={`image-upload-${product.id}`}
                                                                 type="file"
                                                                 accept="image/*"
                                                                 className="sr-only"
-                                                                onChange={(e) => handleImageUpload(e, product.id, index)}
+                                                                onChange={(e) => handleImageUpload(e.target.files ? e.target.files[0] : null, product.id, index)}
                                                                 disabled={uploadState.isUploading}
                                                             />
                                                          </label>
