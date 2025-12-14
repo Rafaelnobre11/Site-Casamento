@@ -1,7 +1,8 @@
 'use client';
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, ChangeEvent } from 'react';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,6 @@ import type { SiteConfig, Product } from '@/types/siteConfig';
 import { generateGiftText } from '@/app/actions';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import StorageImagePicker from '@/components/admin/StorageImagePicker';
 
 interface ShopTabProps {
     config: SiteConfig;
@@ -21,14 +21,12 @@ interface ShopTabProps {
 export default function ShopTab({ config }: ShopTabProps) {
     const { firestore } = useFirebase();
     const { toast } = useToast();
-    const [isPending, startTransition] = useTransition();
+    const [isSaving, startSavingTransition] = useTransition();
     const [isGenerating, setIsGenerating] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState<{ [key: string]: boolean }>({});
 
     const [products, setProducts] = useState<Product[]>(config.products || []);
     const [pixKey, setPixKey] = useState(config.pixKey || '');
-    
-    const [isPickerOpen, setIsPickerOpen] = useState(false);
-    const [activeProductIndex, setActiveProductIndex] = useState<number | null>(null);
 
     useEffect(() => {
         setProducts(config.products || []);
@@ -41,6 +39,33 @@ export default function ShopTab({ config }: ShopTabProps) {
         (newProducts[index] as any)[field] = value;
         setProducts(newProducts);
     };
+    
+    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, index: number) => {
+        const file = e.target.files?.[0];
+        const productId = products[index].id;
+        if (!file) return;
+
+        setIsUploading(prev => ({...prev, [productId]: true}));
+        const storage = getStorage();
+        const fileRef = ref(storage, `site_images/gifts/${Date.now()}_${file.name}`);
+        
+        try {
+            const snapshot = await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            const newProducts = [...products];
+            newProducts[index].imageUrl = downloadURL;
+            setProducts(newProducts);
+            
+            toast({ title: 'Sucesso!', description: 'A imagem foi carregada.' });
+        } catch (error) {
+            console.error("Image upload error:", error);
+            toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
+        } finally {
+            setIsUploading(prev => ({...prev, [productId]: false}));
+        }
+    };
+
 
     const handleGenerateText = async (index: number) => {
         const productTitle = products[index].title;
@@ -53,35 +78,20 @@ export default function ShopTab({ config }: ShopTabProps) {
             return;
         }
 
-        setIsGenerating(products[index].id);
-        startTransition(async () => {
-             const result = await generateGiftText({ giftTitle: productTitle });
-             if (result.success && result.description && result.thankYouNote) {
-                const newProducts = [...products];
-                newProducts[index].description = result.description;
-                newProducts[index].funnyNote = result.thankYouNote;
-                setProducts(newProducts);
-                toast({ title: 'Textos gerados com IA!', description: 'Descrição e agradecimento criados com sucesso.' });
-             } else {
-                toast({ variant: 'destructive', title: 'Erro da IA', description: result.error || 'Não foi possível gerar os textos.' });
-             }
-             setIsGenerating(null);
-        });
-    };
-
-    const openImagePicker = (index: number) => {
-        setActiveProductIndex(index);
-        setIsPickerOpen(true);
-    };
-
-    const handleImageSelect = (imageUrl: string) => {
-        if (activeProductIndex === null) return;
+        const productId = products[index].id;
+        setIsGenerating(productId);
         
-        const newProducts = [...products];
-        newProducts[activeProductIndex].imageUrl = imageUrl;
-        setProducts(newProducts);
-        toast({ title: 'Sucesso!', description: 'A imagem foi selecionada.' });
-        setActiveProductIndex(null);
+        const result = await generateGiftText({ giftTitle: productTitle });
+        if (result.success && result.description && result.thankYouNote) {
+            const newProducts = [...products];
+            newProducts[index].description = result.description;
+            newProducts[index].funnyNote = result.thankYouNote;
+            setProducts(newProducts);
+            toast({ title: 'Textos gerados com IA!', description: 'Descrição e agradecimento criados com sucesso.' });
+        } else {
+            toast({ variant: 'destructive', title: 'Erro da IA', description: result.error || 'Não foi possível gerar os textos.' });
+        }
+        setIsGenerating(null);
     };
 
     const addNewProduct = () => {
@@ -106,7 +116,7 @@ export default function ShopTab({ config }: ShopTabProps) {
     };
 
     const handleSave = () => {
-        startTransition(async () => {
+        startSavingTransition(async () => {
             if (!firestore) return;
             const validProducts = products.filter(p => p.title && p.title.trim() !== '');
             await setDocument(firestore, 'config/site', { products: validProducts, pixKey: pixKey }, { merge: true });
@@ -125,13 +135,6 @@ export default function ShopTab({ config }: ShopTabProps) {
 
     return (
         <div className="space-y-6 relative">
-            <StorageImagePicker 
-                open={isPickerOpen}
-                onOpenChange={setIsPickerOpen}
-                onImageSelect={handleImageSelect}
-                folderPath="site_images/gifts"
-            />
-
              <div className="space-y-6 pb-24">
                 <Card>
                     <CardHeader>
@@ -155,6 +158,7 @@ export default function ShopTab({ config }: ShopTabProps) {
                         <div className="space-y-4">
                             {products.map((product, index) => {
                                 const { width, height } = findImageDimensions(product.imageUrl);
+                                const isCurrentlyUploading = isUploading[product.id];
                                 return (
                                     <div key={product.id} className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-lg relative">
                                         <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeProduct(index)}>
@@ -195,10 +199,20 @@ export default function ShopTab({ config }: ShopTabProps) {
                                                 {product.imageUrl && (
                                                     <Image src={product.imageUrl} alt="Preview" width={width} height={height} className="rounded-md h-24 w-24 object-contain bg-muted p-1 border" />
                                                 )}
-                                                <Button variant="outline" onClick={() => openImagePicker(index)}>
-                                                    <Upload />
-                                                    {product.imageUrl ? 'Alterar Imagem' : 'Escolher Imagem'}
+                                                <Button asChild variant="outline" disabled={isCurrentlyUploading}>
+                                                    <label htmlFor={`file-upload-${product.id}`} className="cursor-pointer flex items-center">
+                                                        {isCurrentlyUploading ? <Loader2 className="animate-spin" /> : <Upload />}
+                                                        {isCurrentlyUploading ? 'A carregar...' : 'Carregar Nova Imagem'}
+                                                    </label>
                                                 </Button>
+                                                <input 
+                                                    id={`file-upload-${product.id}`}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="sr-only"
+                                                    onChange={(e) => handleImageUpload(e, index)}
+                                                    disabled={isCurrentlyUploading}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -213,8 +227,8 @@ export default function ShopTab({ config }: ShopTabProps) {
                 </Card>
             </div>
              <CardFooter className="justify-end sticky bottom-0 bg-background/95 py-4 border-t z-10 -mx-8 px-8">
-                 <Button onClick={handleSave} disabled={isPending} size="lg">
-                    {isPending ? <Loader2 className="animate-spin" /> : <Save />}
+                 <Button onClick={handleSave} disabled={isSaving} size="lg">
+                    {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
                     Salvar Loja e Chave PIX
                 </Button>
             </CardFooter>
