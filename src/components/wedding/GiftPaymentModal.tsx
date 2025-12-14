@@ -59,7 +59,8 @@ const GiftPaymentModal = ({ gift, pixKey, onClose }: GiftPaymentModalProps) => {
         }
         return { width: 400, height: 300 };
     }
-
+    
+    const isPlaceholder = !!PlaceHolderImages.find(p => p.imageUrl === gift.imageUrl);
     const { width, height } = findImageDimensions(gift.imageUrl);
 
     if (paymentConfirmed) {
@@ -79,15 +80,16 @@ const GiftPaymentModal = ({ gift, pixKey, onClose }: GiftPaymentModalProps) => {
         <div className="flex flex-col md:flex-row items-start bg-background rounded-lg w-full max-h-[90vh] md:max-h-none overflow-y-auto">
             {/* Coluna da Esquerda: Detalhes do Presente */}
             <div className="w-full md:w-1/2 flex flex-col space-y-4 p-6 md:p-8 flex-shrink-0">
-                <div className="aspect-[4/3] w-full relative bg-muted/50 rounded-lg overflow-hidden border">
+                <div className="aspect-[4/3] w-full relative bg-muted/30 rounded-lg overflow-hidden border p-4">
                      {gift.imageUrl ? (
                         <Image
                             src={gift.imageUrl}
                             alt={gift.title}
                             width={width}
                             height={height}
-                            className="object-cover h-full w-full"
+                            className="object-contain h-full w-full"
                             sizes="(max-width: 768px) 100vw, 50vw"
+                            unoptimized={!isPlaceholder}
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center">

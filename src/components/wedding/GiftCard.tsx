@@ -48,14 +48,14 @@ const GiftCard = ({ gift, pixKey }: GiftCardProps) => {
                 className="text-left overflow-hidden group flex flex-col border-border/50 shadow-sm hover:shadow-xl transition-shadow duration-300 h-full rounded-xl cursor-pointer"
                 onClick={handleGiftClick}
             >
-                <div className="aspect-[4/3] w-full relative bg-muted/50 overflow-hidden">
+                <div className="aspect-[4/3] w-full relative bg-muted/30 overflow-hidden p-2">
                     {gift.imageUrl ? (
                         <Image
                             src={gift.imageUrl}
                             alt={gift.title}
                             width={width}
                             height={height}
-                            className="object-cover h-full w-full transition-transform duration-500 group-hover:scale-105"
+                            className="object-contain h-full w-full transition-transform duration-500 group-hover:scale-105"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             loading="lazy"
                             unoptimized={!isPlaceholder} // Use original image for non-placeholders
