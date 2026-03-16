@@ -62,9 +62,9 @@ export default function Home() {
     ...siteConfig 
   };
   
-  // Só desbloqueia se o convidado existir E tiver status 'confirmed'
+  // Só bloqueia o endereço se o cadeado estiver ativo E o convidado não tiver status 'confirmed'
   const isConfirmed = guestData?.status === 'confirmed';
-  const shouldLock = config.isContentLocked && !isConfirmed;
+  const shouldLockAddress = config.isContentLocked && !isConfirmed;
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#FBF9F6] text-[#4a4a4a]">
@@ -88,28 +88,19 @@ export default function Home() {
         <RsvpSection onRsvpConfirmed={handleRsvpSuccess} />
         
         <EventInfo
-          isLocked={shouldLock}
-          locationName={shouldLock ? "Local Protegido" : config.locationName}
-          address={shouldLock ? "Confirme sua presença para liberar o acesso ao endereço" : config.locationAddress}
+          isLocked={shouldLockAddress}
+          locationName={shouldLockAddress ? "Local Protegido" : config.locationName}
+          address={shouldLockAddress ? "Confirme sua presença para liberar o acesso ao endereço" : config.locationAddress}
           time={config.time}
-          wazeLink={shouldLock ? "#rsvp" : config.wazeLink}
-          mapUrl={shouldLock ? "" : config.mapUrl}
+          wazeLink={shouldLockAddress ? "#rsvp" : config.wazeLink}
+          mapUrl={shouldLockAddress ? "" : config.mapUrl}
           date={config.date}
         />
 
-        {shouldLock ? (
-            <div className="py-24 px-4 bg-muted/10 text-center">
-                <div className="max-w-md mx-auto p-8 rounded-2xl border-2 border-dashed border-muted-foreground/20 bg-white/50 backdrop-blur-sm">
-                    <h3 className="font-headline text-2xl text-primary/60 mb-2">Lista de Presentes</h3>
-                    <p className="text-muted-foreground italic">A nossa vitrine de desejos será revelada após a sua confirmação de presença.</p>
-                </div>
-            </div>
-        ) : (
-            <GiftSection 
-                products={config.products} 
-                pixKey={config.pixKey} 
-            />
-        )}
+        <GiftSection 
+            products={config.products} 
+            pixKey={config.pixKey} 
+        />
 
       </main>
       <Footer names={config.names} />
