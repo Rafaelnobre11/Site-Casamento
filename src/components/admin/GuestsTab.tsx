@@ -1,8 +1,8 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import { useFirebase } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { addDocument, deleteDocument } from '@/firebase/firestore/utils';
+import { addDocument, deleteDocument, updateDocument } from '@/firebase/firestore/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,180 +10,206 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Users, UserCheck, UserX, BarChart, Trash2 } from 'lucide-react';
+import { Loader2, Users, UserCheck, UserX, BarChart3, Trash2, Search, Download, Edit2, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { maskPhone } from '@/lib/masks';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Guest } from '@/types/siteConfig';
 
-const newGuestSchema = z.object({
-  name: z.string().min(3, "Nome precisa ter no mínimo 3 caracteres."),
-  phone: z.string().refine(value => /\(\d{2}\)\s\d{5}-\d{4}/.test(value), {
-    message: "Telefone inválido. Formato esperado: (99) 99999-9999.",
-  }),
-  maxGuests: z.coerce.number().min(1, "O convite vale para pelo menos 1 pessoa."),
+const guestSchema = z.object({
+  name: z.string().min(3, "Nome muito curto."),
+  phone: z.string().refine(v => v.replace(/\D/g, '').length >= 10, "Telefone inválido."),
+  maxGuests: z.coerce.number().min(1, "Mínimo 1."),
 });
 
-const StatCard = ({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{title}</CardTitle>
-            <Icon className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-            <div className="text-2xl font-bold">{value}</div>
-        </CardContent>
-    </Card>
+const StatCard = ({ title, value, sub, icon: Icon, color }: any) => (
+  <Card className="relative overflow-hidden">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</CardTitle>
+      <Icon className={cn("h-4 w-4", color)} />
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{value}</div>
+      <p className="text-[10px] text-muted-foreground mt-1">{sub}</p>
+    </CardContent>
+    <div className={cn("absolute bottom-0 left-0 h-1 w-full", color?.replace('text', 'bg'))} />
+  </Card>
 );
 
-const StatusBadge = ({ status }: { status: 'pending' | 'confirmed' | 'declined' }) => {
-    switch (status) {
-        case 'confirmed':
-            return <Badge variant="default" className="bg-green-600 hover:bg-green-700">Confirmado</Badge>;
-        case 'declined':
-            return <Badge variant="destructive">Recusado</Badge>;
-        default:
-            return <Badge variant="secondary">Pendente</Badge>;
-    }
-};
-
-type Guest = {
-    id: string;
-    name: string;
-    phone: string;
-    maxGuests: number;
-    status: 'pending' | 'confirmed' | 'declined';
-    confirmedGuests: number;
-    message: string;
-};
-
 export default function GuestsTab() {
-    const { data: guests, loading } = useCollection<Guest>('guests');
-    const { firestore } = useFirebase();
-    const { toast } = useToast();
-    const [isPending, startTransition] = useTransition();
+  const { data: guests, loading } = useCollection<Guest>('guests');
+  const { firestore } = useFirebase();
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [searchTerm, setSearch) = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-    const form = useForm<z.infer<typeof newGuestSchema>>({
-        resolver: zodResolver(newGuestSchema),
-        defaultValues: { name: '', phone: '', maxGuests: 1 },
+  const form = useForm({
+    resolver: zodResolver(guestSchema),
+    defaultValues: { name: '', phone: '', maxGuests: 1 },
+  });
+
+  const stats = useMemo(() => {
+    if (!guests) return null;
+    const total = guests.length;
+    const confirmed = guests.filter(g => g.status === 'confirmed');
+    const declined = guests.filter(g => g.status === 'declined');
+    const pending = total - confirmed.length - declined.length;
+    const peopleCount = confirmed.reduce((acc, g) => acc + (g.confirmedGuests || 0), 0);
+    const maxPeople = guests.reduce((acc, g) => acc + g.maxGuests, 0);
+
+    return { total, confirmed: confirmed.length, declined: declined.length, pending, peopleCount, maxPeople };
+  }, [guests]);
+
+  const filteredGuests = useMemo(() => {
+    return guests?.filter(g => {
+      const matchSearch = g.name.toLowerCase().includes(searchTerm.toLowerCase()) || g.phone.includes(searchTerm);
+      const matchStatus = statusFilter === 'all' || g.status === statusFilter;
+      return matchSearch && matchStatus;
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  }, [guests, searchTerm, statusFilter]);
+
+  const onAdd = (values: any) => {
+    startTransition(async () => {
+      if (!firestore) return;
+      await addDocument(firestore, 'guests', {
+        ...values,
+        phone: values.phone.replace(/\D/g, ''),
+        status: 'pending',
+        confirmedGuests: 0,
+        message: '',
+        createdAt: new Date().toISOString()
+      });
+      toast({ title: "Convidado adicionado!" });
+      form.reset();
     });
-    
-    if (loading) {
-        return (
-            <div className="flex h-96 w-full items-center justify-center rounded-lg border bg-background">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
-    }
+  };
 
-    const totalInvited = guests?.reduce((acc, guest) => acc + guest.maxGuests, 0) || 0;
-    const totalConfirmedGuests = guests?.filter((g) => g.status === 'confirmed').length || 0;
-    const totalConfirmedAttendees = guests?.filter((g) => g.status === 'confirmed').reduce((acc, guest) => acc + guest.confirmedGuests, 0) || 0;
-    const totalDeclined = guests?.filter((g) => g.status === 'declined').length || 0;
+  const onDelete = (id: string, name: string) => {
+    if (!confirm(`Excluir ${name}?`)) return;
+    startTransition(async () => {
+      if (!firestore) return;
+      await deleteDocument(firestore, `guests/${id}`);
+      toast({ title: "Removido!" });
+    });
+  };
 
-    const handleAddGuest = (values: z.infer<typeof newGuestSchema>) => {
-        startTransition(async () => {
-            if (!firestore) return;
-            try {
-                await addDocument(firestore, 'guests', {
-                    ...values,
-                    phone: values.phone.replace(/\D/g, ''),
-                    status: 'pending',
-                    confirmedGuests: 0,
-                    message: '',
-                });
-                toast({ title: "Sucesso!", description: `${values.name} foi adicionado(a) à lista.` });
-                form.reset();
-            } catch (e: any) {
-                 toast({ variant: 'destructive', title: "Erro ao salvar", description: 'Não foi possível adicionar o convidado. Tente novamente.' });
-            }
-        });
-    };
+  const onExport = () => {
+    if (!guests) return;
+    const headers = "Nome,Telefone,Limite,Confirmados,Status,Mensagem\n";
+    const csv = guests.map(g => `"${g.name}","${g.phone}",${g.maxGuests},${g.confirmedGuests},"${g.status}","${g.message}"`).join("\n");
+    const blob = new Blob([headers + csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `convidados_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
 
-    const handleDeleteGuest = (guestId: string, guestName: string) => {
-        if (!firestore) return;
-        if (confirm(`Tem certeza que quer remover ${guestName} da lista?`)) {
-            startTransition(async () => {
-                 try {
-                    await deleteDocument(firestore, `guests/${guestId}`);
-                    toast({ title: "Removido!", description: `${guestName} não está mais na lista.` });
-                 } catch (e: any) {
-                    toast({ variant: 'destructive', title: "Erro ao remover", description: 'Não foi possível remover o convidado. Tente novamente.' });
-                 }
-            });
-        }
-    };
+  if (loading) return <div className="h-96 flex items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
 
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>O Gerente de Festa (Convidados)</CardTitle>
-                <CardDescription>Adicione, remova e acompanhe quem vem para a festa. Os números são atualizados em tempo real.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-8">
-                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <StatCard title="Total de Convites" value={guests?.length || 0} icon={Users} />
-                    <StatCard title="Convidados Confirmados" value={totalConfirmedGuests} icon={UserCheck} />
-                    <StatCard title="Convidados Recusados" value={totalDeclined} icon={UserX} />
-                    <StatCard title="Total de Pessoas (Confirmado)" value={totalConfirmedAttendees} icon={BarChart} />
-                </div>
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <StatCard title="Total Convites" value={stats?.total} sub="Enviados" icon={Users} color="text-blue-500" />
+        <StatCard title="Confirmados" value={stats?.confirmed} sub="Convites OK" icon={UserCheck} color="text-green-500" />
+        <StatCard title="Recusados" value={stats?.declined} sub="Não virão" icon={UserX} color="text-red-500" />
+        <StatCard title="Pendentes" value={stats?.pending} sub="Aguardando" icon={Filter} color="text-amber-500" />
+        <StatCard title="Total Pessoas" value={stats?.peopleCount} sub={`De ${stats?.maxPeople} possíveis`} icon={BarChart3} color="text-primary" />
+        <StatCard title="Taxa" value={stats?.total ? `${Math.round((stats.confirmed / stats.total) * 100)}%` : '0%'} sub="De conversão" icon={Star} color="text-purple-500" />
+      </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="md:col-span-1">
-                        <h3 className="text-lg font-medium mb-4">Adicionar Novo Convidado</h3>
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(handleAddGuest)} className="space-y-4">
-                                <FormField control={form.control} name="name" render={({ field }) => (
-                                    <FormItem><FormLabel>Nome Completo</FormLabel><FormControl><Input {...field} placeholder="Nome do convidado" /></FormControl><FormMessage /></FormItem>
-                                )}/>
-                                 <FormField control={form.control} name="phone" render={({ field }) => (
-                                    <FormItem><FormLabel>Telefone</FormLabel><FormControl><Input {...field} placeholder="(99) 99999-9999" onChange={(e) => field.onChange(maskPhone(e.target.value))} maxLength={15} /></FormControl><FormMessage /></FormItem>
-                                )}/>
-                                <FormField control={form.control} name="maxGuests" render={({ field }) => (
-                                    <FormItem><FormLabel>Nº de Pessoas no Convite</FormLabel><FormControl><Input type="number" {...field} min={1} /></FormControl><FormMessage /></FormItem>
-                                )}/>
-                                <Button type="submit" disabled={isPending}>
-                                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Adicionar à Lista
-                                </Button>
-                            </form>
-                        </Form>
-                    </div>
-                     <div className="md:col-span-2">
-                        <h3 className="text-lg font-medium mb-4">Lista de Convidados</h3>
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Nome</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-center">Convidados</TableHead>
-                                        <TableHead className="text-right">Ações</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {guests && guests.length > 0 ? guests.map((guest) => (
-                                        <TableRow key={guest.id}>
-                                            <TableCell className="font-medium">{guest.name}</TableCell>
-                                            <TableCell><StatusBadge status={guest.status} /></TableCell>
-                                            <TableCell className="text-center">{guest.status === 'confirmed' ? `${guest.confirmedGuests}/${guest.maxGuests}` : `-/${guest.maxGuests}`}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="icon" onClick={() => handleDeleteGuest(guest.id, guest.name)} disabled={isPending}>
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    )) : (
-                                        <TableRow><TableCell colSpan={4} className="h-24 text-center">Nenhum convidado na lista ainda.</TableCell></TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
+      <div className="grid md:grid-cols-4 gap-6">
+        <Card className="md:col-span-1 h-fit sticky top-4">
+          <CardHeader><CardTitle>Novo Convite</CardTitle></CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onAdd)} className="space-y-4">
+                <FormField control={form.control} name="name" render={({ field }) => (
+                  <FormItem><FormLabel>Nome</FormLabel><FormControl><Input placeholder="Ex: Família Silva" {...field} /></FormControl><FormMessage /></FormItem>
+                )}/>
+                <FormField control={form.control} name="phone" render={({ field }) => (
+                  <FormItem><FormLabel>Telefone</FormLabel><FormControl><Input placeholder="(00) 00000-0000" {...field} onChange={e => field.onChange(maskPhone(e.target.value))} /></FormControl><FormMessage /></FormItem>
+                )}/>
+                <FormField control={form.control} name="maxGuests" render={({ field }) => (
+                  <FormItem><FormLabel>Vagas</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )}/>
+                <Button type="submit" className="w-full" disabled={isPending}>Adicionar</Button>
+              </form>
+            </Form>
+          </CardContent>
         </Card>
-    );
-}
 
-    
+        <Card className="md:col-span-3">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Lista de Gerenciamento</CardTitle>
+              <CardDescription>Acompanhe e edite os status manualmente se necessário.</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={onExport}><Download className="mr-2 h-4 w-4" /> Exportar CSV</Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar por nome ou telefone..." className="pl-9" value={searchTerm} onChange={e => setSearch(e.target.value)} />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filtrar Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="pending">Pendentes</SelectItem>
+                  <SelectItem value="confirmed">Confirmados</SelectItem>
+                  <SelectItem value="declined">Recusados</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Convidado</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Presenças</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredGuests?.map((g) => (
+                    <TableRow key={g.id}>
+                      <TableCell className="py-4">
+                        <div className="font-bold">{g.name}</div>
+                        <div className="text-xs text-muted-foreground">{maskPhone(g.phone)}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={g.status === 'confirmed' ? 'default' : g.status === 'declined' ? 'destructive' : 'secondary'}>
+                          {g.status === 'confirmed' ? 'Confirmado' : g.status === 'declined' ? 'Recusado' : 'Pendente'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-mono text-sm">{g.confirmedGuests} / {g.maxGuests}</span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => onDelete(g.id, g.name)} disabled={isPending}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredGuests?.length === 0 && (
+                    <TableRow><TableCell colSpan={4} className="h-32 text-center text-muted-foreground">Nenhum convidado encontrado.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

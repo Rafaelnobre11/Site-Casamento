@@ -1,4 +1,3 @@
-
 export type Product = {
   id: string;
   title: string;
@@ -6,6 +5,19 @@ export type Product = {
   description: string;
   imageUrl: string;
   funnyNote: string;
+};
+
+export type Guest = {
+  id: string;
+  name: string;
+  phone: string;
+  maxGuests: number;
+  confirmedGuests: number;
+  message: string;
+  status: 'pending' | 'confirmed' | 'declined';
+  confirmedAt?: string;
+  updatedAt?: string;
+  additionalGuests?: { name: string; age?: number }[];
 };
 
 export type SiteConfig = {
