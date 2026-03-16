@@ -86,9 +86,9 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
       }
 
       const doc = snap.docs[0];
-      const data = doc.data() as GuestData;
+      const data = doc.data();
       
-      const dbFirstName = data.name.split(' ')[0].toLowerCase();
+      const dbFirstName = (data.name || '').split(' ')[0].toLowerCase();
       const inputFirstName = values.name.split(' ')[0].toLowerCase();
 
       if (dbFirstName !== inputFirstName && !data.name.toLowerCase().includes(values.name.toLowerCase())) {
@@ -96,7 +96,7 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
         return;
       }
 
-      setGuest({ id: doc.id, ...data });
+      setGuest({ ...data, id: doc.id } as GuestData);
       confirmForm.reset({ 
         status: data.status === 'declined' ? 'declined' : 'confirmed', 
         confirmedGuests: data.confirmedGuests || data.maxGuests,
