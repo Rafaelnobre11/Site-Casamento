@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { maskPhone } from '@/lib/masks';
@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Check, UserCheck, UserX, ArrowRight, ArrowLeft, Heart, PartyPopper } from 'lucide-react';
+import { Loader2, Check, UserCheck, UserX, ArrowRight, ArrowLeft, Heart, PartyPopper, Users, UserPlus } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { setDocument } from '@/firebase/firestore/utils';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
@@ -27,10 +27,13 @@ const confirmSchema = z.object({
   status: z.enum(['confirmed', 'declined']),
   confirmedGuests: z.coerce.number().min(0),
   message: z.string().optional(),
+  attendees: z.array(z.object({
+    name: z.string().min(2, "Informe o nome completo"),
+  })).optional(),
 });
 
 type Step = 'IDENTIFY' | 'CONFIRM' | 'SUCCESS';
-type GuestData = { id: string; name: string; maxGuests: number; status: string; confirmedGuests: number; phone: string };
+type GuestData = { id: string; name: string; maxGuests: number; status: string; confirmedGuests: number; phone: string; attendeeNames?: string[] };
 
 export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (guestId: string) => void }) {
   const [step, setStep] = useState<Step>('IDENTIFY');
@@ -46,10 +49,28 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
 
   const confirmForm = useForm<z.infer<typeof confirmSchema>>({
     resolver: zodResolver(confirmSchema),
-    defaultValues: { status: 'confirmed', confirmedGuests: 1, message: '' },
+    defaultValues: { status: 'confirmed', confirmedGuests: 1, message: '', attendees: [] },
+  });
+
+  const { fields, replace } = useFieldArray({
+    control: confirmForm.control,
+    name: "attendees"
   });
 
   const watchStatus = confirmForm.watch('status');
+  const watchCount = confirmForm.watch('confirmedGuests');
+
+  // Atualiza os campos de nome quando a quantidade de pessoas muda
+  useEffect(() => {
+    if (watchStatus === 'confirmed' && guest) {
+      const currentAttendees = confirmForm.getValues('attendees') || [];
+      const newAttendees = Array.from({ length: watchCount }, (_, i) => {
+        if (i === 0) return { name: guest.name }; // O primeiro é sempre o titular
+        return currentAttendees[i] || { name: '' };
+      });
+      replace(newAttendees);
+    }
+  }, [watchCount, watchStatus, guest, replace, confirmForm]);
 
   async function onIdentify(values: z.infer<typeof identifySchema>) {
     if (!firestore) return;
@@ -66,7 +87,7 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
       }
 
       const doc = snap.docs[0];
-      const data = doc.data();
+      const data = doc.data() as GuestData;
       
       const dbFirstName = data.name.split(' ')[0].toLowerCase();
       const inputFirstName = values.name.split(' ')[0].toLowerCase();
@@ -76,11 +97,12 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
         return;
       }
 
-      setGuest({ id: doc.id, ...data, phone: data.phone } as GuestData);
+      setGuest({ id: doc.id, ...data });
       confirmForm.reset({ 
         status: data.status === 'declined' ? 'declined' : 'confirmed', 
         confirmedGuests: data.confirmedGuests || data.maxGuests,
-        message: data.message || ''
+        message: data.message || '',
+        attendees: []
       });
       setStep('CONFIRM');
     });
@@ -91,9 +113,16 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
 
     startTransition(async () => {
       const isAttending = values.status === 'confirmed';
+      
+      // Extrai apenas os nomes do array de objetos
+      const attendeeNames = isAttending 
+        ? (values.attendees?.map(a => a.name) || [guest.name])
+        : [];
+
       const updateData = {
         status: values.status,
         confirmedGuests: isAttending ? values.confirmedGuests : 0,
+        attendeeNames: attendeeNames,
         message: values.message || '',
         updatedAt: new Date().toISOString(),
         confirmedAt: isAttending ? (guest.status === 'confirmed' ? (guest as any).confirmedAt : new Date().toISOString()) : null
@@ -110,7 +139,6 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
         setAiMessage(isAttending ? "Presença confirmada! Nos vemos na festa!" : "Que pena que não poderá vir. Sentiremos sua falta!");
       }
 
-      // Notifica o componente pai do sucesso para desbloquear conteúdo
       onRsvpConfirmed(guest.id);
       setStep('SUCCESS');
     });
@@ -169,7 +197,10 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
             <>
               <CardHeader className="text-center pb-6 pt-10">
                 <CardTitle className="font-headline text-4xl text-gray-800">Olá, {guest.name.split(' ')[0]}!</CardTitle>
-                <CardDescription className="text-lg">Ficamos muito felizes em te encontrar. <br/> Você vem?</CardDescription>
+                <CardDescription className="text-lg">
+                  Convite para até <strong>{guest.maxGuests} {guest.maxGuests > 1 ? 'pessoas' : 'pessoa'}</strong>.
+                  <br/> Você poderá comparecer?
+                </CardDescription>
               </CardHeader>
               <CardContent className="pb-10 px-8 md:px-12">
                 <Form {...confirmForm}>
@@ -180,19 +211,19 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
                         variant={watchStatus === 'confirmed' ? 'default' : 'outline'}
                         className={cn(
                             "h-24 flex-col gap-2 border-2 rounded-2xl transition-all duration-500", 
-                            watchStatus === 'confirmed' ? "border-primary bg-primary/5 text-primary hover:bg-primary/10" : "border-muted"
+                            watchStatus === 'confirmed' ? "border-primary bg-primary/5 text-primary" : "border-muted"
                         )}
                         onClick={() => confirmForm.setValue('status', 'confirmed')}
                       >
                         <UserCheck className="h-7 w-7" />
-                        <span className="font-bold">Sim, eu vou!</span>
+                        <span className="font-bold">Vou comparecer</span>
                       </Button>
                       <Button 
                         type="button" 
                         variant={watchStatus === 'declined' ? 'destructive' : 'outline'}
                         className={cn(
                             "h-24 flex-col gap-2 border-2 rounded-2xl transition-all duration-500", 
-                            watchStatus === 'declined' ? "border-destructive bg-destructive/5 text-destructive hover:bg-destructive/10" : "border-muted"
+                            watchStatus === 'declined' ? "border-destructive bg-destructive/5 text-destructive" : "border-muted"
                         )}
                         onClick={() => confirmForm.setValue('status', 'declined')}
                       >
@@ -202,28 +233,61 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
                     </div>
 
                     {watchStatus === 'confirmed' && (
-                      <FormField control={confirmForm.control} name="confirmedGuests" render={({ field }) => (
-                        <FormItem className="animate-fade-in-up">
-                          <FormLabel className="text-gray-400 uppercase tracking-widest text-[10px] font-bold">Quantas pessoas você confirma? (Máx: {guest.maxGuests})</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
-                            <FormControl>
-                              <SelectTrigger className="h-12 rounded-xl border-muted bg-white"><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="rounded-xl">
-                              {Array.from({ length: guest.maxGuests }, (_, i) => i + 1).map(num => (
-                                <SelectItem key={num} value={String(num)} className="rounded-lg">{num} {num === 1 ? 'pessoa' : 'pessoas'}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}/>
+                      <div className="space-y-6 animate-fade-in-up">
+                        <FormField control={confirmForm.control} name="confirmedGuests" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-400 uppercase tracking-widest text-[10px] font-bold">Quantas pessoas ao todo?</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                              <FormControl>
+                                <SelectTrigger className="h-12 rounded-xl border-muted bg-white"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="rounded-xl">
+                                {Array.from({ length: guest.maxGuests }, (_, i) => i + 1).map(num => (
+                                  <SelectItem key={num} value={String(num)} className="rounded-lg">{num} {num === 1 ? 'pessoa' : 'pessoas'}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}/>
+
+                        <div className="space-y-4 pt-4 border-t border-dashed">
+                          <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest flex items-center gap-2">
+                            <Users className="h-3 w-3" /> Nomes dos Confirmados
+                          </p>
+                          {fields.map((field, index) => (
+                            <FormField
+                              key={field.id}
+                              control={confirmForm.control}
+                              name={`attendees.${index}.name`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">
+                                      {index + 1}.
+                                    </span>
+                                    <FormControl>
+                                      <Input 
+                                        {...field} 
+                                        placeholder={index === 0 ? "Seu nome" : "Nome do acompanhante"} 
+                                        className="h-11 pl-8 border-muted rounded-xl bg-white/50"
+                                        disabled={index === 0} // Titular não muda
+                                      />
+                                    </FormControl>
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     )}
 
                     <FormField control={confirmForm.control} name="message" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-400 uppercase tracking-widest text-[10px] font-bold">Deixe um recado para os noivos</FormLabel>
-                        <FormControl><Textarea placeholder="Ex: Mal podemos esperar por esse dia!" {...field} className="min-h-[100px] border-muted bg-white rounded-xl resize-none" /></FormControl>
+                        <FormLabel className="text-gray-400 uppercase tracking-widest text-[10px] font-bold">Mensagem para os noivos (Opcional)</FormLabel>
+                        <FormControl><Textarea placeholder="Deixe um carinho aqui..." {...field} className="min-h-[80px] border-muted bg-white rounded-xl resize-none" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )}/>
@@ -234,7 +298,7 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
                       </Button>
                       <Button type="submit" className="flex-1 h-14 text-lg rounded-xl shadow-xl" disabled={isPending}>
                         {isPending ? <Loader2 className="animate-spin mr-2" /> : <Check className="mr-2 h-5 w-5" />}
-                        Finalizar Confirmação
+                        Confirmar Agora
                       </Button>
                     </div>
                   </form>
@@ -253,7 +317,7 @@ export default function RsvpSection({ onRsvpConfirmed }: { onRsvpConfirmed: (gue
                 )}
               </div>
               <div className="space-y-4">
-                <h3 className="font-headline text-4xl text-gray-800">Recebido com Carinho!</h3>
+                <h3 className="font-headline text-4xl text-gray-800">Tudo Pronto!</h3>
                 <p className="text-muted-foreground text-lg max-w-sm mx-auto leading-relaxed italic">
                   "{aiMessage || "Sua resposta foi salva. Obrigado por nos avisar!"}"
                 </p>

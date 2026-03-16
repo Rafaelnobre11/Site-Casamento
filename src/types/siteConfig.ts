@@ -15,9 +15,9 @@ export type Guest = {
   confirmedGuests: number;
   message: string;
   status: 'pending' | 'confirmed' | 'declined';
+  attendeeNames?: string[]; // Novos campos para nomes individuais
   confirmedAt?: string;
   updatedAt?: string;
-  additionalGuests?: { name: string; age?: number }[];
 };
 
 export type SiteConfig = {
