@@ -6,7 +6,6 @@ type Events = {
   'permission-error': (error: FirestorePermissionError) => void;
 };
 
-// @ts-expect-error - we are not using all of the EventEmitter methods.
 class TypedEventEmitter extends EventEmitter {
   emit<T extends keyof Events>(event: T, ...args: Parameters<Events[T]>): boolean {
     return super.emit(event, ...args);

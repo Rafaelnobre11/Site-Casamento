@@ -31,6 +31,7 @@ export type SiteConfig = {
     buttonBg?: string;
     buttonText?: string;
     headingText?: string;
+    heroHeadingText?: string;
     bodyText?: string;
   };
   names?: string;
@@ -44,6 +45,7 @@ export type SiteConfig = {
   locationAddress?: string;
   mapUrl?: string;
   wazeLink?: string;
+  googleMapsLink?: string;
   isContentLocked?: boolean;
   pixKey?: string;
   carouselImages?: string[];

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,7 +21,7 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
   
   const navLinks = [
     { href: '#carousel', label: texts.nav_story || 'Nossa História' },
-    { href: '#event', label: texts.nav_info || 'O Grande Dia' },
+    { href: '#event-info', label: texts.nav_info || 'O Grande Dia' },
     { href: '#gifts', label: texts.nav_gifts || 'Presentes' },
   ];
 
@@ -38,7 +39,7 @@ export default function Header({ texts = {}, names, logoUrl }: HeaderProps) {
         const linkProps = {
           href: link.href,
           className: cn(
-            'font-medium transition-colors hover:text-primary',
+            'font-medium transition-transform hover:scale-105',
             isMobile ? 'text-lg py-2' : 'text-sm'
           )
         };

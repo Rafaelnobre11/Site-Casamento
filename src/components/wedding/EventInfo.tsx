@@ -3,33 +3,58 @@
 import { MapPin, Clock, Navigation, Calendar, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+<<<<<<< HEAD
 import { cn } from '@/lib/utils';
+=======
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+>>>>>>> 5c07af4a248d37fbb8dcac0d291b75ca4375149d
 
 interface EventInfoProps {
   locationName?: string;
   address?: string;
+  addressNumber?: string;
   time?: string;
   wazeLink?: string;
+  googleMapsLink?: string;
   mapUrl?: string;
+<<<<<<< HEAD
   date?: string;
   isLocked?: boolean;
+=======
+  date?: string; 
+  texts?: { [key: string]: string };
+>>>>>>> 5c07af4a248d37fbb8dcac0d291b75ca4375149d
 }
 
 const EventInfo: React.FC<EventInfoProps> = ({
   locationName,
   address,
+  addressNumber,
   time,
   wazeLink,
+  googleMapsLink,
   mapUrl,
   date,
+<<<<<<< HEAD
   isLocked = false,
+=======
+  texts = {},
+>>>>>>> 5c07af4a248d37fbb8dcac0d291b75ca4375149d
 }) => {
 
   const formattedDate = date 
     ? new Date(date).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
     : "Data do evento";
+    
+  const fullAddress = addressNumber ? `${address}, ${addressNumber}` : address;
 
   return (
+<<<<<<< HEAD
     <section id="event" className="relative w-full py-20 md:py-32 bg-white overflow-hidden">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="text-center mb-16">
@@ -136,6 +161,80 @@ const EventInfo: React.FC<EventInfoProps> = ({
                         </Button>
                     </div>
                 </div>
+=======
+    <section id="event-info" className="w-full py-16 md:py-24 bg-background">
+      <div className="container mx-auto max-w-5xl px-4">
+        <div className="text-center mb-12">
+          <h2 className="font-headline text-4xl md:text-5xl text-primary">{texts.info_title || 'O Grande Dia'}</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto mt-4">
+            {texts.info_subtitle || 'Todas as informações que você precisa para celebrar conosco sem preocupações.'}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-center">
+          <div className="lg:col-span-2 space-y-8 text-center lg:text-left">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4">
+              <div className="flex-shrink-0 bg-muted text-primary p-3 rounded-full shadow-sm">
+                <Calendar className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold font-headline">Data</h3>
+                <p className="text-muted-foreground capitalize">{formattedDate}</p>
+              </div>
+            </div>
+            <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4">
+              <div className="flex-shrink-0 bg-muted text-primary p-3 rounded-full shadow-sm">
+                <Clock className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold font-headline">Horário</h3>
+                <p className="text-muted-foreground">Às {time || "16:00"}</p>
+              </div>
+            </div>
+             <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4">
+              <div className="flex-shrink-0 bg-muted text-primary p-3 rounded-full shadow-sm">
+                <MapPin className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold font-headline">Local</h3>
+                <p className="text-muted-foreground">{locationName || "Nome do Local"}</p>
+                <p className="text-sm text-gray-500">{fullAddress || "Endereço do evento"}</p>
+              </div>
+            </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="lg" className="w-full max-w-xs mx-auto lg:mx-0">
+                  <Navigation className="mr-2 h-5 w-5" />
+                  {texts.info_button || 'Como Chegar'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuItem asChild>
+                  <a href={googleMapsLink} target="_blank" rel="noopener noreferrer">Abrir no Google Maps</a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a href={wazeLink} target="_blank" rel="noopener noreferrer">Abrir no Waze</a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+          </div>
+          
+          <div className="lg:col-span-3 w-full">
+            {mapUrl && (
+              <Card className="overflow-hidden shadow-lg w-full aspect-[4/3] lg:aspect-video rounded-xl border-border/50">
+                <iframe
+                  src={mapUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={true}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </Card>
+>>>>>>> 5c07af4a248d37fbb8dcac0d291b75ca4375149d
             )}
         </div>
       </div>

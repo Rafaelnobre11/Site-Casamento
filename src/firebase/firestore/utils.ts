@@ -24,7 +24,7 @@ export async function setDocument<T>(
 ) {
   const ref = doc(db, path) as DocumentReference<T>;
 
-  return setDoc(ref, data, options).catch((error) => {
+  return setDoc(ref, data, options ?? {}).catch((error) => {
     const permissionError = new FirestorePermissionError({
       path: ref.path,
       operation: 'update',

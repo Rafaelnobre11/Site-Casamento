@@ -1,7 +1,7 @@
+
 'use client';
 import { useState, useTransition, useEffect, ChangeEvent } from 'react';
 import { useFirebase } from '@/firebase';
-import { setDocument } from '@/firebase/firestore/utils';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -9,58 +9,135 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle, Calendar, Clock, Upload } from 'lucide-react';
+import { Loader2, Palette, Image as ImageIcon, MapPin, Lock, Save, Trash2, PlusCircle, Calendar, Clock, Upload, ChevronsUpDown, Check, RefreshCcw } from 'lucide-react';
 import type { SiteConfig } from '@/types/siteConfig';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { colorToHsl, colorStringToHex, hexToRgb, getYiq } from '@/lib/color-utils';
+import { cn } from '@/lib/utils';
+import { colorPalette } from '@/lib/color-palette';
+
+type CustomColors = NonNullable<SiteConfig['customColors']>;
 
 interface CustomizeTabProps {
     config: SiteConfig;
+    onConfigChange: (newConfig: Partial<SiteConfig>) => void;
 }
 
-const ColorInput = ({ label, value, onChange }: { label: string, value: string, onChange: (value: string) => void }) => (
-    <div className="space-y-2">
-        <Label>{label}</Label>
-        <div className="flex items-center gap-2">
-            <Input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="w-12 h-10 p-1" />
-            <Input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder="#ffffff" />
+const ColorSwatch = ({ color }: { color: string }) => {
+  const hexColor = colorStringToHex(color);
+  return <div className="w-6 h-6 rounded-md border" style={{ backgroundColor: hexColor || 'transparent' }} />;
+};
+
+const ColorInput = ({ label, value, onChange, placeholder }: { label: string, value: string, onChange: (value: string) => void, placeholder?: string }) => {
+    const displayValue = value || placeholder || '';
+    const hexColor = colorStringToHex(displayValue) || '#ffffff';
+
+    const handleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        onChange(e.target.value);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        onChange(e.target.value);
+    };
+
+    return (
+        <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">{label}</Label>
+            <div className="flex items-center gap-2">
+                <div className="relative w-10 h-10 rounded-md border p-1 bg-white">
+                    <div className="w-full h-full rounded" style={{ backgroundColor: hexColor }}></div>
+                    <Input 
+                        type="color" 
+                        value={hexColor}
+                        onChange={handleColorPickerChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                </div>
+                <Input 
+                    value={displayValue} 
+                    onChange={handleInputChange} 
+                    placeholder={placeholder}
+                    className="font-mono text-sm"
+                />
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 
-export default function CustomizeTab({ config }: CustomizeTabProps) {
-    const { firestore } = useFirebase();
+export default function CustomizeTab({ config, onConfigChange }: CustomizeTabProps) {
+    const { storage } = useFirebase();
     const { toast } = useToast();
-    const [isPending, startTransition] = useTransition();
     const [isUploading, setIsUploading] = useState(false);
-
-    const [formState, setFormState] = useState<SiteConfig>(config);
+    const [openColorPopover, setOpenColorPopover] = useState(false);
     
-    useEffect(() => {
-        setFormState(config);
-    }, [config]);
+    const formState = config;
 
     const handleFieldChange = (field: keyof SiteConfig, value: any) => {
-        setFormState(prev => ({ ...prev, [field]: value }));
-    };
-    
-    const handleColorChange = (field: keyof SiteConfig['customColors'], value: string) => {
-        setFormState(prev => ({ 
-            ...prev, 
-            customColors: {
-                ...prev.customColors,
-                [field]: value
+        let updatedState: Partial<SiteConfig> = { [field]: value };
+        if (field === 'addressCep') {
+            const cep = value.replace(/\D/g, '');
+            if (cep && cep.length === 8) {
+                fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.erro) {
+                            const street = data.logradouro || '';
+                            const neighborhood = data.bairro || '';
+                            const city = data.localidade || '';
+                            const state = data.uf || '';
+                            const fullAddressForDisplay = `${street}, ${neighborhood}, ${city} - ${state}`;
+                            onConfigChange({ ...updatedState, locationAddress: fullAddressForDisplay });
+                        }
+                    }).catch(err => console.error("Falha ao buscar CEP:", err));
+            } else {
+                 onConfigChange(updatedState);
             }
-        }));
+        } else if (field === 'locationAddress' || field === 'addressNumber') {
+            const addressForMap = field === 'locationAddress' ? value : formState.locationAddress;
+            const numberForMap = field === 'addressNumber' ? value : formState.addressNumber;
+            if (addressForMap && numberForMap) {
+                const fullAddressForMap = `${addressForMap}, ${numberForMap}`;
+                const encodedAddress = encodeURIComponent(fullAddressForMap);
+                updatedState.mapUrl = `https://maps.google.com/maps?q=${encodedAddress}&z=15&output=embed`;
+                updatedState.wazeLink = `https://www.waze.com/ul?q=${encodedAddress}`;
+                updatedState.googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+            }
+             onConfigChange({ ...formState, ...updatedState });
+        }
+        else {
+             onConfigChange(updatedState);
+        }
     };
     
-    const handleCarouselAdd = () => {
-        const newImages = [...(formState.carouselImages || []), 'https://picsum.photos/seed/new/800/600'];
-        handleFieldChange('carouselImages', newImages);
+    const handleColorChange = (field: keyof CustomColors, value: string) => {
+        onConfigChange({ 
+            customColors: { ...formState.customColors, [field]: value }
+        });
     };
+    
+    const resetDetailedColors = () => {
+        onConfigChange({
+             customColors: {
+                ...formState.customColors,
+                headingText: '',
+                heroHeadingText: '',
+                bodyText: '',
+                buttonBg: '',
+                buttonText: '',
+            }
+        });
+    }
 
     const handleCarouselChange = (index: number, value: string) => {
         const newImages = [...(formState.carouselImages || [])];
         newImages[index] = value;
+        handleFieldChange('carouselImages', newImages);
+    };
+
+    const handleCarouselAdd = () => {
+        const newImages = [...(formState.carouselImages || []), `https://picsum.photos/seed/${Date.now()}/800/800`];
         handleFieldChange('carouselImages', newImages);
     };
 
@@ -69,27 +146,26 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
         handleFieldChange('carouselImages', newImages);
     };
     
-    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, field: 'heroImage' | 'carousel' | 'logoUrl', index?: number) => {
+    const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'heroImage' | 'carousel', index?: number) => {
         const file = e.target.files?.[0];
-        if (!file) return;
+        if (!file || !storage) return;
 
-        const storage = getStorage();
+        setIsUploading(true);
         const fileRef = ref(storage, `site_images/${field}_${Date.now()}_${file.name}`);
         
-        setIsUploading(true);
-
         try {
             const snapshot = await uploadBytes(fileRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
 
-            if (field === 'heroImage' || field === 'logoUrl') {
-                handleFieldChange(field, downloadURL);
-            } else if (field === 'carousel' && index !== undefined) {
+            if (field === 'carousel' && index !== undefined) {
                 const newImages = [...(formState.carouselImages || [])];
                 newImages[index] = downloadURL;
                 handleFieldChange('carouselImages', newImages);
+            } else {
+                handleFieldChange(field as 'logoUrl' | 'heroImage', downloadURL);
             }
-            toast({ title: 'Sucesso!', description: 'A imagem foi carregada e o URL foi atualizado.' });
+            
+            toast({ title: 'Sucesso!', description: 'Sua imagem foi carregada. Clique em Salvar para publicar.' });
         } catch (error) {
             console.error("Image upload error:", error);
             toast({ variant: 'destructive', title: 'Erro de Upload', description: 'Não foi possível carregar a imagem.' });
@@ -99,58 +175,32 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
     };
 
 
-    const handleSave = () => {
-        startTransition(async () => {
-            if (!firestore) {
-                toast({ variant: 'destructive', title: "Erro de Conexão", description: "Não foi possível conectar ao banco de dados." });
-                return;
-            };
-
-            let updatedState = { ...formState };
-
-            if (updatedState.locationAddress && updatedState.addressNumber) {
-                const fullAddressForMap = `${updatedState.locationAddress}, ${updatedState.addressNumber}`;
-                const encodedAddress = encodeURIComponent(fullAddressForMap);
-                
-                updatedState.mapUrl = `https://maps.google.com/maps?q=${encodedAddress}&z=15&output=embed`;
-                updatedState.wazeLink = `https://www.waze.com/ul?q=${encodedAddress}`;
-            }
-
-            try {
-                await setDocument(firestore, 'config/site', updatedState);
-                toast({ title: "Salvo!", description: `Suas personalizações foram salvas com sucesso.` });
-            } catch (error) {
-                console.error("Error saving config:", error);
-                toast({ variant: 'destructive', title: "Erro ao Salvar", description: "Não foi possível salvar as configurações." });
-            }
-        });
-    };
+    // Lógica para obter as cores da paleta gerada
+    const mainColor = formState.customColor || '#e85d3f'; // Fallback
+    const primaryHsl = colorToHsl(mainColor);
     
-    useEffect(() => {
-        const cep = formState.addressCep?.replace(/\D/g, '');
-        if (cep && cep.length === 8) {
-            fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.erro) {
-                        const street = data.logradouro || '';
-                        const neighborhood = data.bairro || '';
-                        const city = data.localidade || '';
-                        const state = data.uf || '';
-                        const fullAddressForDisplay = `${street}, ${neighborhood}, ${city} - ${state}`;
-                        
-                        setFormState(prev => ({
-                            ...prev,
-                            locationAddress: fullAddressForDisplay,
-                        }));
-                    }
-                }).catch(err => console.error("Falha ao buscar CEP:", err));
-        }
-    }, [formState.addressCep]);
+    let generatedHeadingText = '#111827';
+    let generatedHeroHeadingText = '#FFFFFF';
+    let generatedBodyText = '#4b5563';
+    let generatedButtonBg = '#e85d3f';
+    let generatedButtonText = '#ffffff';
+
+    if (primaryHsl) {
+        const { h, s, l } = primaryHsl;
+        generatedHeadingText = `hsl(${h}, ${s * 0.9}%, ${Math.max(15, l * 0.35)}%)`;
+        generatedHeroHeadingText = `hsl(${h}, ${s * 0.1}%, ${Math.min(99, l + (100 - l) * 0.98)}%)`;
+        generatedBodyText = `hsl(${h}, ${s * 0.3}%, ${Math.max(15, l * 0.25)}%)`;
+        generatedButtonBg = `hsl(${h}, ${s}%, ${l}%)`;
+        
+        const mainColorHex = colorStringToHex(mainColor);
+        const primaryRgb = mainColorHex ? hexToRgb(mainColorHex) : null;
+        const buttonYiq = primaryRgb ? getYiq(primaryRgb) : 128;
+        generatedButtonText = buttonYiq >= 128 ? '#000000' : '#FFFFFF';
+    }
 
     return (
         <div className="grid gap-6 relative">
-            <div className="space-y-6 pb-24">
+            <div className="space-y-6 pb-16">
                 <Card>
                     <CardHeader>
                         <CardTitle>Identidade do Casal</CardTitle>
@@ -192,39 +242,97 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><Palette /> Cores do Tema</CardTitle>
-                        <CardDescription>Escolha a cor principal para gerar uma paleta ou defina cada cor manualmente.</CardDescription>
+                        <CardDescription>Escolha a cor principal para gerar uma paleta coesa ou ajuste as cores detalhadas manualmente.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="p-4 border rounded-lg bg-background">
-                            <h3 className="font-semibold mb-4">1. Cor Principal (Gera Paleta Inteligente)</h3>
-                            <div className="flex items-center gap-4">
-                                <Input 
-                                    type="color" 
-                                    value={formState.customColor || '#e85d3f'}
-                                    onChange={(e) => handleFieldChange('customColor', e.target.value)}
-                                    className="w-24 h-12 p-1"
-                                />
-                                <div className="flex-1">
-                                    <Input 
-                                        value={formState.customColor || ''}
-                                        onChange={(e) => handleFieldChange('customColor', e.target.value)}
-                                        placeholder="Pesquisar cor (ex: #e85d3f)" 
-                                    />
-                                    <p className="text-xs text-muted-foreground mt-2">Ao selecionar uma cor aqui, o site gera automaticamente as cores dos botões, textos e fundos para manter o contraste legível.</p>
+                        <div className="p-4 border rounded-lg bg-background space-y-4">
+                            <div>
+                                <Label className="font-semibold mb-2 block">1. Cor Principal (Gera Paleta Inteligente)</Label>
+                                <div className="flex items-center gap-4">
+                                     <div className="relative w-14 h-11 rounded-md border-2 border-muted-foreground/20 p-1 bg-white">
+                                        <div className="w-full h-full rounded" style={{ backgroundColor: colorStringToHex(formState.customColor || '#e85d3f') || 'transparent' }}></div>
+                                        <Input 
+                                            type="color" 
+                                            value={colorStringToHex(formState.customColor || '#e85d3f') || '#e85d3f'}
+                                            onChange={(e) => handleFieldChange('customColor', e.target.value)}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <Popover open={openColorPopover} onOpenChange={setOpenColorPopover}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={openColorPopover}
+                                                    className="w-full justify-between font-normal h-11"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        {formState.customColor || "Selecione uma cor..."}
+                                                    </div>
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[300px] p-0">
+                                                <Command>
+                                                    <CommandInput 
+                                                        placeholder="Pesquisar cor (ex: Marsala, #e85d3f)" 
+                                                        onValueChange={(search) => handleFieldChange('customColor', search)}
+                                                    />
+                                                    <CommandList>
+                                                        <CommandEmpty>Nenhuma cor encontrada.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {colorPalette.map((color) => (
+                                                            <CommandItem
+                                                                key={color.name}
+                                                                value={color.name}
+                                                                onSelect={(currentValue) => {
+                                                                    const selectedColor = colorPalette.find(c => c.name.toLowerCase() === currentValue.toLowerCase());
+                                                                    handleFieldChange('customColor', selectedColor ? selectedColor.hex : currentValue);
+                                                                    setOpenColorPopover(false);
+                                                                }}
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <ColorSwatch color={color.hex} />
+                                                                    {color.name}
+                                                                </div>
+                                                                <Check
+                                                                    className={cn(
+                                                                        "ml-auto h-4 w-4",
+                                                                        (formState.customColor || '').toLowerCase() === color.name.toLowerCase() ? "opacity-100" : "opacity-0"
+                                                                    )}
+                                                                />
+                                                            </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                          Escreva um nome de cor ou um código de cor.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="p-4 border rounded-lg bg-background">
-                            <h3 className="font-semibold mb-4">2. Cores Detalhadas (Avançado)</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <ColorInput label="Fundo do Menu" value={formState.customColors?.headerBg || ''} onChange={(v) => handleColorChange('headerBg', v)} />
-                                <ColorInput label="Texto do Menu" value={formState.customColors?.headerText || ''} onChange={(v) => handleColorChange('headerText', v)} />
-                                <ColorInput label="Fundo do Rodapé" value={formState.customColors?.footerBg || ''} onChange={(v) => handleColorChange('footerBg', v)} />
-                                <ColorInput label="Texto do Rodapé" value={formState.customColors?.footerText || ''} onChange={(v) => handleColorChange('footerText', v)} />
-                                <ColorInput label="Fundo dos Botões" value={formState.customColors?.buttonBg || ''} onChange={(v) => handleColorChange('buttonBg', v)} />
-                                <ColorInput label="Texto dos Botões" value={formState.customColors?.buttonText || ''} onChange={(v) => handleColorChange('buttonText', v)} />
-                                <ColorInput label="Cor dos Títulos" value={formState.customColors?.headingText || ''} onChange={(v) => handleColorChange('headingText', v)} />
-                                <ColorInput label="Cor dos Textos" value={formState.customColors?.bodyText || ''} onChange={(v) => handleColorChange('bodyText', v)} />
+                        <div className="p-4 border rounded-lg bg-background space-y-4">
+                            <div className="flex justify-between items-center mb-2">
+                                 <Label className="font-semibold">2. Cores Detalhadas (Avançado)</Label>
+                                 <Button variant="ghost" size="sm" onClick={resetDetailedColors} className="flex items-center gap-2 text-xs">
+                                     <RefreshCcw className="w-3 h-3" />
+                                     Restaurar Padrão
+                                 </Button>
+                            </div>
+                             <p className="text-xs text-muted-foreground -mt-2">
+                                Deixe em branco para usar a paleta gerada automaticamente. Preencha para substituir uma cor específica.
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <ColorInput label="Texto Títulos (Geral)" value={formState.customColors?.headingText || ''} onChange={(value) => handleColorChange('headingText', value)} placeholder={colorStringToHex(generatedHeadingText) || ''} />
+                                <ColorInput label="Texto Títulos (Hero)" value={formState.customColors?.heroHeadingText || ''} onChange={(value) => handleColorChange('heroHeadingText', value)} placeholder={colorStringToHex(generatedHeroHeadingText) || ''} />
+                                <ColorInput label="Texto do Corpo" value={formState.customColors?.bodyText || ''} onChange={(value) => handleColorChange('bodyText', value)} placeholder={colorStringToHex(generatedBodyText) || ''} />
+                                <ColorInput label="Fundo do Botão" value={formState.customColors?.buttonBg || ''} onChange={(value) => handleColorChange('buttonBg', value)} placeholder={colorStringToHex(generatedButtonBg) || ''} />
+                                <ColorInput label="Texto do Botão" value={formState.customColors?.buttonText || ''} onChange={(value) => handleColorChange('buttonText', value)} placeholder={colorStringToHex(generatedButtonText) || ''} />
                             </div>
                         </div>
                     </CardContent>
@@ -314,13 +422,6 @@ export default function CustomizeTab({ config }: CustomizeTabProps) {
                     </CardContent>
                 </Card>
             </div>
-            
-            <CardFooter className="justify-end sticky bottom-0 bg-background/95 py-4 border-t z-10 -mx-8 px-8">
-                 <Button onClick={handleSave} disabled={isPending || isUploading} size="lg">
-                    {isPending || isUploading ? <Loader2 className="animate-spin" /> : <Save />}
-                    {isUploading ? 'Aguardando Upload...' : 'Salvar Todas as Alterações'}
-                </Button>
-            </CardFooter>
         </div>
     );
 }

@@ -65,7 +65,7 @@ export function useCollection<T = DocumentData>(
       (err) => {
         console.error(err);
         if (err.code === 'permission-denied') {
-          errorEmitter.emit('error', new FirestorePermissionError());
+          errorEmitter.emit('permission-error', new FirestorePermissionError({path: ref.path, operation: 'list'}));
         }
         setError(err);
       }

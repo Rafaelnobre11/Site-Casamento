@@ -1,103 +1,89 @@
-'use client';
 
+'use client';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { SiteConfig } from '@/types/siteConfig';
-
-function hexToHsl(hex: string | undefined): string | null {
-    if (!hex || !/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(hex)) return null;
-
-    let r, g, b;
-    hex = hex.substring(1); // remove #
-
-    if (hex.length === 3) {
-        r = parseInt(hex.charAt(0) + hex.charAt(0), 16);
-        g = parseInt(hex.charAt(1) + hex.charAt(1), 16);
-        b = parseInt(hex.charAt(2) + hex.charAt(2), 16);
-    } else {
-        r = parseInt(hex.substring(0, 2), 16);
-        g = parseInt(hex.substring(2, 4), 16);
-        b = parseInt(hex.substring(4, 6), 16);
-    }
-
-    r /= 255;
-    g /= 255;
-    b /= 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0, s, l = (max + min) / 2;
-
-    if (max === min) {
-        h = s = 0; // achromatic
-    } else {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-    }
-
-    h = Math.round(h * 360);
-    s = Math.round(s * 100);
-    l = Math.round(l * 100);
-
-    return `${h} ${s}% ${l}%`;
-}
-
+import { colorToHsl, hexToRgb, getYiq } from '@/lib/color-utils';
 
 export function SiteStyle() {
   const { data: config } = useDoc<SiteConfig>('config/site');
 
   if (!config) return null;
 
-  const primaryColorHsl = hexToHsl(config.customColor);
-  const colors = config.customColors || {};
+  const primaryColor = config.customColor || '#e85d3f'; // Terracota como fallback
+  const primaryHsl = colorToHsl(primaryColor);
+  
+  if (!primaryHsl) return null;
+  
+  const { h, s, l } = primaryHsl;
+
+  // Lógica de contraste para o texto do botão principal
+  const primaryRgb = hexToRgb(primaryColor);
+  const primaryYiq = primaryRgb ? getYiq(primaryRgb) : 128; // Default to dark text if conversion fails
+  const primaryFg = primaryYiq >= 128 ? '0 0% 10%' : '0 0% 98%';
+
+  // Lógica de contraste para o texto do botão customizado
+  const buttonRgb = config.customColors?.buttonBg ? hexToRgb(config.customColors.buttonBg) : primaryRgb;
+  const buttonYiq = buttonRgb ? getYiq(buttonRgb) : 128;
+  const buttonFg = buttonYiq >= 128 ? 'hsl(0 0% 10%)' : 'hsl(0 0% 98%)';
+
+  const customColors = config.customColors || {};
 
   const style = `
     :root {
-      ${primaryColorHsl ? `--primary: ${primaryColorHsl};` : ''}
+      --background: ${h} ${s * 0.1} ${Math.min(99, l + (100 - l) * 0.98)}%;
+      --foreground: ${h} ${s * 0.5} ${Math.max(8, l * 0.15)}%;
+      
+      --card: ${h} ${s * 0.05} ${Math.min(100, l + (100 - l) * 0.99)}%;
+      --card-foreground: var(--foreground);
+
+      --popover: var(--card);
+      --popover-foreground: var(--card-foreground);
+      
+      --primary: ${h} ${s}% ${l}%;
+      --primary-foreground: ${primaryFg};
+
+      --secondary: ${h} ${s * 0.7} ${l * 0.9}%;
+      --secondary-foreground: ${h} ${s} ${l * 0.2}%;
+      
+      --muted: ${h} ${s * 0.2} ${Math.min(97, l + (100 - l) * 0.94)}%;
+      --muted-foreground: ${h} ${s * 0.25} ${Math.max(30, l * 0.5)}%;
+
+      --accent: ${h} ${s * 0.8} ${l * 0.95}%;
+      --accent-foreground: ${h} ${s} ${l * 0.25}%;
+      
+      --border: ${h} ${s * 0.15} ${l * 0.9}%;
+      --input: ${h} ${s * 0.1} ${l * 0.95}%;
+      --ring: ${h} ${s}% ${l}%;
+
+      --radius: 0.75rem;
+    }
+
+    .font-headline {
+      color: ${customColors.headingText || `hsl(${h}, ${s * 0.9}%, ${Math.max(15, l * 0.35)}%)`};
+    }
+
+    .font-hero-headline {
+      color: ${customColors.heroHeadingText || `hsl(${h}, ${s * 0.1}%, ${Math.min(99, l + (100 - l) * 0.98)}%)`};
     }
     
     body {
-        ${colors.bodyText ? `color: ${colors.bodyText};` : ''}
+        color: ${customColors.bodyText || `hsl(${h}, ${s * 0.3}, ${Math.max(15, l * 0.25)}%)`};
     }
+  `;
 
-    h1, h2, h3, h4, h5, h6, .font-headline {
-        ${colors.headingText ? `color: ${colors.headingText};` : ''}
-    }
-    
-    header {
-        ${colors.headerBg ? `background-color: ${colors.headerBg} !important;` : ''}
-        ${colors.headerBg ? `backdrop-filter: none !important;` : ''}
-    }
-    header a, header span {
-        ${colors.headerText ? `color: ${colors.headerText} !important;` : ''}
-    }
-
-    footer {
-        ${colors.footerBg ? `background-color: ${colors.footerBg};` : ''}
-        ${colors.footerText ? `color: ${colors.footerText};` : ''}
-    }
-    footer a {
-       ${colors.footerText ? `color: ${colors.footerText};` : ''}
-    }
-    footer a:hover {
-       ${colors.footerText ? `color: ${colors.footerText}; opacity: 0.8;` : ''}
-    }
-    
+  const dynamicButtonStyle = `
     .btn-primary {
-        ${colors.buttonBg ? `background-color: ${colors.buttonBg};` : ''}
-        ${colors.buttonText ? `color: ${colors.buttonText};` : ''}
+      background-color: ${customColors.buttonBg || `hsl(${h}, ${s}%, ${l}%)`};
+      color: ${customColors.buttonText || buttonFg};
     }
-     .btn-primary:hover {
-        ${colors.buttonBg ? `background-color: ${colors.buttonBg}; opacity: 0.9;` : ''}
+    .btn-primary:hover {
+        background-color: ${customColors.buttonBg ? `color-mix(in srgb, ${customColors.buttonBg}, black 10%)` : `hsl(${h}, ${s}%, ${l - 5}%)`};
     }
   `;
 
   return (
-    <style dangerouslySetInnerHTML={{ __html: style }} />
+    <style dangerouslySetInnerHTML={{ __html: style + dynamicButtonStyle }} />
   );
 }
+
+    

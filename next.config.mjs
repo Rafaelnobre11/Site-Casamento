@@ -5,26 +5,27 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'imgur.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i.imgur.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i.imgflip.com',
+        port: '',
       },
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
+        port: '',
       },
       {
         protocol: 'https',
         hostname: 'picsum.photos',
+        port: '',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imgur.com',
+        port: '',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgflip.com',
+        port: '',
       },
     ],
   },
