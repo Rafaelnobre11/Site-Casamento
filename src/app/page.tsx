@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { SiteConfig, Guest } from '@/types/siteConfig';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Lock } from 'lucide-react';
 import Hero from '@/components/wedding/Hero';
 import PhotoCarousel from '@/components/wedding/PhotoCarousel';
 import RsvpSection from '@/components/wedding/RsvpSection';
@@ -21,7 +21,7 @@ export default function Home() {
   const [currentGuestId, setCurrentGuestId] = useState<string | null>(null);
   const { data: siteConfig, loading: loadingConfig } = useDoc<SiteConfig>('config/site');
   
-  const { data: guestData, loading: loadingGuest } = useDoc<Guest>(
+  const { data: guestData } = useDoc<Guest>(
     currentGuestId ? `guests/${currentGuestId}` : ''
   );
 
@@ -46,12 +46,7 @@ export default function Home() {
     );
   }
 
-<<<<<<< HEAD
-  const config = {
-=======
-  // Define default config with witty texts
   const defaultConfig = {
->>>>>>> 5c07af4a248d37fbb8dcac0d291b75ca4375149d
     names: 'Cláudia & Rafael',
     date: '2025-09-21T16:00:00',
     time: '16:00',
@@ -59,8 +54,8 @@ export default function Home() {
     locationAddress: 'R. Funchal, 500 - Vila Olímpia, São Paulo - SP',
     addressNumber: '500',
     mapUrl: 'https://maps.google.com/maps?q=Rua+Funchal%2C+500+-+Vila+Ol%C3%ADmpia%2C+S%C3%A3o+Paulo+-+SP&z=15&output=embed',
-    wazeLink: 'https://www.waze.com/ul?q=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo',
-    googleMapsLink: 'https://www.google.com/maps/search/?api=1&query=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o%20Paulo',
+    wazeLink: 'https://www.waze.com/ul?q=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o+Paulo',
+    googleMapsLink: 'https://www.google.com/maps/search/?api=1&query=Rua%20Funchal%2C%20500%20-%20Vila%20Ol%C3%ADmpia%2C%20S%C3%A3o+Paulo',
     products: defaultGifts,
     layoutOrder: defaultLayoutOrder,
     heroImage: PlaceHolderImages.find(p => p.id === 'hero-bg')?.imageUrl,
@@ -90,12 +85,8 @@ export default function Home() {
     customColors: {},
     carouselImages: [],
     isContentLocked: true,
-    ...siteConfig 
   };
-<<<<<<< HEAD
-=======
 
-  // Merge siteConfig with defaultConfig, ensuring texts are merged deeply
   const config: SiteConfig = {
     ...defaultConfig,
     ...siteConfig,
@@ -104,9 +95,7 @@ export default function Home() {
       ...(siteConfig?.texts || {}),
     },
   };
->>>>>>> 5c07af4a248d37fbb8dcac0d291b75ca4375149d
   
-  // Só bloqueia o endereço se o cadeado estiver ativo E o convidado não tiver status 'confirmed'
   const isConfirmed = guestData?.status === 'confirmed';
   const shouldLockAddress = config.isContentLocked && !isConfirmed;
 
@@ -129,35 +118,9 @@ export default function Home() {
         <PhotoCarousel images={config.carouselImages} texts={config.texts} />
     ),
     rsvp: (
-        <RsvpSection onRsvpConfirmed={handleRsvpConfirmed} texts={config.texts} />
-    ),
-    event: showGatedContent ? (
-        <EventInfo
-          locationName={config.locationName}
-          address={config.locationAddress}
-          addressNumber={config.addressNumber}
-          time={config.time}
-          wazeLink={config.wazeLink}
-          googleMapsLink={config.googleMapsLink}
-          mapUrl={config.mapUrl}
-          date={config.date}
-          texts={config.texts}
-        />
-    ) : null,
-     gifts: showGatedContent ? (
-        <GiftSection 
-            products={config.products} 
-            pixKey={config.pixKey}
-            texts={config.texts} 
-        />
-    ) : null,
-  };
-
-  const layoutOrder = config.layoutOrder || defaultLayoutOrder;
-
-<<<<<<< HEAD
         <RsvpSection onRsvpConfirmed={handleRsvpSuccess} />
-        
+    ),
+    event: (
         <EventInfo
           isLocked={shouldLockAddress}
           locationName={shouldLockAddress ? "Local Protegido" : config.locationName}
@@ -166,13 +129,19 @@ export default function Home() {
           wazeLink={shouldLockAddress ? "#rsvp" : config.wazeLink}
           mapUrl={shouldLockAddress ? "" : config.mapUrl}
           date={config.date}
+          texts={config.texts}
         />
-
+    ),
+    gifts: (
         <GiftSection 
             products={config.products} 
-            pixKey={config.pixKey} 
+            pixKey={config.pixKey}
+            texts={config.texts} 
         />
-=======
+    ),
+  };
+
+  const layoutOrder = config.layoutOrder || defaultLayoutOrder;
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background text-foreground">
@@ -182,15 +151,6 @@ export default function Home() {
         {layoutOrder.map(key => components[key] ? (
             <div key={key}>{components[key]}</div>
         ) : null)}
-
-        {!showGatedContent && (
-            <div className="text-center py-16 px-4 sm:px-6 lg:px-8 bg-muted/50 rounded-lg shadow-inner max-w-2xl mx-auto my-12">
-                <Lock className="mx-auto h-10 w-10 text-muted-foreground" />
-                <h3 className="mt-4 text-xl font-semibold font-headline">{config.texts.rsvp_lock_message_title}</h3>
-                <p className="mt-2 text-md text-muted-foreground">{config.texts.rsvp_lock_message_subtitle}</p>
-            </div>
-        )}
->>>>>>> 5c07af4a248d37fbb8dcac0d291b75ca4375149d
 
       </main>
       <Footer names={config.names} />
