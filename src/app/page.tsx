@@ -20,13 +20,11 @@ export default function Home() {
   const [currentGuestId, setCurrentGuestId] = useState<string | null>(null);
   const { data: siteConfig, loading: loadingConfig } = useDoc<SiteConfig>('config/site');
   
-  // Busca os dados do convidado logado para validar o status real no Firestore
   const { data: guestData, loading: loadingGuest } = useDoc<Guest>(
     currentGuestId ? `guests/${currentGuestId}` : ''
   );
 
   useEffect(() => {
-    // Tenta recuperar o ID do convidado que já se identificou/confirmou
     const savedId = localStorage.getItem('guestId');
     if (savedId) {
       setCurrentGuestId(savedId);
@@ -47,7 +45,7 @@ export default function Home() {
     );
   }
 
-  const defaultConfig = {
+  const config = {
     names: 'Cláudia & Rafael',
     date: '2025-09-21T16:00:00',
     time: '16:00',
@@ -61,16 +59,12 @@ export default function Home() {
     customColors: {},
     carouselImages: [],
     isContentLocked: true,
+    ...siteConfig 
   };
-
-  const config = { ...defaultConfig, ...siteConfig };
   
-  // Lógica de Desbloqueio: 
-  // O conteúdo só é liberado se:
-  // 1. A trava global estiver desligada no Admin
-  // 2. OU o convidado estiver com status 'confirmed' no Firestore
+  // Só desbloqueia se o convidado existir E tiver status 'confirmed'
   const isConfirmed = guestData?.status === 'confirmed';
-  const showGatedContent = !config.isContentLocked || isConfirmed;
+  const shouldLock = config.isContentLocked && !isConfirmed;
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#FBF9F6] text-[#4a4a4a]">
@@ -93,30 +87,28 @@ export default function Home() {
 
         <RsvpSection onRsvpConfirmed={handleRsvpSuccess} />
         
-        {/* Seção de Informações com Proteção de Dados */}
         <EventInfo
-          isLocked={!showGatedContent}
-          locationName={showGatedContent ? config.locationName : "Local Protegido"}
-          address={showGatedContent ? config.locationAddress : "Confirme sua presença para ver o endereço"}
+          isLocked={shouldLock}
+          locationName={shouldLock ? "Local Protegido" : config.locationName}
+          address={shouldLock ? "Confirme sua presença para liberar o acesso ao endereço" : config.locationAddress}
           time={config.time}
-          wazeLink={showGatedContent ? config.wazeLink : "#rsvp"}
-          mapUrl={showGatedContent ? config.mapUrl : ""}
+          wazeLink={shouldLock ? "#rsvp" : config.wazeLink}
+          mapUrl={shouldLock ? "" : config.mapUrl}
           date={config.date}
         />
 
-        {/* Seção de Presentes */}
-        {showGatedContent ? (
+        {shouldLock ? (
+            <div className="py-24 px-4 bg-muted/10 text-center">
+                <div className="max-w-md mx-auto p-8 rounded-2xl border-2 border-dashed border-muted-foreground/20 bg-white/50 backdrop-blur-sm">
+                    <h3 className="font-headline text-2xl text-primary/60 mb-2">Lista de Presentes</h3>
+                    <p className="text-muted-foreground italic">A nossa vitrine de desejos será revelada após a sua confirmação de presença.</p>
+                </div>
+            </div>
+        ) : (
             <GiftSection 
                 products={config.products} 
                 pixKey={config.pixKey} 
             />
-        ) : (
-            <div className="py-24 px-4 bg-muted/10 text-center">
-                <div className="max-w-md mx-auto p-8 rounded-2xl border-2 border-dashed border-muted-foreground/20">
-                    <h3 className="font-headline text-2xl text-primary/60 mb-2">Lista de Presentes</h3>
-                    <p className="text-muted-foreground italic">A nossa vitrine de desejos será revelada após a sua confirmação.</p>
-                </div>
-            </div>
         )}
 
       </main>
