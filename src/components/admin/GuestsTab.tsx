@@ -10,13 +10,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Users, UserCheck, UserX, BarChart3, Trash2, Search, Download, Edit2, Filter } from 'lucide-react';
+import { Loader2, Users, UserCheck, UserX, BarChart3, Trash2, Search, Download, Edit2, Filter, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { maskPhone } from '@/lib/masks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Guest } from '@/types/siteConfig';
+import { cn } from '@/lib/utils';
 
 const guestSchema = z.object({
   name: z.string().min(3, "Nome muito curto."),
@@ -43,7 +44,7 @@ export default function GuestsTab() {
   const { firestore } = useFirebase();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const [searchTerm, setSearch) = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   const form = useForm({
@@ -74,16 +75,20 @@ export default function GuestsTab() {
   const onAdd = (values: any) => {
     startTransition(async () => {
       if (!firestore) return;
-      await addDocument(firestore, 'guests', {
-        ...values,
-        phone: values.phone.replace(/\D/g, ''),
-        status: 'pending',
-        confirmedGuests: 0,
-        message: '',
-        createdAt: new Date().toISOString()
-      });
-      toast({ title: "Convidado adicionado!" });
-      form.reset();
+      try {
+        await addDocument(firestore, 'guests', {
+          ...values,
+          phone: values.phone.replace(/\D/g, ''),
+          status: 'pending',
+          confirmedGuests: 0,
+          message: '',
+          createdAt: new Date().toISOString()
+        });
+        toast({ title: "Convidado adicionado!" });
+        form.reset();
+      } catch (error) {
+        // Erro tratado pelo error emitter
+      }
     });
   };
 
@@ -91,8 +96,12 @@ export default function GuestsTab() {
     if (!confirm(`Excluir ${name}?`)) return;
     startTransition(async () => {
       if (!firestore) return;
-      await deleteDocument(firestore, `guests/${id}`);
-      toast({ title: "Removido!" });
+      try {
+        await deleteDocument(firestore, `guests/${id}`);
+        toast({ title: "Removido!" });
+      } catch (error) {
+        // Erro tratado pelo error emitter
+      }
     });
   };
 
@@ -154,7 +163,7 @@ export default function GuestsTab() {
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar por nome ou telefone..." className="pl-9" value={searchTerm} onChange={e => setSearch(e.target.value)} />
+                <Input placeholder="Buscar por nome ou telefone..." className="pl-9" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[180px]"><SelectValue placeholder="Filtrar Status" /></SelectTrigger>
