@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useDoc } from '@/firebase/firestore/use-doc';
-import { SiteConfig } from '@/types/siteConfig';
-import { Loader2, Lock } from 'lucide-react';
+import { SiteConfig, Guest } from '@/types/siteConfig';
+import { Loader2 } from 'lucide-react';
 import Hero from '@/components/wedding/Hero';
 import PhotoCarousel from '@/components/wedding/PhotoCarousel';
 import RsvpSection from '@/components/wedding/RsvpSection';
@@ -18,22 +17,28 @@ import Countdown from '@/components/wedding/Countdown';
 const defaultLayoutOrder = ['hero', 'countdown', 'carousel', 'rsvp', 'event', 'gifts'];
 
 export default function Home() {
-  const [isRsvpConfirmed, setIsRsvpConfirmed] = useState(false);
-  const { data: siteConfig, loading } = useDoc<SiteConfig>('config/site');
+  const [currentGuestId, setCurrentGuestId] = useState<string | null>(null);
+  const { data: siteConfig, loading: loadingConfig } = useDoc<SiteConfig>('config/site');
+  
+  // Busca os dados do convidado logado para validar o status real no Firestore
+  const { data: guestData, loading: loadingGuest } = useDoc<Guest>(
+    currentGuestId ? `guests/${currentGuestId}` : ''
+  );
 
   useEffect(() => {
-    // Check local storage to see if RSVP was already confirmed
-    if (localStorage.getItem('rsvpConfirmed') === 'true') {
-      setIsRsvpConfirmed(true);
+    // Tenta recuperar o ID do convidado que já se identificou/confirmou
+    const savedId = localStorage.getItem('guestId');
+    if (savedId) {
+      setCurrentGuestId(savedId);
     }
   }, []);
 
-  const handleRsvpConfirmed = () => {
-    setIsRsvpConfirmed(true);
-    localStorage.setItem('rsvpConfirmed', 'true');
+  const handleRsvpSuccess = (guestId: string) => {
+    setCurrentGuestId(guestId);
+    localStorage.setItem('guestId', guestId);
   };
 
-  if (loading) {
+  if (loadingConfig) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -42,7 +47,6 @@ export default function Home() {
     );
   }
 
-  // Define default config
   const defaultConfig = {
     names: 'Cláudia & Rafael',
     date: '2025-09-21T16:00:00',
@@ -56,14 +60,17 @@ export default function Home() {
     texts: {},
     customColors: {},
     carouselImages: [],
-    isContentLocked: true, // Default to locked
+    isContentLocked: true,
   };
 
-  // Merge siteConfig with defaultConfig
   const config = { ...defaultConfig, ...siteConfig };
   
-  const isContentLocked = config.isContentLocked;
-  const showGatedContent = isRsvpConfirmed || !isContentLocked;
+  // Lógica de Desbloqueio: 
+  // O conteúdo só é liberado se:
+  // 1. A trava global estiver desligada no Admin
+  // 2. OU o convidado estiver com status 'confirmed' no Firestore
+  const isConfirmed = guestData?.status === 'confirmed';
+  const showGatedContent = !config.isContentLocked || isConfirmed;
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#FBF9F6] text-[#4a4a4a]">
@@ -84,28 +91,31 @@ export default function Home() {
 
         <PhotoCarousel images={config.carouselImages} />
 
-        <RsvpSection onRsvpConfirmed={handleRsvpConfirmed} />
+        <RsvpSection onRsvpConfirmed={handleRsvpSuccess} />
         
+        {/* Seção de Informações com Proteção de Dados */}
+        <EventInfo
+          isLocked={!showGatedContent}
+          locationName={showGatedContent ? config.locationName : "Local Protegido"}
+          address={showGatedContent ? config.locationAddress : "Confirme sua presença para ver o endereço"}
+          time={config.time}
+          wazeLink={showGatedContent ? config.wazeLink : "#rsvp"}
+          mapUrl={showGatedContent ? config.mapUrl : ""}
+          date={config.date}
+        />
+
+        {/* Seção de Presentes */}
         {showGatedContent ? (
-            <>
-                <EventInfo
-                  locationName={config.locationName}
-                  address={config.locationAddress}
-                  time={config.time}
-                  wazeLink={config.wazeLink}
-                  mapUrl={config.mapUrl}
-                  date={config.date} // Pass the date prop
-                />
-                <GiftSection 
-                    products={config.products} 
-                    pixKey={config.pixKey} 
-                />
-            </>
+            <GiftSection 
+                products={config.products} 
+                pixKey={config.pixKey} 
+            />
         ) : (
-            <div className="text-center py-16 px-4 sm:px-6 lg:px-8 bg-gray-50/50 rounded-lg shadow-inner max-w-2xl mx-auto my-12">
-                <Lock className="mx-auto h-10 w-10 text-gray-400" />
-                <h3 className="mt-4 text-xl font-semibold text-gray-800">Calma lá, ansioso!</h3>
-                <p className="mt-2 text-md text-gray-600">Primeiro confirma que você vem...</p>
+            <div className="py-24 px-4 bg-muted/10 text-center">
+                <div className="max-w-md mx-auto p-8 rounded-2xl border-2 border-dashed border-muted-foreground/20">
+                    <h3 className="font-headline text-2xl text-primary/60 mb-2">Lista de Presentes</h3>
+                    <p className="text-muted-foreground italic">A nossa vitrine de desejos será revelada após a sua confirmação.</p>
+                </div>
             </div>
         )}
 
